@@ -1,0 +1,44 @@
+appId: com.zennote.app
+productName: 禅意笔记本
+copyright: Copyright © 2024
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - universal
+  category: public.app-category.productivity
+  icon: build/icon.icns
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  artifactName: "${productName}-${version}.${ext}"
+  title: "${productName}"
+  window:
+    width: 540
+    height: 380
+  contents:
+    - x: 130
+      y: 180
+      type: file
+    - x: 410
+      y: 180
+      type: link
+      path: /Applications
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - "dist/**/*"
+  - "dist-electron/**/*"
+  - "package.json"
+
+extraResources:
+  - from: "public"
+    to: "public"
+    filter:
+      - "**/*"
