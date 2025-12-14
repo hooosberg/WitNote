@@ -158,11 +158,12 @@ const AppContent: React.FC = () => {
         if (vaultPath) loadPreviews()
     }, [activeFolder, fileTree, vaultPath])
 
-    // 关闭菜单
+    // 关闭菜单（点击外部区域时）
     useEffect(() => {
         const close = (e: MouseEvent) => {
             const target = e.target as HTMLElement
-            if (!target.closest('.dropdown-menu') && !target.closest('.gallery-menu')) {
+            // 排除菜单本身和触发按钮
+            if (!target.closest('.dropdown-menu') && !target.closest('.gallery-menu') && !target.closest('.action-btn')) {
                 setShowSortMenu(false)
                 setShowFilterMenu(false)
                 setGalleryMenu(prev => ({ ...prev, show: false }))
@@ -409,105 +410,74 @@ const AppContent: React.FC = () => {
                             /* 画廊视图 */
                             <div className="gallery-view">
                                 {/* 画廊头部 - 只有操作按钮 */}
-                                <div className="gallery-header">
+                                <div className={`gallery-header ${focusMode ? 'focus-mode' : ''}`}>
                                     <div className="gallery-actions">
                                         {/* 排序 */}
                                         <div className="dropdown">
                                             <button
                                                 className="action-btn"
-                                                onClick={() => setShowSortMenu(!showSortMenu)}
+                                                onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu) }}
                                             >
                                                 <ArrowUpDown size={16} strokeWidth={1.5} />
                                             </button>
                                             {showSortMenu && (
                                                 <div className="dropdown-menu">
                                                     <button onClick={() => { setSortBy('name-asc'); setShowSortMenu(false) }}>
-                                                        名称 A-Z
+                                                        <span className="menu-check">{sortBy === 'name-asc' ? '✓' : ''}</span>名称 A-Z
                                                     </button>
                                                     <button onClick={() => { setSortBy('name-desc'); setShowSortMenu(false) }}>
-                                                        名称 Z-A
+                                                        <span className="menu-check">{sortBy === 'name-desc' ? '✓' : ''}</span>名称 Z-A
                                                     </button>
                                                     <button onClick={() => { setSortBy('time-desc'); setShowSortMenu(false) }}>
-                                                        最新优先
+                                                        <span className="menu-check">{sortBy === 'time-desc' ? '✓' : ''}</span>最新优先
                                                     </button>
                                                     <button onClick={() => { setSortBy('time-asc'); setShowSortMenu(false) }}>
-                                                        最早优先
+                                                        <span className="menu-check">{sortBy === 'time-asc' ? '✓' : ''}</span>最早优先
                                                     </button>
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* 颜色筛选 */}
-                                        <div className="dropdown">
-                                            <button
-                                                className="action-btn"
-                                                onClick={() => setShowFilterMenu(!showFilterMenu)}
-                                            >
-                                                <Filter size={16} strokeWidth={1.5} />
-                                            </button>
-                                            {showFilterMenu && (
-                                                <div className="dropdown-menu filter-menu">
-                                                    <button onClick={() => { setFilterColor('all'); setShowFilterMenu(false) }}>
-                                                        全部
-                                                    </button>
-                                                    <div className="color-filter-dots">
-                                                        {COLORS.filter(c => c.key !== 'none').map(c => (
-                                                            <button
-                                                                key={c.key}
-                                                                className="color-dot-btn"
-                                                                style={{ background: c.hex }}
-                                                                onClick={() => { setFilterColor(c.key); setShowFilterMenu(false) }}
-                                                                title={c.name}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* 新建按钮 - 灰色 */}
-                                        <button className="action-btn" onClick={handleQuickCreate}>
-                                            <Plus size={18} strokeWidth={1.5} />
-                                        </button>
                                     </div>
                                 </div>
 
-                                {/* 文件网格 */}
+                                {/* 文件网格 - 第一个永远是新建卡片 */}
                                 <div className="gallery-grid-square">
-                                    {sortedFilteredFiles.length === 0 ? (
-                                        <div className="gallery-empty-clean">
-                                            <button className="empty-create-btn" onClick={handleQuickCreate}>
-                                                <Plus size={24} strokeWidth={1.2} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        sortedFilteredFiles.map(file => {
-                                            const style = getCardStyle(file.path)
-                                            const preview = previews[file.path] || ''
-                                            return (
-                                                <div
-                                                    key={file.path}
-                                                    className="file-card-square"
-                                                    onClick={() => openFile(file)}
-                                                    onContextMenu={(e) => handleCardContextMenu(e, file)}
-                                                    style={{
-                                                        borderColor: style.border,
-                                                        background: style.bg
-                                                    }}
-                                                >
-                                                    <div className="card-title">
-                                                        {file.name.replace(/\.[^/.]+$/, '')}
-                                                    </div>
-                                                    <div className="card-summary">
-                                                        {preview || '...'}
-                                                    </div>
-                                                    <div className="card-date">
-                                                        {new Date().toLocaleDateString()}
-                                                    </div>
+                                    {/* 新建文章卡片 */}
+                                    <div
+                                        className="file-card-square create-card"
+                                        onClick={handleQuickCreate}
+                                    >
+                                        <Plus size={32} strokeWidth={1.2} className="create-card-icon" />
+                                        <div className="create-card-text">新建文章</div>
+                                    </div>
+
+                                    {/* 文件卡片列表 */}
+                                    {sortedFilteredFiles.map(file => {
+                                        const style = getCardStyle(file.path)
+                                        const preview = previews[file.path] || ''
+                                        return (
+                                            <div
+                                                key={file.path}
+                                                className="file-card-square"
+                                                onClick={() => openFile(file)}
+                                                onContextMenu={(e) => handleCardContextMenu(e, file)}
+                                                style={{
+                                                    borderColor: style.border,
+                                                    background: style.bg
+                                                }}
+                                            >
+                                                <div className="card-title">
+                                                    {file.name.replace(/\.[^/.]+$/, '')}
                                                 </div>
-                                            )
-                                        })
-                                    )}
+                                                <div className="card-summary">
+                                                    {preview || '...'}
+                                                </div>
+                                                <div className="card-date">
+                                                    {new Date().toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -526,39 +496,41 @@ const AppContent: React.FC = () => {
             </PanelGroup>
 
             {/* 画廊右键菜单 */}
-            {galleryMenu.show && galleryMenu.node && (
-                <div
-                    className="gallery-menu context-menu"
-                    style={{ position: 'fixed', left: galleryMenu.x, top: galleryMenu.y }}
-                    onMouseDown={e => e.stopPropagation()}
-                >
-                    <button onClick={() => handleGalleryAction('rename')}>重命名</button>
+            {
+                galleryMenu.show && galleryMenu.node && (
+                    <div
+                        className="gallery-menu context-menu"
+                        style={{ position: 'fixed', left: galleryMenu.x, top: galleryMenu.y }}
+                        onMouseDown={e => e.stopPropagation()}
+                    >
+                        <button onClick={() => handleGalleryAction('rename')}>重命名</button>
 
-                    {/* 红黄绿颜色圆圈 */}
-                    <div className="color-circles">
-                        {COLORS.filter(c => c.key !== 'none').map(c => {
-                            const isActive = getGalleryCurrentColor() === c.key
-                            return (
-                                <button
-                                    key={c.key}
-                                    className={`color-circle ${isActive ? 'active' : ''}`}
-                                    style={{ background: c.hex }}
-                                    onClick={() => handleGalleryColor(c.key)}
-                                    title={c.name}
-                                >
-                                    <span className="color-circle-icon">
-                                        {isActive ? <Minus size={10} strokeWidth={2.5} /> : <Plus size={10} strokeWidth={2.5} />}
-                                    </span>
-                                </button>
-                            )
-                        })}
+                        {/* 红黄绿颜色圆圈 */}
+                        <div className="color-circles">
+                            {COLORS.filter(c => c.key !== 'none').map(c => {
+                                const isActive = getGalleryCurrentColor() === c.key
+                                return (
+                                    <button
+                                        key={c.key}
+                                        className={`color-circle ${isActive ? 'active' : ''}`}
+                                        style={{ background: c.hex }}
+                                        onClick={() => handleGalleryColor(c.key)}
+                                        title={c.name}
+                                    >
+                                        <span className="color-circle-icon">
+                                            {isActive ? <Minus size={10} strokeWidth={2.5} /> : <Plus size={10} strokeWidth={2.5} />}
+                                        </span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <div className="menu-divider" />
+                        <button className="danger" onClick={() => handleGalleryAction('delete')}>删除</button>
                     </div>
-
-                    <div className="menu-divider" />
-                    <button className="danger" onClick={() => handleGalleryAction('delete')}>删除</button>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     )
 }
 

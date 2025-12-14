@@ -479,15 +479,20 @@ select:focus {
   overflow: hidden;
 }
 
-/* 画廊头部 - 与折叠按钮对齐，避免重合 */
+/* 画廊头部 - 与标题栏同高度 */
 .gallery-header {
-  height: calc(var(--titlebar-height) + 44px);
-  padding: 0 48px;
-  padding-top: var(--titlebar-height);
+  height: var(--titlebar-height);
+  padding: 0 24px;
+  /* 与网格 padding 对齐 */
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* 专注模式下给布局按钮留出空间 */
+.gallery-header.focus-mode {
+  padding-right: 56px;
 }
 
 .gallery-title {
@@ -512,6 +517,7 @@ select:focus {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
+  -webkit-app-region: no-drag;
   transition: all var(--transition-fast);
 }
 
@@ -556,6 +562,14 @@ select:focus {
 
 .dropdown-menu button:hover {
   background: var(--bg-hover);
+}
+
+/* 菜单对号占位 */
+.menu-check {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  margin-right: 4px;
 }
 
 /* 颜色筛选下拉 */
@@ -620,7 +634,7 @@ select:focus {
   padding: 16px 24px;
   overflow-y: auto;
   align-content: start;
-  padding-top: calc(var(--titlebar-height) - 24px);
+  padding-top: 8px;
 }
 
 /* 正方形卡片 */
@@ -638,6 +652,32 @@ select:focus {
 .file-card-square:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 新建文章卡片样式 */
+.file-card-square.create-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--border-color);
+  background: transparent;
+  color: var(--text-tertiary);
+}
+
+.file-card-square.create-card:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+}
+
+.create-card-icon {
+  margin-bottom: 8px;
+}
+
+.create-card-text {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .file-card-square .card-title {
