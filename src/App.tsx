@@ -390,12 +390,8 @@ const AppContent: React.FC = () => {
                         ) : (
                             /* 画廊视图 */
                             <div className="gallery-view">
-                                {/* 画廊头部 */}
+                                {/* 画廊头部 - 只有操作按钮 */}
                                 <div className="gallery-header">
-                                    <h2 className="gallery-title">
-                                        {activeFolder ? activeFolder.name : '所有文件'}
-                                    </h2>
-
                                     <div className="gallery-actions">
                                         {/* 排序 */}
                                         <div className="dropdown">
@@ -451,8 +447,8 @@ const AppContent: React.FC = () => {
                                             )}
                                         </div>
 
-                                        {/* 新建按钮 */}
-                                        <button className="action-btn primary" onClick={handleQuickCreate}>
+                                        {/* 新建按钮 - 灰色 */}
+                                        <button className="action-btn" onClick={handleQuickCreate}>
                                             <Plus size={18} strokeWidth={1.5} />
                                         </button>
                                     </div>
