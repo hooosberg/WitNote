@@ -1,19 +1,19 @@
 /**
- * ZenNote - Phase 4 Final Polish
- * 统一毛玻璃背景 + 交互优化
+ * ZenNote - 简化样式
+ * 确保可见性优先
  */
 
 /* ============ CSS 变量 ============ */
 :root {
-  /* 布局 */
+  --titlebar-height: 52px;
   --sidebar-width: 240px;
   --chat-width: 320px;
-  --titlebar-height: 52px;
   --item-height: 28px;
 
-  /* 统一毛玻璃背景 */
-  --app-bg: rgba(255, 255, 255, 0.72);
-  --app-blur: blur(24px);
+  /* 背景 - 高不透明度确保可见 */
+  --bg-sidebar: #f6f6f8;
+  --bg-main: #ffffff;
+  --bg-chat: #fafafc;
 
   /* 颜色 */
   --bg-hover: rgba(0, 0, 0, 0.04);
@@ -22,34 +22,21 @@
   --text-primary: #1d1d1f;
   --text-secondary: #6e6e73;
   --text-tertiary: #aeaeb2;
-  --text-placeholder: rgba(174, 174, 178, 0.3);
+  --text-muted: #d1d1d6;
 
-  --border-color: rgba(0, 0, 0, 0.06);
+  --border-color: rgba(0, 0, 0, 0.08);
 
   --accent-color: #007aff;
   --success-color: #30d158;
   --warning-color: #ff9f0a;
   --error-color: #ff453a;
 
-  /* 动画 */
   --transition-fast: 0.1s ease;
   --transition-normal: 0.2s ease;
 
-  /* 圆角 */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
-}
-
-/* 深色主题预留 */
-[data-theme="dark"] {
-  --app-bg: rgba(30, 30, 32, 0.85);
-  --text-primary: #f5f5f7;
-  --text-secondary: #a1a1a6;
-  --text-tertiary: #6e6e73;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --bg-hover: rgba(255, 255, 255, 0.06);
-  --bg-active: rgba(0, 122, 255, 0.2);
 }
 
 /* ============ 基础重置 ============ */
@@ -69,7 +56,7 @@ body,
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   font-size: 13px;
   color: var(--text-primary);
-  background: transparent;
+  background: var(--bg-main);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -85,13 +72,11 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  box-shadow: none;
 }
 
 /* 隐藏滚动条 */
 ::-webkit-scrollbar {
   width: 6px;
-  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -99,21 +84,15 @@ select:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
-}
-
-*:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ============ 应用容器 ============ */
 .app-container {
   display: flex;
   height: 100%;
-  background: var(--app-bg);
-  backdrop-filter: var(--app-blur);
-  -webkit-backdrop-filter: var(--app-blur);
+  background: var(--bg-main);
 }
 
 .app-loading {
@@ -123,13 +102,11 @@ select:focus {
   justify-content: center;
   height: 100%;
   gap: 16px;
-  background: var(--app-bg);
-  backdrop-filter: var(--app-blur);
+  background: var(--bg-main);
 }
 
 .app-loading p {
   color: var(--text-tertiary);
-  font-size: 13px;
 }
 
 .loading-spinner {
@@ -149,7 +126,6 @@ select:focus {
   }
 }
 
-/* ============ 标题栏 ============ */
 .titlebar-drag-region {
   position: fixed;
   top: 0;
@@ -161,66 +137,13 @@ select:focus {
   z-index: 1000;
 }
 
-/* ============ Onboarding ============ */
-.onboarding-container {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--app-bg);
-  backdrop-filter: var(--app-blur);
-}
-
-.onboarding-content {
-  text-align: center;
-  padding: 60px;
-}
-
-.onboarding-logo {
-  font-size: 72px;
-  margin-bottom: 24px;
-  animation: float 3s ease-in-out infinite;
-}
-
-.onboarding-title {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  margin-bottom: 12px;
-}
-
-.onboarding-desc {
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 32px;
-}
-
-.onboarding-button {
-  padding: 14px 32px;
-  font-size: 15px;
-  font-weight: 600;
-  color: white;
-  background: var(--accent-color);
-  border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-.onboarding-button:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-/* ============ 左侧边栏 ============ */
+/* ============ 侧边栏 ============ */
 .sidebar {
   width: var(--sidebar-width);
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
 }
 
@@ -266,7 +189,7 @@ select:focus {
 }
 
 .sidebar-empty {
-  padding: 32px 12px;
+  padding: 32px;
   text-align: center;
   color: var(--text-tertiary);
   font-size: 12px;
@@ -275,7 +198,6 @@ select:focus {
 /* ============ Finder 文件树 ============ */
 .finder-tree {
   user-select: none;
-  position: relative;
 }
 
 .finder-tree-node {
@@ -352,10 +274,9 @@ select:focus {
 
 /* 右键菜单 */
 .finder-context-menu {
-  min-width: 120px;
+  min-width: 140px;
   padding: 4px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
+  background: white;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
@@ -366,7 +287,9 @@ select:focus {
   width: 100%;
   padding: 6px 10px;
   font-size: 12px;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   color: var(--text-primary);
   background: transparent;
   border: none;
@@ -383,15 +306,143 @@ select:focus {
   color: var(--error-color);
 }
 
-/* ============ 中间编辑区 ============ */
+.menu-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+.menu-arrow {
+  color: var(--text-tertiary);
+}
+
+/* 颜色选择器 */
+.color-picker {
+  padding: 4px 0;
+}
+
+.color-picker .color-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============ 主内容区 ============ */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background: var(--bg-main);
   overflow: hidden;
 }
 
+/* ============ Gallery 视图 ============ */
+.gallery-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 32px;
+  padding-top: var(--titlebar-height);
+  overflow: hidden;
+}
+
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.gallery-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.gallery-add-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.gallery-add-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.gallery-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.gallery-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 200px;
+  color: var(--text-tertiary);
+}
+
+.gallery-empty button {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  background: var(--bg-hover);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.gallery-empty button:hover {
+  color: var(--text-primary);
+}
+
+/* 简化文件卡片 */
+.file-card-simple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.file-card-simple:hover {
+  background: var(--bg-hover);
+}
+
+.file-card-simple .card-icon {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.file-card-simple .card-name {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+/* ============ 编辑器 ============ */
 .medium-editor {
   flex: 1;
   display: flex;
@@ -415,20 +466,18 @@ select:focus {
   flex: 1;
 }
 
-/* 格式徽标 */
 .editor-format-badge {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
 }
 
 .format-icon {
   color: var(--text-tertiary);
   display: flex;
-  align-items: center;
 }
 
 .format-toggle {
@@ -439,14 +488,10 @@ select:focus {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
 }
 
 .format-toggle:hover {
   color: var(--text-secondary);
-  background: var(--bg-hover);
 }
 
 .editor-title {
@@ -457,312 +502,54 @@ select:focus {
   color: var(--text-primary);
   background: transparent;
   border: none;
-  outline: none;
   margin-bottom: 24px;
   width: 100%;
 }
 
 .editor-title::placeholder {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
 .editor-body {
   flex: 1;
   font-size: 17px;
-  font-weight: 400;
   line-height: 1.8;
   color: var(--text-primary);
   background: transparent;
   border: none;
-  outline: none;
   resize: none;
   min-height: 400px;
 }
 
 .editor-body::placeholder {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
-.editor-empty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-top: var(--titlebar-height);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px;
-}
-
-.empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-state-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.empty-state-desc {
-  font-size: 14px;
-  color: var(--text-tertiary);
-}
-
-/* ============ 文件夹视图 ============ */
-.folder-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 32px;
-  padding-top: var(--titlebar-height);
-  overflow: hidden;
-}
-
-.folder-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.folder-title {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.new-note-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  color: white;
-  background: var(--accent-color);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.new-note-btn:hover {
-  filter: brightness(1.1);
-}
-
-.folder-content {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.folder-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-tertiary);
-}
-
-.folder-empty .empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.4;
-}
-
-.folder-empty h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: var(--text-secondary);
-}
-
-.file-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px;
-}
-
-.file-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 14px 10px;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.file-card:hover {
-  background: var(--bg-hover);
-}
-
-.file-card-icon {
-  font-size: 32px;
-  margin-bottom: 6px;
-  opacity: 0.7;
-}
-
-.file-card-name {
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
-  color: var(--text-secondary);
-  word-break: break-all;
-  line-height: 1.3;
-}
-
-/* ============ 右侧 AI 面板 ============ */
-.chat-panel {
+/* ============ ChatPanel ============ */
+.chat-panel-v2 {
   width: var(--chat-width);
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background: var(--bg-chat);
   border-left: 1px solid var(--border-color);
 }
 
-/* AI 状态栏 */
-.ai-status-bar {
-  padding: 12px 16px;
-  padding-top: var(--titlebar-height);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.ai-icon {
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-}
-
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.status-light {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.status-light.status-ollama {
-  background: var(--success-color);
-  box-shadow: 0 0 6px var(--success-color);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.status-light.status-webllm {
-  background: var(--accent-color);
-}
-
-.status-light.status-loading {
-  background: var(--warning-color);
-  animation: spin 1s linear infinite;
-}
-
-.status-light.status-error {
-  background: var(--error-color);
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.status-text {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.status-divider {
-  color: var(--text-tertiary);
-}
-
-.model-select select {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.model-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-/* 上下文指示器 */
-.context-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.context-filename {
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-/* 加载进度 */
-.loading-progress {
-  padding: 10px 16px;
-}
-
-.progress-bar {
-  height: 2px;
-  background: var(--bg-hover);
-  border-radius: 1px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--accent-color);
-}
-
-.progress-text {
-  margin-top: 6px;
-  font-size: 10px;
-  color: var(--text-tertiary);
-}
-
-/* 聊天消息 */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  padding-top: var(--titlebar-height);
+}
+
+.chat-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-tertiary);
 }
 
 .chat-bubble {
@@ -778,7 +565,7 @@ select:focus {
   justify-content: flex-start;
 }
 
-.chat-bubble-content {
+.bubble-content {
   max-width: 85%;
   padding: 10px 14px;
   font-size: 13px;
@@ -786,14 +573,14 @@ select:focus {
   border-radius: 16px;
 }
 
-.chat-bubble.user .chat-bubble-content {
+.chat-bubble.user .bubble-content {
   background: var(--accent-color);
   color: white;
   border-bottom-right-radius: 4px;
 }
 
-.chat-bubble.assistant .chat-bubble-content {
-  background: rgba(0, 0, 0, 0.04);
+.chat-bubble.assistant .bubble-content {
+  background: rgba(0, 0, 0, 0.05);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
 }
@@ -819,9 +606,80 @@ select:focus {
   }
 }
 
-/* 聊天输入 */
-.chat-input-container {
-  padding: 12px;
+/* Chat Footer */
+.chat-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+.context-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.context-filename {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.chat-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 11px;
+}
+
+.status-light {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-light.status-ollama {
+  background: var(--success-color);
+  box-shadow: 0 0 6px var(--success-color);
+}
+
+.status-light.status-webllm {
+  background: var(--accent-color);
+}
+
+.status-light.status-loading {
+  background: var(--warning-color);
+}
+
+.status-light.status-error {
+  background: var(--error-color);
+}
+
+.status-label {
+  color: var(--text-secondary);
+}
+
+.model-select-inline {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.model-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.retry-btn {
+  font-size: 11px;
+  color: var(--accent-color);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .chat-input-wrapper {
@@ -829,7 +687,8 @@ select:focus {
   align-items: flex-end;
   gap: 8px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.6);
+  margin: 12px;
+  background: white;
   border: 1px solid var(--border-color);
   border-radius: 20px;
 }
@@ -850,10 +709,10 @@ select:focus {
 }
 
 .chat-input::placeholder {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
-.send-button {
+.send-btn {
   width: 28px;
   height: 28px;
   display: flex;
@@ -867,55 +726,64 @@ select:focus {
   transition: all var(--transition-fast);
 }
 
-.send-button:hover:not(:disabled) {
+.send-btn:hover:not(:disabled) {
   filter: brightness(1.1);
 }
 
-.send-button:disabled {
+.send-btn:disabled {
   opacity: 0.4;
 }
 
-.send-button svg {
-  width: 14px;
-  height: 14px;
-}
-
-.stop-button {
+.send-btn.stop {
   background: var(--error-color);
 }
 
-/* ============ Toast ============ */
-.toast-container {
+/* ============ Onboarding ============ */
+.onboarding-container {
   position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10000;
-}
-
-.toast {
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  animation: toastIn 0.2s ease;
+  justify-content: center;
+  background: white;
 }
 
-@keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
+.onboarding-content {
+  text-align: center;
+  padding: 60px;
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.onboarding-logo {
+  font-size: 72px;
+  margin-bottom: 24px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.onboarding-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.onboarding-desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.onboarding-button {
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background: var(--accent-color);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
+.onboarding-button:hover {
+  filter: brightness(1.1);
 }
 
 /* ============ 对话框 ============ */
@@ -933,8 +801,7 @@ select:focus {
 .dialog-content {
   width: 300px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
+  background: white;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
@@ -984,18 +851,36 @@ select:focus {
   color: white;
 }
 
-.dialog-btn.confirm:disabled {
-  opacity: 0.5;
+/* ============ Toast ============ */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
 }
 
-/* ============ 响应式 ============ */
-@media (max-width: 1000px) {
-  :root {
-    --sidebar-width: 200px;
-    --chat-width: 280px;
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  animation: toastIn 0.2s ease;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 
-  .medium-editor {
-    padding: 20px 32px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

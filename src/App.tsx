@@ -1,10 +1,10 @@
 /**
  * 主应用组件
- * Phase 4: 交互优化 - 自动创建 Untitled、移除侧边栏新建文件
+ * 简化版本 - 移除 react-resizable-panels
  */
 
 import React, { useEffect, useState } from 'react'
-import { FolderPlus, FilePlus } from 'lucide-react'
+import { FolderPlus, Plus, FileText, FileCode, Folder } from 'lucide-react'
 import Onboarding from './components/Onboarding'
 import FileTree from './components/FileTree'
 import Editor from './components/Editor'
@@ -19,7 +19,7 @@ import './styles/index.css'
 const generateUntitledName = (): string => {
     const now = new Date()
     const timestamp = `${now.getMonth() + 1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`
-    return `未命名_${timestamp}.md`
+    return `Untitled_${timestamp}.md`
 }
 
 const AppContent: React.FC = () => {
@@ -27,7 +27,6 @@ const AppContent: React.FC = () => {
     const llm = useLLM()
     const { showToast } = useToast()
 
-    // 对话框状态
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false)
     const [showRenameDialog, setShowRenameDialog] = useState(false)
     const [renameTarget, setRenameTarget] = useState<FileNode | null>(null)
@@ -41,7 +40,6 @@ const AppContent: React.FC = () => {
         fileContent,
         selectVault,
         openFile,
-        selectFolder,
         setFileContent,
         toggleFileFormat,
         createNewFile,
@@ -50,20 +48,19 @@ const AppContent: React.FC = () => {
         deleteFile,
     } = fileSystem
 
-    // 监听引擎切换
+    // 引擎切换
     useEffect(() => {
         llm.onEngineChange((event) => {
             if (event.reason === 'heartbeat') {
-                if (event.to === 'ollama') {
-                    showToast('success', '🟢 已切换到本地模型')
-                } else {
-                    showToast('warning', '🔵 已切换到内置模型')
-                }
+                showToast(
+                    event.to === 'ollama' ? 'success' : 'info',
+                    event.to === 'ollama' ? '🟢 Ollama 已连接' : '🔵 使用内置模型'
+                )
             }
         })
     }, [llm, showToast])
 
-    // 文件/文件夹切换时更新上下文
+    // 上下文同步
     useEffect(() => {
         if (activeFile) {
             llm.loadChatHistory(activeFile.path)
@@ -73,11 +70,9 @@ const AppContent: React.FC = () => {
             llm.setActiveFolderContext(activeFolder.name, files)
         } else {
             llm.setActiveFileContext(null, null, null)
-            llm.clearMessages()
         }
     }, [activeFile?.path, activeFolder?.path])
 
-    // 文件内容变化
     useEffect(() => {
         if (activeFile) {
             llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
@@ -94,26 +89,21 @@ const AppContent: React.FC = () => {
         )
     }
 
-    // 未选择 Vault
     if (!vaultPath) {
         return <Onboarding onSelectVault={selectVault} />
     }
 
-    // 创建文件夹
+    // Handlers
     const handleCreateFolder = async (name: string) => {
         await createNewFolder(name)
         setShowNewFolderDialog(false)
-        showToast('success', `📁 已创建: ${name}`)
     }
 
-    // 快速创建文件（无 Modal）
-    const handleQuickCreateFile = async () => {
+    const handleQuickCreate = async () => {
         const fileName = generateUntitledName()
         await createNewFile(fileName)
-        showToast('success', '📝 新日记已创建')
     }
 
-    // 重命名
     const handleRename = async (newName: string) => {
         if (renameTarget) {
             await renameItem(renameTarget.path, newName)
@@ -122,22 +112,18 @@ const AppContent: React.FC = () => {
         }
     }
 
-    // 删除
     const handleDelete = async (node: FileNode) => {
-        if (confirm(`确定删除 "${node.name}"?`)) {
+        if (confirm(`删除 "${node.name}"?`)) {
             await deleteFile(node.path)
-            showToast('info', '🗑️ 已删除')
         }
     }
 
-    // 编辑器内改标题
     const handleTitleChange = async (newFileName: string) => {
         if (activeFile && newFileName !== activeFile.name) {
             await renameItem(activeFile.path, newFileName)
         }
     }
 
-    // 当前文件夹的文件
     const getCurrentFolderFiles = (): FileNode[] => {
         if (activeFolder) {
             return activeFolder.children?.filter(c => !c.isDirectory) || []
@@ -146,14 +132,14 @@ const AppContent: React.FC = () => {
     }
 
     return (
-        <div className="app-container" data-theme="light">
+        <div className="app-container">
             <div className="titlebar-drag-region" />
 
             {/* 对话框 */}
             <InputDialog
                 isOpen={showNewFolderDialog}
                 title="新建文件夹"
-                placeholder="文件夹名称"
+                placeholder="名称"
                 onConfirm={handleCreateFolder}
                 onCancel={() => setShowNewFolderDialog(false)}
             />
@@ -166,14 +152,13 @@ const AppContent: React.FC = () => {
                 onCancel={() => { setShowRenameDialog(false); setRenameTarget(null) }}
             />
 
-            {/* 左侧边栏 - 只保留新建文件夹 */}
+            {/* 左侧边栏 */}
             <div className="sidebar">
                 <div className="sidebar-header">
                     <span className="sidebar-title">文件</span>
                     <button
                         className="sidebar-btn"
                         onClick={() => setShowNewFolderDialog(true)}
-                        title="新建文件夹"
                     >
                         <FolderPlus size={16} strokeWidth={1.5} />
                     </button>
@@ -181,9 +166,7 @@ const AppContent: React.FC = () => {
 
                 <div className="sidebar-content">
                     {fileTree.length === 0 ? (
-                        <div className="sidebar-empty">
-                            <p>文件夹为空</p>
-                        </div>
+                        <div className="sidebar-empty">空文件夹</div>
                     ) : (
                         <FileTree
                             nodes={fileTree}
@@ -210,59 +193,46 @@ const AppContent: React.FC = () => {
                         onTitleChange={handleTitleChange}
                         onFormatToggle={toggleFileFormat}
                     />
-                ) : activeFolder ? (
-                    <div className="folder-view">
-                        <div className="folder-header">
-                            <h2 className="folder-title">📁 {activeFolder.name}</h2>
-                            <button
-                                className="new-note-btn"
-                                onClick={handleQuickCreateFile}
-                            >
-                                <FilePlus size={16} strokeWidth={1.5} />
-                                新建日记
+                ) : (
+                    /* Gallery 视图 */
+                    <div className="gallery-view">
+                        <div className="gallery-header">
+                            <h2 className="gallery-title">
+                                {activeFolder ? `📁 ${activeFolder.name}` : '所有文件'}
+                            </h2>
+                            <button className="gallery-add-btn" onClick={handleQuickCreate}>
+                                <Plus size={18} strokeWidth={1.5} />
                             </button>
                         </div>
-                        <div className="folder-content">
+
+                        <div className="gallery-grid">
                             {getCurrentFolderFiles().length === 0 ? (
-                                <div className="folder-empty">
-                                    <div className="empty-icon">📝</div>
-                                    <h3>空文件夹</h3>
-                                    <p>点击上方按钮创建日记</p>
+                                <div className="gallery-empty">
+                                    <p>空</p>
+                                    <button onClick={handleQuickCreate}>
+                                        <Plus size={20} strokeWidth={1.5} />
+                                    </button>
                                 </div>
                             ) : (
-                                <div className="file-grid">
-                                    {getCurrentFolderFiles().map(file => (
-                                        <div
-                                            key={file.path}
-                                            className="file-card"
-                                            onClick={() => openFile(file)}
-                                        >
-                                            <div className="file-card-icon">
-                                                {file.extension === 'md' ? '📄' : '📃'}
-                                            </div>
-                                            <div className="file-card-name">{file.name}</div>
+                                getCurrentFolderFiles().map(file => (
+                                    <div
+                                        key={file.path}
+                                        className="file-card-simple"
+                                        onClick={() => openFile(file)}
+                                    >
+                                        <div className="card-icon">
+                                            {file.extension === 'md' ? (
+                                                <FileCode size={28} strokeWidth={1.2} />
+                                            ) : (
+                                                <FileText size={28} strokeWidth={1.2} />
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="card-name">
+                                            {file.name.replace(/\.[^/.]+$/, '')}
+                                        </div>
+                                    </div>
+                                ))
                             )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="editor-empty">
-                        <div className="empty-state">
-                            <div className="empty-state-icon">📝</div>
-                            <div className="empty-state-title">选择文件开始</div>
-                            <div className="empty-state-desc">
-                                从左侧选择文件或文件夹
-                            </div>
-                            <button
-                                className="new-note-btn"
-                                style={{ marginTop: '20px' }}
-                                onClick={handleQuickCreateFile}
-                            >
-                                <FilePlus size={16} strokeWidth={1.5} />
-                                新建日记
-                            </button>
                         </div>
                     </div>
                 )}
@@ -274,12 +244,10 @@ const AppContent: React.FC = () => {
     )
 }
 
-export const App: React.FC = () => {
-    return (
-        <ToastProvider>
-            <AppContent />
-        </ToastProvider>
-    )
-}
+export const App: React.FC = () => (
+    <ToastProvider>
+        <AppContent />
+    </ToastProvider>
+)
 
 export default App

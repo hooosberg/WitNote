@@ -1,22 +1,22 @@
 /**
- * 聊天面板组件
- * iMessage 风格的 AI 对话界面 + 极简状态设计
+ * 聊天面板 - 底部重心布局
+ * 状态栏移到输入框上方，顶部留空
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage } from '../services/types';
-import StatusIndicator from './StatusIndicator';
-import ContextIndicator from './ContextIndicator';
-import { UseLLMReturn } from '../hooks/useLLM';
+import React, { useState, useRef, useEffect } from 'react'
+import { Send, Square, Sparkles } from 'lucide-react'
+import { ChatMessage } from '../services/types'
+import ContextIndicator from './ContextIndicator'
+import { UseLLMReturn } from '../hooks/useLLM'
 
 interface ChatPanelProps {
-    llm: UseLLMReturn;
+    llm: UseLLMReturn
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
-    const [inputValue, setInputValue] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const [inputValue, setInputValue] = useState('')
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const inputRef = useRef<HTMLTextAreaElement>(null)
 
     const {
         providerType,
@@ -35,123 +35,52 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
         sendMessage,
         abortGeneration,
         retryDetection
-    } = llm;
+    } = llm
 
-    // 自动滚动到底部
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages])
 
-    // 处理发送
     const handleSend = async () => {
-        if (!inputValue.trim() || isGenerating || status !== 'ready') return;
+        if (!inputValue.trim() || isGenerating || status !== 'ready') return
+        const message = inputValue
+        setInputValue('')
+        await sendMessage(message)
+    }
 
-        const message = inputValue;
-        setInputValue('');
-        await sendMessage(message);
-    };
-
-    // 处理键盘事件
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
+            e.preventDefault()
+            handleSend()
         }
-    };
+    }
 
-    // 自动调整输入框高度
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInputValue(e.target.value);
+        setInputValue(e.target.value)
+        const textarea = e.target
+        textarea.style.height = 'auto'
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`
+    }
 
-        const textarea = e.target;
-        textarea.style.height = 'auto';
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
-    };
+    const formatModelName = (name: string) => {
+        const base = name.split(':')[0]
+        return base.charAt(0).toUpperCase() + base.slice(1)
+    }
 
-    // 获取空状态提示文字
-    const getEmptyStateText = () => {
-        if (status === 'detecting' || status === 'loading') return '正在准备 AI 引擎...';
-        if (status === 'error') return '请点击重试';
-        if (contextType === 'file' && activeFileName) {
-            return `正在阅读 "${activeFileName}"`;
-        }
-        if (contextType === 'folder' && activeFolderName) {
-            return `浏览文件夹 "${activeFolderName}"`;
-        }
-        return '选择文件开始对话';
-    };
+    const getStatusClass = () => {
+        if (status === 'loading' || status === 'detecting') return 'status-loading'
+        if (status === 'error') return 'status-error'
+        return providerType === 'ollama' ? 'status-ollama' : 'status-webllm'
+    }
 
     return (
-        <div className="chat-panel">
-            {/* 状态指示器 */}
-            <StatusIndicator
-                providerType={providerType}
-                status={status}
-                modelName={modelName}
-                ollamaModels={ollamaModels}
-                selectedModel={selectedOllamaModel}
-                onModelChange={setSelectedOllamaModel}
-                loadProgress={loadProgress}
-            />
-
-            {/* 上下文指示器 */}
-            <ContextIndicator
-                fileName={activeFileName}
-                folderName={activeFolderName}
-                contextType={contextType}
-            />
-
-            {/* 加载进度条 */}
-            {status === 'loading' && loadProgress && (
-                <div className="loading-progress">
-                    <div className="progress-bar">
-                        <div
-                            className="progress-fill"
-                            style={{ width: `${loadProgress.progress}%` }}
-                        />
-                    </div>
-                    <div className="progress-text">
-                        {loadProgress.text}
-                    </div>
-                </div>
-            )}
-
-            {/* 错误状态 */}
-            {status === 'error' && (
-                <div className="error-state" style={{
-                    padding: '12px 16px',
-                    background: 'rgba(255, 69, 58, 0.08)',
-                    textAlign: 'center'
-                }}>
-                    <div style={{ color: '#ff453a', marginBottom: '8px', fontSize: '12px' }}>
-                        {errorMessage || '初始化失败'}
-                    </div>
-                    <button
-                        onClick={retryDetection}
-                        style={{
-                            padding: '6px 14px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            background: '#007aff',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                        }}
-                    >
-                        重试
-                    </button>
-                </div>
-            )}
-
-            {/* 消息区域 */}
+        <div className="chat-panel-v2">
+            {/* 消息区域（占据大部分空间） */}
             <div className="chat-messages">
                 {messages.length === 0 ? (
-                    <div className="empty-state">
-                        <div className="empty-state-icon">🧘</div>
-                        <div className="empty-state-title">禅意助手</div>
-                        <div className="empty-state-desc">
-                            {getEmptyStateText()}
-                        </div>
+                    <div className="chat-empty">
+                        <Sparkles size={32} strokeWidth={1.2} />
+                        <p>AI 助手</p>
                     </div>
                 ) : (
                     messages.map((msg) => (
@@ -161,8 +90,57 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* 输入区域 */}
-            <div className="chat-input-container">
+            {/* 底部区域 */}
+            <div className="chat-footer">
+                {/* 上下文指示 */}
+                {contextType && (
+                    <ContextIndicator
+                        fileName={activeFileName}
+                        folderName={activeFolderName}
+                        contextType={contextType}
+                    />
+                )}
+
+                {/* 状态栏 (在输入框上方) */}
+                <div className="chat-status-bar">
+                    <span className={`status-light ${getStatusClass()}`} />
+
+                    {status === 'ready' ? (
+                        <>
+                            <span className="status-label">
+                                {providerType === 'ollama' ? 'Ollama' : 'Built-in'}
+                            </span>
+
+                            {providerType === 'ollama' && ollamaModels.length > 1 ? (
+                                <select
+                                    className="model-select-inline"
+                                    value={selectedOllamaModel}
+                                    onChange={(e) => setSelectedOllamaModel(e.target.value)}
+                                >
+                                    {ollamaModels.map((model) => (
+                                        <option key={model.name} value={model.name}>
+                                            {formatModelName(model.name)}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <span className="model-label">{formatModelName(modelName)}</span>
+                            )}
+                        </>
+                    ) : status === 'loading' ? (
+                        <span className="status-label">
+                            Loading {loadProgress ? `${loadProgress.progress}%` : '...'}
+                        </span>
+                    ) : status === 'error' ? (
+                        <button className="retry-btn" onClick={retryDetection}>
+                            重试
+                        </button>
+                    ) : (
+                        <span className="status-label">检测中...</span>
+                    )}
+                </div>
+
+                {/* 输入框 */}
                 <div className="chat-input-wrapper">
                     <textarea
                         ref={inputRef}
@@ -176,47 +154,33 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                     />
 
                     {isGenerating ? (
-                        <button
-                            className="send-button stop-button"
-                            onClick={abortGeneration}
-                            title="停止"
-                        >
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <rect x="6" y="6" width="12" height="12" rx="1" />
-                            </svg>
+                        <button className="send-btn stop" onClick={abortGeneration}>
+                            <Square size={14} fill="currentColor" />
                         </button>
                     ) : (
                         <button
-                            className="send-button"
+                            className="send-btn"
                             onClick={handleSend}
                             disabled={!inputValue.trim() || status !== 'ready'}
                         >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 2L11 13" />
-                                <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                            </svg>
+                            <Send size={14} />
                         </button>
                     )}
                 </div>
             </div>
         </div>
-    );
-};
-
-// 聊天气泡组件
-interface ChatBubbleProps {
-    message: ChatMessage;
+    )
 }
 
-const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
+const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
     return (
         <div className={`chat-bubble ${message.role}`}>
-            <div className="chat-bubble-content">
+            <div className="bubble-content">
                 {message.content}
                 {message.isStreaming && <span className="typing-cursor" />}
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default ChatPanel;
+export default ChatPanel
