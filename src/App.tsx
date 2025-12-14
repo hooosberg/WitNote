@@ -56,20 +56,28 @@ const AppContent: React.FC = () => {
         });
     }, [llm, showToast]);
 
-    // 文件切换时加载对应的聊天记录
+    // 文件切换时加载对应的聊天记录和设置上下文
     useEffect(() => {
         if (activeFile) {
+            // 选中了文件
             llm.loadChatHistory(activeFile.path);
             llm.setActiveFileContext(
                 activeFile.path,
                 activeFile.name,
                 fileContent
             );
+        } else if (activeFolder) {
+            // 选中了文件夹 - 获取文件列表
+            const files = activeFolder.children
+                ?.filter(c => !c.isDirectory)
+                .map(c => c.name) || [];
+            llm.setActiveFolderContext(activeFolder.name, files);
         } else {
+            // 什么都没选中
             llm.setActiveFileContext(null, null, null);
             llm.clearMessages();
         }
-    }, [activeFile?.path]);
+    }, [activeFile?.path, activeFolder?.path]);
 
     // 文件内容变化时更新上下文
     useEffect(() => {
@@ -299,7 +307,7 @@ const AppContent: React.FC = () => {
             </div>
 
             {/* 右侧 AI 聊天面板 */}
-            <ChatPanel llm={llm} activeFileName={activeFile?.name || null} />
+            <ChatPanel llm={llm} />
         </div>
     );
 };

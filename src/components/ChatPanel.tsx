@@ -1,6 +1,6 @@
 /**
  * 聊天面板组件
- * iMessage 风格的 AI 对话界面
+ * iMessage 风格的 AI 对话界面 + 极简状态设计
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -11,10 +11,9 @@ import { UseLLMReturn } from '../hooks/useLLM';
 
 interface ChatPanelProps {
     llm: UseLLMReturn;
-    activeFileName: string | null;
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
     const [inputValue, setInputValue] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -30,6 +29,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
         setSelectedOllamaModel,
         messages,
         isGenerating,
+        contextType,
+        activeFileName,
+        activeFolderName,
         sendMessage,
         abortGeneration,
         retryDetection
@@ -61,10 +63,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInputValue(e.target.value);
 
-        // 自动调整高度
         const textarea = e.target;
         textarea.style.height = 'auto';
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
+    };
+
+    // 获取空状态提示文字
+    const getEmptyStateText = () => {
+        if (status === 'detecting' || status === 'loading') return '正在准备 AI 引擎...';
+        if (status === 'error') return '请点击重试';
+        if (contextType === 'file' && activeFileName) {
+            return `正在阅读 "${activeFileName}"`;
+        }
+        if (contextType === 'folder' && activeFolderName) {
+            return `浏览文件夹 "${activeFolderName}"`;
+        }
+        return '选择文件开始对话';
     };
 
     return (
@@ -83,7 +97,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
             {/* 上下文指示器 */}
             <ContextIndicator
                 fileName={activeFileName}
-                isActive={!!activeFileName}
+                folderName={activeFolderName}
+                contextType={contextType}
             />
 
             {/* 加载进度条 */}
@@ -104,27 +119,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
             {/* 错误状态 */}
             {status === 'error' && (
                 <div className="error-state" style={{
-                    padding: '16px',
-                    background: 'rgba(255, 59, 48, 0.1)',
-                    borderBottom: '1px solid rgba(255, 59, 48, 0.2)',
+                    padding: '12px 16px',
+                    background: 'rgba(255, 69, 58, 0.08)',
                     textAlign: 'center'
                 }}>
-                    <div style={{ color: '#ff3b30', marginBottom: '8px', fontSize: '13px' }}>
-                        ❌ {errorMessage || 'AI 引擎初始化失败'}
+                    <div style={{ color: '#ff453a', marginBottom: '8px', fontSize: '12px' }}>
+                        {errorMessage || '初始化失败'}
                     </div>
                     <button
                         onClick={retryDetection}
                         style={{
-                            padding: '6px 16px',
+                            padding: '6px 14px',
                             borderRadius: '6px',
                             border: 'none',
                             background: '#007aff',
                             color: 'white',
                             cursor: 'pointer',
-                            fontSize: '13px'
+                            fontSize: '12px'
                         }}
                     >
-                        重新检测
+                        重试
                     </button>
                 </div>
             )}
@@ -136,13 +150,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
                         <div className="empty-state-icon">🧘</div>
                         <div className="empty-state-title">禅意助手</div>
                         <div className="empty-state-desc">
-                            {status === 'ready'
-                                ? activeFileName
-                                    ? `我已阅读 "${activeFileName}"，有什么可以帮您的？`
-                                    : '选择一个文件，我可以帮您分析内容'
-                                : status === 'error'
-                                    ? '请点击上方按钮重试'
-                                    : '正在准备 AI 引擎...'}
+                            {getEmptyStateText()}
                         </div>
                     </div>
                 ) : (
@@ -162,7 +170,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
                         value={inputValue}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder={status === 'ready' ? '输入消息...' : '等待引擎就绪...'}
+                        placeholder={status === 'ready' ? '输入消息...' : '等待就绪...'}
                         disabled={status !== 'ready'}
                         rows={1}
                     />
@@ -171,7 +179,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
                         <button
                             className="send-button stop-button"
                             onClick={abortGeneration}
-                            title="停止生成"
+                            title="停止"
                         >
                             <svg viewBox="0 0 24 24" fill="currentColor">
                                 <rect x="6" y="6" width="12" height="12" rx="1" />
@@ -182,7 +190,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => 
                             className="send-button"
                             onClick={handleSend}
                             disabled={!inputValue.trim() || status !== 'ready'}
-                            title="发送消息"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M22 2L11 13" />

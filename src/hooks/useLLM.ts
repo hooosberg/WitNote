@@ -49,10 +49,14 @@ export interface UseLLMReturn {
     isGenerating: boolean;
 
     // 上下文相关
+    contextType: 'file' | 'folder' | null;
     activeFilePath: string | null;
     activeFileName: string | null;
     activeFileContent: string | null;
+    activeFolderName: string | null;
+    activeFolderFiles: string[];
     setActiveFileContext: (path: string | null, name: string | null, content: string | null) => void;
+    setActiveFolderContext: (name: string | null, files: string[]) => void;
 
     // 方法
     sendMessage: (content: string) => Promise<void>;
@@ -88,9 +92,12 @@ export function useLLM(): UseLLMReturn {
     const [isGenerating, setIsGenerating] = useState(false);
 
     // 上下文状态
+    const [contextType, setContextType] = useState<'file' | 'folder' | null>(null);
     const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
     const [activeFileName, setActiveFileName] = useState<string | null>(null);
     const [activeFileContent, setActiveFileContent] = useState<string | null>(null);
+    const [activeFolderName, setActiveFolderName] = useState<string | null>(null);
+    const [activeFolderFiles, setActiveFolderFiles] = useState<string[]>([]);
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
@@ -141,9 +148,29 @@ export function useLLM(): UseLLMReturn {
         name: string | null,
         content: string | null
     ) => {
+        setContextType(path ? 'file' : null);
         setActiveFilePath(path);
         setActiveFileName(name);
         setActiveFileContent(content);
+        // 清空文件夹上下文
+        setActiveFolderName(null);
+        setActiveFolderFiles([]);
+    }, []);
+
+    /**
+     * 设置活动文件夹上下文
+     */
+    const setActiveFolderContext = useCallback((
+        name: string | null,
+        files: string[]
+    ) => {
+        setContextType(name ? 'folder' : null);
+        setActiveFolderName(name);
+        setActiveFolderFiles(files);
+        // 清空文件上下文
+        setActiveFilePath(null);
+        setActiveFileName(null);
+        setActiveFileContent(null);
     }, []);
 
     /**
@@ -288,6 +315,7 @@ export function useLLM(): UseLLMReturn {
      * 构建上下文增强的系统提示词
      */
     const buildContextPrompt = useCallback((userInput: string): string => {
+        // 文件上下文
         if (activeFileContent && activeFileName) {
             const truncatedContent = activeFileContent.slice(0, MAX_CONTEXT_LENGTH);
             const isTruncated = activeFileContent.length > MAX_CONTEXT_LENGTH;
@@ -302,8 +330,23 @@ ${truncatedContent}${isTruncated ? '\n... (内容已截断)' : ''}
 
 用户问题: ${userInput}`;
         }
+
+        // 文件夹上下文
+        if (activeFolderName && activeFolderFiles.length > 0) {
+            const fileList = activeFolderFiles.slice(0, 20).map(f => `- ${f}`).join('\n');
+            const hasMore = activeFolderFiles.length > 20;
+
+            return `${SYSTEM_PROMPT}
+
+[上下文: 用户正在浏览文件夹 "${activeFolderName}"]
+该文件夹包含以下文件:
+${fileList}${hasMore ? '\n... (更多文件)' : ''}
+
+用户问题: ${userInput}`;
+        }
+
         return userInput;
-    }, [activeFileContent, activeFileName]);
+    }, [activeFileContent, activeFileName, activeFolderName, activeFolderFiles]);
 
     /**
      * 发送消息
@@ -488,10 +531,14 @@ ${truncatedContent}${isTruncated ? '\n... (内容已截断)' : ''}
         setSelectedOllamaModel: handleSetSelectedOllamaModel,
         messages,
         isGenerating,
+        contextType,
         activeFilePath,
         activeFileName,
         activeFileContent,
+        activeFolderName,
+        activeFolderFiles,
         setActiveFileContext,
+        setActiveFolderContext,
         sendMessage,
         abortGeneration,
         clearMessages,

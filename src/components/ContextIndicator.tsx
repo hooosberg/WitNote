@@ -1,28 +1,34 @@
 /**
  * 上下文指示器组件
- * 显示 AI 正在读取的文件
+ * 极简设计：淡化的胶囊样式
  */
 
 import React from 'react'
 
 interface ContextIndicatorProps {
     fileName: string | null
-    isActive: boolean
+    folderName: string | null
+    contextType: 'file' | 'folder' | null
 }
 
 export const ContextIndicator: React.FC<ContextIndicatorProps> = ({
     fileName,
-    isActive
+    folderName,
+    contextType
 }) => {
-    if (!isActive || !fileName) {
-        return null
-    }
+    if (!contextType) return null
 
     return (
         <div className="context-indicator">
-            <span className="context-icon">👁️</span>
-            <span className="context-label">Reading:</span>
-            <span className="context-filename">{fileName}</span>
+            <span className="context-icon">
+                {contextType === 'file' ? '👁️' : '📂'}
+            </span>
+            <span className="context-label">
+                {contextType === 'file' ? 'Reading:' : 'Focused:'}
+            </span>
+            <span className="context-filename">
+                {contextType === 'file' ? fileName : folderName}
+            </span>
         </div>
     )
 }
