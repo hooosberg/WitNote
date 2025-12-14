@@ -1,20 +1,26 @@
 /**
  * Finder 风格文件树
- * Apple Finder 布局：Chevron + Icon + Name + Count
- * 支持右键菜单和拖放
+ * 修复：右键菜单全局单例 + 点击外部关闭
  */
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
     ChevronRight,
     ChevronDown,
     Folder,
     FolderOpen,
     FileText,
-    FileCode,
-    MoreHorizontal
+    FileCode
 } from 'lucide-react'
 import { FileNode } from '../hooks/useFileSystem'
+
+// 全局右键菜单状态
+interface ContextMenuState {
+    show: boolean
+    x: number
+    y: number
+    node: FileNode | null
+}
 
 interface FileTreeProps {
     nodes: FileNode[]
@@ -22,7 +28,6 @@ interface FileTreeProps {
     onFileSelect: (node: FileNode) => void
     onRename?: (node: FileNode) => void
     onDelete?: (node: FileNode) => void
-    level?: number
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({
@@ -30,9 +35,65 @@ export const FileTree: React.FC<FileTreeProps> = ({
     activeFilePath,
     onFileSelect,
     onRename,
-    onDelete,
-    level = 0
+    onDelete
 }) => {
+    // 全局单例右键菜单
+    const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+        show: false,
+        x: 0,
+        y: 0,
+        node: null
+    })
+
+    // 点击外部关闭菜单
+    useEffect(() => {
+        const handleClickOutside = () => {
+            if (contextMenu.show) {
+                setContextMenu(prev => ({ ...prev, show: false, node: null }))
+            }
+        }
+
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setContextMenu(prev => ({ ...prev, show: false, node: null }))
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        document.addEventListener('keydown', handleEscape)
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+            document.removeEventListener('keydown', handleEscape)
+        }
+    }, [contextMenu.show])
+
+    // 打开右键菜单
+    const openContextMenu = useCallback((e: React.MouseEvent, node: FileNode) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setContextMenu({
+            show: true,
+            x: e.clientX,
+            y: e.clientY,
+            node
+        })
+    }, [])
+
+    // 菜单操作
+    const handleMenuAction = (action: 'rename' | 'delete') => {
+        const node = contextMenu.node
+        setContextMenu({ show: false, x: 0, y: 0, node: null })
+
+        if (node) {
+            if (action === 'rename' && onRename) {
+                onRename(node)
+            } else if (action === 'delete' && onDelete) {
+                onDelete(node)
+            }
+        }
+    }
+
     return (
         <div className="finder-tree">
             {nodes.map((node) => (
@@ -41,11 +102,30 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     node={node}
                     activeFilePath={activeFilePath}
                     onFileSelect={onFileSelect}
-                    onRename={onRename}
-                    onDelete={onDelete}
-                    level={level}
+                    onContextMenu={openContextMenu}
+                    level={0}
                 />
             ))}
+
+            {/* 全局单例右键菜单 */}
+            {contextMenu.show && contextMenu.node && (
+                <div
+                    className="finder-context-menu"
+                    style={{
+                        position: 'fixed',
+                        left: contextMenu.x,
+                        top: contextMenu.y
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                >
+                    <button onClick={() => handleMenuAction('rename')}>
+                        重命名
+                    </button>
+                    <button onClick={() => handleMenuAction('delete')} className="danger">
+                        删除
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
@@ -54,8 +134,7 @@ interface FileTreeItemProps {
     node: FileNode
     activeFilePath: string | null
     onFileSelect: (node: FileNode) => void
-    onRename?: (node: FileNode) => void
-    onDelete?: (node: FileNode) => void
+    onContextMenu: (e: React.MouseEvent, node: FileNode) => void
     level: number
 }
 
@@ -63,19 +142,15 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     node,
     activeFilePath,
     onFileSelect,
-    onRename,
-    onDelete,
+    onContextMenu,
     level
 }) => {
     const [isExpanded, setIsExpanded] = useState(level < 1)
-    const [showMenu, setShowMenu] = useState(false)
-    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
-    const itemRef = useRef<HTMLDivElement>(null)
 
     const isActive = activeFilePath === node.path
     const hasChildren = node.isDirectory && node.children && node.children.length > 0
 
-    // 计算文件夹内文件数量
+    // 计算文件数量
     const getFileCount = (): number => {
         if (!node.isDirectory || !node.children) return 0
         return node.children.filter(c => !c.isDirectory).length
@@ -89,32 +164,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
         onFileSelect(node)
     }
 
-    const handleContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setMenuPosition({ x: e.clientX, y: e.clientY })
-        setShowMenu(true)
-    }
-
-    const handleMenuAction = (action: 'rename' | 'delete') => {
-        setShowMenu(false)
-        if (action === 'rename' && onRename) {
-            onRename(node)
-        } else if (action === 'delete' && onDelete) {
-            onDelete(node)
-        }
-    }
-
-    // 关闭菜单
-    React.useEffect(() => {
-        const handleClickOutside = () => setShowMenu(false)
-        if (showMenu) {
-            document.addEventListener('click', handleClickOutside)
-            return () => document.removeEventListener('click', handleClickOutside)
-        }
-    }, [showMenu])
-
-    // 获取图标
+    // 图标
     const getIcon = () => {
         if (node.isDirectory) {
             return isExpanded ? (
@@ -135,10 +185,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     return (
         <div className="finder-tree-node">
             <div
-                ref={itemRef}
                 className={`finder-tree-item ${isActive ? 'active' : ''}`}
                 onClick={handleClick}
-                onContextMenu={handleContextMenu}
+                onContextMenu={(e) => onContextMenu(e, node)}
                 style={{ paddingLeft: `${12 + level * 16}px` }}
             >
                 {/* Chevron */}
@@ -159,52 +208,26 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 {/* Spacer */}
                 <span className="finder-spacer" />
 
-                {/* Count (仅文件夹) */}
+                {/* Count */}
                 {node.isDirectory && fileCount > 0 && (
                     <span className="finder-count">{fileCount}</span>
                 )}
-
-                {/* More button */}
-                <button
-                    className="finder-more"
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        handleContextMenu(e)
-                    }}
-                >
-                    <MoreHorizontal size={14} strokeWidth={1.5} />
-                </button>
             </div>
-
-            {/* 右键菜单 */}
-            {showMenu && (
-                <div
-                    className="finder-context-menu"
-                    style={{
-                        position: 'fixed',
-                        left: menuPosition.x,
-                        top: menuPosition.y
-                    }}
-                >
-                    <button onClick={() => handleMenuAction('rename')}>
-                        重命名
-                    </button>
-                    <button onClick={() => handleMenuAction('delete')} className="danger">
-                        删除
-                    </button>
-                </div>
-            )}
 
             {/* 子节点 */}
             {node.isDirectory && isExpanded && node.children && (
-                <FileTree
-                    nodes={node.children}
-                    activeFilePath={activeFilePath}
-                    onFileSelect={onFileSelect}
-                    onRename={onRename}
-                    onDelete={onDelete}
-                    level={level + 1}
-                />
+                <div className="finder-tree-children">
+                    {node.children.map((child) => (
+                        <FileTreeItem
+                            key={child.path}
+                            node={child}
+                            activeFilePath={activeFilePath}
+                            onFileSelect={onFileSelect}
+                            onContextMenu={onContextMenu}
+                            level={level + 1}
+                        />
+                    ))}
+                </div>
             )}
         </div>
     )

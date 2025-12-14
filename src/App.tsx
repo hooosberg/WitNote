@@ -1,6 +1,6 @@
 /**
  * 主应用组件
- * 禅意笔记本 - Final Polish: Medium + Finder + shadcn style
+ * Phase 4: 交互优化 - 自动创建 Untitled、移除侧边栏新建文件
  */
 
 import React, { useEffect, useState } from 'react'
@@ -15,7 +15,13 @@ import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import './styles/index.css'
 
-// 主应用内容
+// 生成唯一文件名
+const generateUntitledName = (): string => {
+    const now = new Date()
+    const timestamp = `${now.getMonth() + 1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`
+    return `未命名_${timestamp}.md`
+}
+
 const AppContent: React.FC = () => {
     const fileSystem = useFileSystem()
     const llm = useLLM()
@@ -23,7 +29,6 @@ const AppContent: React.FC = () => {
 
     // 对话框状态
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false)
-    const [showNewFileDialog, setShowNewFileDialog] = useState(false)
     const [showRenameDialog, setShowRenameDialog] = useState(false)
     const [renameTarget, setRenameTarget] = useState<FileNode | null>(null)
 
@@ -72,7 +77,7 @@ const AppContent: React.FC = () => {
         }
     }, [activeFile?.path, activeFolder?.path])
 
-    // 文件内容变化时更新上下文
+    // 文件内容变化
     useEffect(() => {
         if (activeFile) {
             llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
@@ -84,7 +89,7 @@ const AppContent: React.FC = () => {
         return (
             <div className="app-loading">
                 <div className="loading-spinner">🧘</div>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>正在初始化...</p>
+                <p>正在初始化...</p>
             </div>
         )
     }
@@ -94,50 +99,45 @@ const AppContent: React.FC = () => {
         return <Onboarding onSelectVault={selectVault} />
     }
 
-    // 处理创建文件夹
+    // 创建文件夹
     const handleCreateFolder = async (name: string) => {
         await createNewFolder(name)
         setShowNewFolderDialog(false)
         showToast('success', `📁 已创建: ${name}`)
     }
 
-    // 处理创建文件
-    const handleCreateFile = async (name: string) => {
-        let fileName = name
-        if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) {
-            fileName += '.md'
-        }
+    // 快速创建文件（无 Modal）
+    const handleQuickCreateFile = async () => {
+        const fileName = generateUntitledName()
         await createNewFile(fileName)
-        setShowNewFileDialog(false)
-        showToast('success', `📄 已创建: ${fileName}`)
+        showToast('success', '📝 新日记已创建')
     }
 
-    // 处理重命名
+    // 重命名
     const handleRename = async (newName: string) => {
         if (renameTarget) {
             await renameItem(renameTarget.path, newName)
             setShowRenameDialog(false)
             setRenameTarget(null)
-            showToast('success', `✏️ 已重命名`)
         }
     }
 
-    // 处理删除
+    // 删除
     const handleDelete = async (node: FileNode) => {
         if (confirm(`确定删除 "${node.name}"?`)) {
             await deleteFile(node.path)
-            showToast('info', `🗑️ 已删除`)
+            showToast('info', '🗑️ 已删除')
         }
     }
 
-    // 处理标题变更 (编辑器内直接改名)
+    // 编辑器内改标题
     const handleTitleChange = async (newFileName: string) => {
         if (activeFile && newFileName !== activeFile.name) {
             await renameItem(activeFile.path, newFileName)
         }
     }
 
-    // 获取当前文件夹的文件
+    // 当前文件夹的文件
     const getCurrentFolderFiles = (): FileNode[] => {
         if (activeFolder) {
             return activeFolder.children?.filter(c => !c.isDirectory) || []
@@ -146,7 +146,7 @@ const AppContent: React.FC = () => {
     }
 
     return (
-        <div className="app-container">
+        <div className="app-container" data-theme="light">
             <div className="titlebar-drag-region" />
 
             {/* 对话框 */}
@@ -158,13 +158,6 @@ const AppContent: React.FC = () => {
                 onCancel={() => setShowNewFolderDialog(false)}
             />
             <InputDialog
-                isOpen={showNewFileDialog}
-                title="新建日记"
-                placeholder="文件名 (如: 今日随想)"
-                onConfirm={handleCreateFile}
-                onCancel={() => setShowNewFileDialog(false)}
-            />
-            <InputDialog
                 isOpen={showRenameDialog}
                 title="重命名"
                 placeholder="新名称"
@@ -173,33 +166,23 @@ const AppContent: React.FC = () => {
                 onCancel={() => { setShowRenameDialog(false); setRenameTarget(null) }}
             />
 
-            {/* 左侧边栏 */}
+            {/* 左侧边栏 - 只保留新建文件夹 */}
             <div className="sidebar">
                 <div className="sidebar-header">
                     <span className="sidebar-title">文件</span>
-                    <div className="sidebar-actions">
-                        <button
-                            className="sidebar-btn"
-                            onClick={() => setShowNewFileDialog(true)}
-                            title="新建文件"
-                        >
-                            <FilePlus size={16} strokeWidth={1.5} />
-                        </button>
-                        <button
-                            className="sidebar-btn"
-                            onClick={() => setShowNewFolderDialog(true)}
-                            title="新建文件夹"
-                        >
-                            <FolderPlus size={16} strokeWidth={1.5} />
-                        </button>
-                    </div>
+                    <button
+                        className="sidebar-btn"
+                        onClick={() => setShowNewFolderDialog(true)}
+                        title="新建文件夹"
+                    >
+                        <FolderPlus size={16} strokeWidth={1.5} />
+                    </button>
                 </div>
 
                 <div className="sidebar-content">
                     {fileTree.length === 0 ? (
                         <div className="sidebar-empty">
                             <p>文件夹为空</p>
-                            <p>点击上方按钮创建</p>
                         </div>
                     ) : (
                         <FileTree
@@ -219,7 +202,6 @@ const AppContent: React.FC = () => {
             {/* 中间内容区 */}
             <div className="main-content">
                 {activeFile ? (
-                    /* 编辑器视图 */
                     <Editor
                         content={fileContent}
                         onChange={setFileContent}
@@ -229,13 +211,12 @@ const AppContent: React.FC = () => {
                         onFormatToggle={toggleFileFormat}
                     />
                 ) : activeFolder ? (
-                    /* 文件夹视图 */
                     <div className="folder-view">
                         <div className="folder-header">
                             <h2 className="folder-title">📁 {activeFolder.name}</h2>
                             <button
                                 className="new-note-btn"
-                                onClick={() => setShowNewFileDialog(true)}
+                                onClick={handleQuickCreateFile}
                             >
                                 <FilePlus size={16} strokeWidth={1.5} />
                                 新建日记
@@ -267,14 +248,21 @@ const AppContent: React.FC = () => {
                         </div>
                     </div>
                 ) : (
-                    /* 空状态 */
                     <div className="editor-empty">
                         <div className="empty-state">
                             <div className="empty-state-icon">📝</div>
-                            <div className="empty-state-title">选择或创建文件</div>
+                            <div className="empty-state-title">选择文件开始</div>
                             <div className="empty-state-desc">
-                                从左侧选择文件开始编辑
+                                从左侧选择文件或文件夹
                             </div>
+                            <button
+                                className="new-note-btn"
+                                style={{ marginTop: '20px' }}
+                                onClick={handleQuickCreateFile}
+                            >
+                                <FilePlus size={16} strokeWidth={1.5} />
+                                新建日记
+                            </button>
                         </div>
                     </div>
                 )}
@@ -286,7 +274,6 @@ const AppContent: React.FC = () => {
     )
 }
 
-// 根组件
 export const App: React.FC = () => {
     return (
         <ToastProvider>

@@ -1,6 +1,6 @@
 /**
- * ZenNote - Final Polish CSS
- * Medium.com (Editor) + Apple Finder (Sidebar) + shadcn/ui (Components)
+ * ZenNote - Phase 4 Final Polish
+ * 统一毛玻璃背景 + 交互优化
  */
 
 /* ============ CSS 变量 ============ */
@@ -11,22 +11,18 @@
   --titlebar-height: 52px;
   --item-height: 28px;
 
-  /* 透明度 */
-  --app-opacity: 0.88;
+  /* 统一毛玻璃背景 */
+  --app-bg: rgba(255, 255, 255, 0.72);
+  --app-blur: blur(24px);
 
   /* 颜色 */
-  --bg-sidebar: rgba(246, 246, 248, var(--app-opacity));
-  --bg-content: transparent;
-  --bg-chat: rgba(250, 250, 252, var(--app-opacity));
-
   --bg-hover: rgba(0, 0, 0, 0.04);
-  --bg-active: rgba(0, 122, 255, 0.15);
-  --bg-active-muted: rgba(0, 0, 0, 0.06);
+  --bg-active: rgba(0, 122, 255, 0.12);
 
   --text-primary: #1d1d1f;
   --text-secondary: #6e6e73;
   --text-tertiary: #aeaeb2;
-  --text-placeholder: #d1d1d6;
+  --text-placeholder: rgba(174, 174, 178, 0.3);
 
   --border-color: rgba(0, 0, 0, 0.06);
 
@@ -43,6 +39,17 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
+}
+
+/* 深色主题预留 */
+[data-theme="dark"] {
+  --app-bg: rgba(30, 30, 32, 0.85);
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-tertiary: #6e6e73;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-active: rgba(0, 122, 255, 0.2);
 }
 
 /* ============ 基础重置 ============ */
@@ -66,7 +73,6 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
-/* 全局 input/textarea 重置 */
 input,
 textarea,
 select,
@@ -98,14 +104,16 @@ select:focus {
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ============ 应用容器 ============ */
 .app-container {
   display: flex;
   height: 100%;
-  background: transparent;
+  background: var(--app-bg);
+  backdrop-filter: var(--app-blur);
+  -webkit-backdrop-filter: var(--app-blur);
 }
 
 .app-loading {
@@ -115,6 +123,13 @@ select:focus {
   justify-content: center;
   height: 100%;
   gap: 16px;
+  background: var(--app-bg);
+  backdrop-filter: var(--app-blur);
+}
+
+.app-loading p {
+  color: var(--text-tertiary);
+  font-size: 13px;
 }
 
 .loading-spinner {
@@ -134,7 +149,7 @@ select:focus {
   }
 }
 
-/* ============ 标题栏拖拽区 ============ */
+/* ============ 标题栏 ============ */
 .titlebar-drag-region {
   position: fixed;
   top: 0;
@@ -153,8 +168,8 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 250, 0.98));
-  backdrop-filter: blur(60px);
+  background: var(--app-bg);
+  backdrop-filter: var(--app-blur);
 }
 
 .onboarding-content {
@@ -199,18 +214,18 @@ select:focus {
   transform: translateY(-1px);
 }
 
-/* ============ 左侧边栏 (Finder 风格) ============ */
+/* ============ 左侧边栏 ============ */
 .sidebar {
   width: var(--sidebar-width);
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--bg-sidebar);
+  background: transparent;
   border-right: 1px solid var(--border-color);
 }
 
 .sidebar-header {
-  padding: 12px 12px 8px;
+  padding: 12px;
   padding-top: var(--titlebar-height);
   display: flex;
   align-items: center;
@@ -223,11 +238,6 @@ select:focus {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-tertiary);
-}
-
-.sidebar-actions {
-  display: flex;
-  gap: 4px;
 }
 
 .sidebar-btn {
@@ -256,7 +266,7 @@ select:focus {
 }
 
 .sidebar-empty {
-  padding: 24px 12px;
+  padding: 32px 12px;
   text-align: center;
   color: var(--text-tertiary);
   font-size: 12px;
@@ -265,6 +275,7 @@ select:focus {
 /* ============ Finder 文件树 ============ */
 .finder-tree {
   user-select: none;
+  position: relative;
 }
 
 .finder-tree-node {
@@ -303,7 +314,6 @@ select:focus {
   justify-content: center;
   color: var(--text-tertiary);
   flex-shrink: 0;
-  transition: transform var(--transition-fast);
 }
 
 .finder-chevron.invisible {
@@ -329,55 +339,33 @@ select:focus {
 
 .finder-spacer {
   flex: 1;
-  min-width: 8px;
+  min-width: 4px;
 }
 
 .finder-count {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-tertiary);
-  padding: 1px 6px;
+  padding: 1px 5px;
   background: var(--bg-hover);
-  border-radius: 8px;
-}
-
-.finder-more {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.finder-tree-item:hover .finder-more {
-  opacity: 1;
-}
-
-.finder-more:hover {
-  background: var(--bg-hover);
+  border-radius: 6px;
 }
 
 /* 右键菜单 */
 .finder-context-menu {
-  min-width: 140px;
+  min-width: 120px;
   padding: 4px;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   z-index: 10000;
 }
 
 .finder-context-menu button {
   width: 100%;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 6px 10px;
+  font-size: 12px;
   text-align: left;
   color: var(--text-primary);
   background: transparent;
@@ -395,12 +383,12 @@ select:focus {
   color: var(--error-color);
 }
 
-/* ============ 中间编辑区 (Medium 风格) ============ */
+/* ============ 中间编辑区 ============ */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--bg-content);
+  background: transparent;
   overflow: hidden;
 }
 
@@ -419,23 +407,39 @@ select:focus {
 .editor-top-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: 32px;
 }
 
-.editor-file-icon {
+.editor-spacer {
+  flex: 1;
+}
+
+/* 格式徽标 */
+.editor-format-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.format-icon {
   color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
 }
 
 .format-toggle {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--text-tertiary);
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 2px 4px;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
 }
@@ -479,7 +483,6 @@ select:focus {
   color: var(--text-placeholder);
 }
 
-/* 空状态 */
 .editor-empty {
   flex: 1;
   display: flex;
@@ -496,7 +499,7 @@ select:focus {
 .empty-state-icon {
   font-size: 48px;
   margin-bottom: 16px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .empty-state-title {
@@ -530,7 +533,6 @@ select:focus {
 .folder-title {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
 }
 
 .new-note-btn {
@@ -567,14 +569,21 @@ select:focus {
 }
 
 .folder-empty .empty-icon {
-  font-size: 56px;
+  font-size: 48px;
   margin-bottom: 16px;
-  opacity: 0.5;
+  opacity: 0.4;
+}
+
+.folder-empty h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
 }
 
 .file-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 12px;
 }
 
@@ -582,7 +591,7 @@ select:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 12px;
+  padding: 14px 10px;
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -593,9 +602,9 @@ select:focus {
 }
 
 .file-card-icon {
-  font-size: 36px;
-  margin-bottom: 8px;
-  opacity: 0.8;
+  font-size: 32px;
+  margin-bottom: 6px;
+  opacity: 0.7;
 }
 
 .file-card-name {
@@ -604,6 +613,7 @@ select:focus {
   text-align: center;
   color: var(--text-secondary);
   word-break: break-all;
+  line-height: 1.3;
 }
 
 /* ============ 右侧 AI 面板 ============ */
@@ -612,7 +622,7 @@ select:focus {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--bg-chat);
+  background: transparent;
   border-left: 1px solid var(--border-color);
 }
 
@@ -626,6 +636,12 @@ select:focus {
   border-bottom: 1px solid var(--border-color);
 }
 
+.ai-icon {
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+}
+
 .status-badge {
   display: flex;
   align-items: center;
@@ -633,29 +649,54 @@ select:focus {
 }
 
 .status-light {
-  display: flex;
-  align-items: center;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
 .status-light.status-ollama {
-  color: var(--success-color);
+  background: var(--success-color);
+  box-shadow: 0 0 6px var(--success-color);
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .status-light.status-webllm {
-  color: var(--accent-color);
+  background: var(--accent-color);
 }
 
 .status-light.status-loading {
-  color: var(--warning-color);
+  background: var(--warning-color);
+  animation: spin 1s linear infinite;
 }
 
 .status-light.status-error {
-  color: var(--error-color);
+  background: var(--error-color);
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .status-text {
   font-size: 12px;
-  font-weight: 500;
   color: var(--text-secondary);
 }
 
@@ -670,12 +711,6 @@ select:focus {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-}
-
-.model-select select:hover {
-  background: var(--bg-hover);
 }
 
 .model-name {
@@ -689,10 +724,10 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.02);
+  padding: 6px 16px;
   font-size: 11px;
   color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .context-filename {
@@ -715,7 +750,6 @@ select:focus {
 .progress-fill {
   height: 100%;
   background: var(--accent-color);
-  transition: width var(--transition-fast);
 }
 
 .progress-text {
@@ -750,7 +784,6 @@ select:focus {
   font-size: 13px;
   line-height: 1.5;
   border-radius: 16px;
-  word-wrap: break-word;
 }
 
 .chat-bubble.user .chat-bubble-content {
@@ -760,7 +793,7 @@ select:focus {
 }
 
 .chat-bubble.assistant .chat-bubble-content {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.04);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
 }
@@ -796,10 +829,9 @@ select:focus {
   align-items: flex-end;
   gap: 8px;
   padding: 10px 14px;
-  background: white;
+  background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--border-color);
   border-radius: 20px;
-  transition: border-color var(--transition-fast);
 }
 
 .chat-input-wrapper:focus-within {
@@ -833,7 +865,6 @@ select:focus {
   border-radius: 50%;
   cursor: pointer;
   transition: all var(--transition-fast);
-  flex-shrink: 0;
 }
 
 .send-button:hover:not(:disabled) {
@@ -842,7 +873,6 @@ select:focus {
 
 .send-button:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .send-button svg {
@@ -895,15 +925,16 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(4px);
   z-index: 10001;
 }
 
 .dialog-content {
-  width: 320px;
+  width: 300px;
   padding: 20px;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
@@ -920,6 +951,7 @@ select:focus {
   font-size: 13px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
+  background: transparent;
 }
 
 .dialog-input:focus {

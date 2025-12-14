@@ -1,6 +1,6 @@
 /**
  * Medium 风格编辑器
- * 极致简洁：透明背景、无边框、Typography-centric
+ * 优化：右上角布局（图标+格式徽标）
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -26,9 +26,10 @@ export const Editor: React.FC<EditorProps> = ({
     placeholder = '写下你的想法...'
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const titleRef = useRef<HTMLInputElement>(null)
     const [title, setTitle] = useState('')
 
-    // 从文件名提取标题 (去掉扩展名)
+    // 从文件名提取标题
     useEffect(() => {
         const baseName = fileName.replace(/\.[^/.]+$/, '')
         setTitle(baseName)
@@ -51,48 +52,52 @@ export const Editor: React.FC<EditorProps> = ({
     // 标题失焦时保存
     const handleTitleBlur = () => {
         if (onTitleChange && title.trim()) {
-            const newFileName = `${title.trim()}.${fileExtension}`
+            const ext = fileExtension.startsWith('.') ? fileExtension.slice(1) : fileExtension
+            const newFileName = `${title.trim()}.${ext}`
             if (newFileName !== fileName) {
                 onTitleChange(newFileName)
             }
         }
     }
 
-    // 标题回车时失焦
+    // 标题回车
     const handleTitleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             e.preventDefault()
-                ; (e.target as HTMLInputElement).blur()
+            titleRef.current?.blur()
             textareaRef.current?.focus()
         }
     }
 
-    // 判断是否为 Markdown
     const isMarkdown = fileExtension === 'md' || fileExtension === '.md'
 
     return (
         <div className="medium-editor">
-            {/* 顶部工具栏 */}
+            {/* 右上角：图标 + 格式徽标 */}
             <div className="editor-top-bar">
-                <div className="editor-file-icon">
-                    {isMarkdown ? (
-                        <FileCode size={16} strokeWidth={1.5} />
-                    ) : (
-                        <FileText size={16} strokeWidth={1.5} />
-                    )}
-                </div>
+                <div className="editor-spacer" />
 
-                <button
-                    className="format-toggle"
-                    onClick={onFormatToggle}
-                    title="切换格式"
-                >
-                    {isMarkdown ? 'MD' : 'TXT'}
-                </button>
+                <div className="editor-format-badge">
+                    <span className="format-icon">
+                        {isMarkdown ? (
+                            <FileCode size={14} strokeWidth={1.5} />
+                        ) : (
+                            <FileText size={14} strokeWidth={1.5} />
+                        )}
+                    </span>
+                    <button
+                        className="format-toggle"
+                        onClick={onFormatToggle}
+                        title="切换格式"
+                    >
+                        {isMarkdown ? 'MD' : 'TXT'}
+                    </button>
+                </div>
             </div>
 
-            {/* 标题输入 */}
+            {/* 标题 */}
             <input
+                ref={titleRef}
                 type="text"
                 className="editor-title"
                 value={title}
@@ -103,7 +108,7 @@ export const Editor: React.FC<EditorProps> = ({
                 spellCheck={false}
             />
 
-            {/* 正文输入 */}
+            {/* 正文 */}
             <textarea
                 ref={textareaRef}
                 className="editor-body"
