@@ -196,7 +196,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     const [isExpanded, setIsExpanded] = useState(level < 1)
 
     const isActive = activeFilePath === node.path
-    const hasChildren = node.isDirectory && node.children && node.children.length > 0
+    // 只有包含子文件夹时才显示箭头（不考虑文件）
+    const hasSubFolders = node.isDirectory && node.children && node.children.some(c => c.isDirectory)
     const color = getColor ? getColor(node.path) : 'none'
     const colorHex = COLORS.find(c => c.key === color)?.hex || 'transparent'
 
@@ -238,7 +239,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 style={{ paddingLeft: `${12 + level * 16}px` }}
             >
                 <span
-                    className={`finder-chevron ${!hasChildren ? 'invisible' : ''}`}
+                    className={`finder-chevron ${!hasSubFolders ? 'invisible' : ''}`}
                     onClick={handleChevronClick}
                 >
                     {isExpanded ? (
