@@ -680,6 +680,13 @@ select:focus {
   padding: 4px 8px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.format-badge:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
 }
 
 .format-icon {
@@ -698,7 +705,7 @@ select:focus {
   cursor: pointer;
 }
 
-.format-toggle:hover {
+.format-badge:hover .format-toggle {
   color: var(--text-secondary);
 }
 
@@ -913,62 +920,63 @@ select:focus {
   border-top: 1px solid var(--border-color);
 }
 
-.context-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-.context-filename {
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
+/* 状态栏 - 左右两端布局 */
 .chat-status-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 11px;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 12px;
 }
 
-.status-light {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.status-light.status-ollama {
-  background: var(--success-color);
-  box-shadow: 0 0 6px var(--success-color);
-}
-
-.status-light.status-webllm {
-  background: var(--accent-color);
-}
-
-.status-light.status-loading {
-  background: var(--warning-color);
-}
-
-.status-light.status-error {
-  background: var(--error-color);
-}
-
-.status-label {
+/* 左侧：咖啡杯 + 上下文 */
+.chat-context-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text-secondary);
 }
 
+.context-coffee {
+  color: #5d7b47;
+}
+
+.context-text {
+  font-weight: 500;
+}
+
+/* 右侧：脑袋 + 模型选择 */
+.chat-model-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.model-brain {
+  color: var(--text-tertiary);
+}
+
+.model-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.model-label:hover {
+  color: var(--text-primary);
+}
+
 .model-select-inline {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
   border: none;
   cursor: pointer;
+}
+
+.model-select-inline:hover {
+  color: var(--text-primary);
 }
 
 .model-label {

@@ -4,9 +4,8 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Square, Sparkles } from 'lucide-react'
+import { Send, Square, Sparkles, Brain, Coffee } from 'lucide-react'
 import { ChatMessage } from '../services/types'
-import ContextIndicator from './ContextIndicator'
 import { UseLLMReturn } from '../hooks/useLLM'
 
 interface ChatPanelProps {
@@ -92,26 +91,25 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
 
             {/* 底部区域 */}
             <div className="chat-footer">
-                {/* 上下文指示 */}
-                {contextType && (
-                    <ContextIndicator
-                        fileName={activeFileName}
-                        folderName={activeFolderName}
-                        contextType={contextType}
-                    />
-                )}
-
-                {/* 状态栏 (在输入框上方) */}
+                {/* 状态栏：左侧咖啡杯+上下文，右侧脑袋+模型选择 */}
                 <div className="chat-status-bar">
-                    <span className={`status-light ${getStatusClass()}`} />
+                    {/* 左侧：咖啡杯 + 上下文提示 */}
+                    <div className="chat-context-info">
+                        <Coffee size={18} strokeWidth={1.5} className="context-coffee" />
+                        <span className="context-text">
+                            {contextType === 'file' && activeFileName
+                                ? `我已经看到你的这篇文章`
+                                : contextType === 'folder' && activeFolderName
+                                    ? `我已经看到这些文件夹的内容`
+                                    : '选择文件或文件夹'}
+                        </span>
+                    </div>
 
-                    {status === 'ready' ? (
-                        <>
-                            <span className="status-label">
-                                {providerType === 'ollama' ? 'Ollama' : 'Built-in'}
-                            </span>
-
-                            {providerType === 'ollama' && ollamaModels.length > 1 ? (
+                    {/* 右侧：脑袋 + 模型选择 */}
+                    <div className="chat-model-info">
+                        <Brain size={18} strokeWidth={1.5} className="model-brain" />
+                        {status === 'ready' ? (
+                            providerType === 'ollama' && ollamaModels.length > 1 ? (
                                 <select
                                     className="model-select-inline"
                                     value={selectedOllamaModel}
@@ -125,19 +123,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                 </select>
                             ) : (
                                 <span className="model-label">{formatModelName(modelName)}</span>
-                            )}
-                        </>
-                    ) : status === 'loading' ? (
-                        <span className="status-label">
-                            Loading {loadProgress ? `${loadProgress.progress}%` : '...'}
-                        </span>
-                    ) : status === 'error' ? (
-                        <button className="retry-btn" onClick={retryDetection}>
-                            重试
-                        </button>
-                    ) : (
-                        <span className="status-label">检测中...</span>
-                    )}
+                            )
+                        ) : status === 'loading' ? (
+                            <span className="model-label">
+                                Loading {loadProgress ? `${loadProgress.progress}%` : '...'}
+                            </span>
+                        ) : status === 'error' ? (
+                            <button className="retry-btn" onClick={retryDetection}>
+                                重试
+                            </button>
+                        ) : (
+                            <span className="model-label">检测中...</span>
+                        )}
+                    </div>
                 </div>
 
                 {/* 输入框 */}
@@ -148,7 +146,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                         value={inputValue}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder={status === 'ready' ? '输入消息...' : '等待就绪...'}
+                        placeholder={status === 'ready' ? '有什么想法...' : '等待就绪...'}
                         disabled={status !== 'ready'}
                         rows={1}
                     />

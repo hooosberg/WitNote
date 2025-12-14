@@ -207,13 +207,22 @@ function setupIpcHandlers() {
         return true
     })
 
-    // 删除文件
+    // 删除文件或文件夹
     ipcMain.handle('fs:deleteFile', async (_event, relativePath: string) => {
         const vaultPath = store.get('vaultPath')
         if (!vaultPath) throw new Error('未设置 Vault 路径')
 
         const fullPath = join(vaultPath, relativePath)
-        await fs.unlink(fullPath)
+
+        // 检查是文件还是文件夹
+        const stat = await fs.stat(fullPath)
+        if (stat.isDirectory()) {
+            // 递归删除文件夹
+            await fs.rm(fullPath, { recursive: true, force: true })
+        } else {
+            // 删除文件
+            await fs.unlink(fullPath)
+        }
         return true
     })
 

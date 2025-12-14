@@ -193,10 +193,15 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation()
+        // 只选择，不展开（展开由箭头控制）
+        onFileSelect(node)
+    }
+
+    const handleChevronClick = (e: React.MouseEvent) => {
+        e.stopPropagation()
         if (node.isDirectory) {
             setIsExpanded(!isExpanded)
         }
-        onFileSelect(node)
     }
 
     const getIcon = () => {
@@ -224,7 +229,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 onContextMenu={(e) => onContextMenu(e, node)}
                 style={{ paddingLeft: `${12 + level * 16}px` }}
             >
-                <span className={`finder-chevron ${!hasChildren ? 'invisible' : ''}`}>
+                <span
+                    className={`finder-chevron ${!hasChildren ? 'invisible' : ''}`}
+                    onClick={handleChevronClick}
+                >
                     {isExpanded ? (
                         <ChevronDown size={12} strokeWidth={2} />
                     ) : (

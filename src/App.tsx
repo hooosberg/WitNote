@@ -323,7 +323,9 @@ const AppContent: React.FC = () => {
                         <Panel defaultSize={20} minSize={15} maxSize={35} className="panel-sidebar">
                             <div className="sidebar-inner">
                                 <div className="sidebar-header">
-                                    <span className="sidebar-title">文件</span>
+                                    <span className="sidebar-title">
+                                        {vaultPath ? vaultPath.split('/').pop() : '文件'}
+                                    </span>
                                     <button
                                         className="sidebar-btn"
                                         onClick={() => setShowNewFolderDialog(true)}
