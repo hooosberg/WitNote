@@ -1,6 +1,6 @@
 /**
  * useLLM Hook
- * 核心：双引擎管理，自动检测 Ollama 并智能切换
+ * 核心：双引擎管理、心跳检测、上下文注入、聊天持久化
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,10 +11,25 @@ import {
     LLMStatus,
     LoadProgress,
     OllamaModel,
-    DEFAULT_WEBLLM_MODEL
+    DEFAULT_WEBLLM_MODEL,
+    SYSTEM_PROMPT
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
 import { WebLLMService } from '../services/WebLLMService';
+
+// 心跳检测间隔 (毫秒)
+const HEARTBEAT_INTERVAL = 5000;
+// 连续失败次数阈值
+const HEARTBEAT_FAIL_THRESHOLD = 2;
+// 上下文最大长度
+const MAX_CONTEXT_LENGTH = 4000;
+
+// 引擎切换事件
+export type EngineChangeEvent = {
+    from: LLMProviderType;
+    to: LLMProviderType;
+    reason: 'heartbeat' | 'manual';
+};
 
 export interface UseLLMReturn {
     // 状态
@@ -33,11 +48,22 @@ export interface UseLLMReturn {
     messages: ChatMessage[];
     isGenerating: boolean;
 
+    // 上下文相关
+    activeFilePath: string | null;
+    activeFileName: string | null;
+    activeFileContent: string | null;
+    setActiveFileContext: (path: string | null, name: string | null, content: string | null) => void;
+
     // 方法
     sendMessage: (content: string) => Promise<void>;
     abortGeneration: () => void;
     clearMessages: () => void;
+    setMessages: (messages: ChatMessage[]) => void;
     retryDetection: () => void;
+    loadChatHistory: (filePath: string) => Promise<void>;
+
+    // 事件
+    onEngineChange: (callback: (event: EngineChangeEvent) => void) => void;
 }
 
 // 生成唯一 ID
@@ -61,9 +87,172 @@ export function useLLM(): UseLLMReturn {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // 上下文状态
+    const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
+    const [activeFileName, setActiveFileName] = useState<string | null>(null);
+    const [activeFileContent, setActiveFileContent] = useState<string | null>(null);
+
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
     const webllmServiceRef = useRef<WebLLMService | null>(null);
+
+    // 心跳检测引用
+    const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+    const heartbeatFailCountRef = useRef(0);
+
+    // 使用 ref 跟踪最新状态（解决闭包问题）
+    const providerTypeRef = useRef<LLMProviderType>(providerType);
+    const statusRef = useRef<LLMStatus>(status);
+
+    // 同步状态到 ref
+    useEffect(() => {
+        providerTypeRef.current = providerType;
+    }, [providerType]);
+
+    useEffect(() => {
+        statusRef.current = status;
+    }, [status]);
+
+    // 引擎切换回调
+    const engineChangeCallbackRef = useRef<((event: EngineChangeEvent) => void) | null>(null);
+
+    /**
+     * 注册引擎切换回调
+     */
+    const onEngineChange = useCallback((callback: (event: EngineChangeEvent) => void) => {
+        engineChangeCallbackRef.current = callback;
+    }, []);
+
+    /**
+     * 触发引擎切换事件
+     */
+    const emitEngineChange = useCallback((event: EngineChangeEvent) => {
+        console.log('🔄 引擎切换:', event.from, '->', event.to);
+        if (engineChangeCallbackRef.current) {
+            engineChangeCallbackRef.current(event);
+        }
+    }, []);
+
+    /**
+     * 设置活动文件上下文
+     */
+    const setActiveFileContext = useCallback((
+        path: string | null,
+        name: string | null,
+        content: string | null
+    ) => {
+        setActiveFilePath(path);
+        setActiveFileName(name);
+        setActiveFileContent(content);
+    }, []);
+
+    /**
+     * 初始化 WebLLM
+     */
+    const initializeWebLLM = useCallback(async () => {
+        console.log('🔵 初始化 WebLLM...');
+        setProviderType('webllm');
+        setModelName(DEFAULT_WEBLLM_MODEL);
+        setStatus('loading');
+
+        const webllmService = new WebLLMService();
+
+        webllmService.setProgressCallback((progress) => {
+            setLoadProgress(progress);
+        });
+
+        try {
+            await webllmService.initialize();
+            webllmServiceRef.current = webllmService;
+            setStatus('ready');
+            setLoadProgress(null);
+            console.log('✅ WebLLM 初始化成功');
+        } catch (error) {
+            console.error('❌ WebLLM 初始化失败:', error);
+            const errMsg = error instanceof Error ? error.message : '未知错误';
+            setErrorMessage(`WebLLM 初始化失败: ${errMsg}`);
+            setStatus('error');
+        }
+    }, []);
+
+    /**
+     * 初始化 Ollama
+     */
+    const initializeOllama = useCallback(async (models: OllamaModel[]) => {
+        console.log('🟢 初始化 Ollama...');
+        setOllamaModels(models);
+        setSelectedOllamaModel(models[0].name);
+        setProviderType('ollama');
+        setModelName(models[0].name);
+
+        const ollamaService = new OllamaService(models[0].name);
+        try {
+            await ollamaService.initialize();
+            ollamaServiceRef.current = ollamaService;
+            setStatus('ready');
+            console.log('✅ Ollama 初始化成功');
+        } catch (error) {
+            console.error('❌ Ollama 初始化失败:', error);
+            throw error;
+        }
+    }, []);
+
+    /**
+     * 心跳检测 - 实时监测 Ollama 状态
+     */
+    const startHeartbeat = useCallback(() => {
+        if (heartbeatRef.current) {
+            clearInterval(heartbeatRef.current);
+        }
+
+        console.log('💓 启动心跳检测 (每 5 秒)');
+
+        heartbeatRef.current = setInterval(async () => {
+            const models = await OllamaService.detect();
+            const currentProvider = providerTypeRef.current;
+            const currentStatus = statusRef.current;
+
+            console.log(`💓 心跳: provider=${currentProvider}, status=${currentStatus}, ollama=${models ? 'online' : 'offline'}`);
+
+            if (models && models.length > 0) {
+                // Ollama 在线
+                heartbeatFailCountRef.current = 0;
+
+                if (currentProvider === 'webllm' && currentStatus === 'ready') {
+                    // 从 WebLLM 切换到 Ollama
+                    console.log('💚 检测到 Ollama，自动切换...');
+
+                    // 停止 WebLLM
+                    if (webllmServiceRef.current) {
+                        webllmServiceRef.current.destroy();
+                        webllmServiceRef.current = null;
+                    }
+
+                    try {
+                        await initializeOllama(models);
+                        emitEngineChange({ from: 'webllm', to: 'ollama', reason: 'heartbeat' });
+                    } catch (e) {
+                        console.error('切换到 Ollama 失败:', e);
+                    }
+                }
+            } else {
+                // Ollama 离线
+                heartbeatFailCountRef.current++;
+                console.log(`💔 Ollama 离线, 失败次数: ${heartbeatFailCountRef.current}`);
+
+                if (currentProvider === 'ollama' && heartbeatFailCountRef.current >= HEARTBEAT_FAIL_THRESHOLD) {
+                    // 从 Ollama 切换到 WebLLM
+                    console.log('💔 Ollama 持续离线，自动降级到 WebLLM...');
+
+                    ollamaServiceRef.current = null;
+                    emitEngineChange({ from: 'ollama', to: 'webllm', reason: 'heartbeat' });
+
+                    await initializeWebLLM();
+                    heartbeatFailCountRef.current = 0;
+                }
+            }
+        }, HEARTBEAT_INTERVAL);
+    }, [initializeOllama, initializeWebLLM, emitEngineChange]);
 
     /**
      * 检测并初始化 LLM 引擎
@@ -74,69 +263,47 @@ export function useLLM(): UseLLMReturn {
         setLoadProgress(null);
         setErrorMessage(null);
 
-        // Step 1: 尝试探测 Ollama
         const models = await OllamaService.detect();
 
         if (models && models.length > 0) {
-            // Case A: Ollama 在线且有模型
             console.log('✅ Ollama Detected: YES');
             console.log(`📋 可用模型: ${models.map(m => m.name).join(', ')}`);
 
-            setOllamaModels(models);
-            setSelectedOllamaModel(models[0].name);
-            setProviderType('ollama');
-            setModelName(models[0].name);
-
-            // 初始化 Ollama 服务
-            const ollamaService = new OllamaService(models[0].name);
             try {
-                await ollamaService.initialize();
-                ollamaServiceRef.current = ollamaService;
-                setStatus('ready');
-
-                // 自测消息
-                console.log('🧪 Ollama 自测通过');
-            } catch (error) {
-                console.error('❌ Ollama 初始化失败，降级到 WebLLM:', error);
+                await initializeOllama(models);
+            } catch {
+                console.log('⚠️ Ollama 初始化失败，降级到 WebLLM');
                 await initializeWebLLM();
             }
         } else {
-            // Case B: Ollama 离线或无模型
-            console.log('⚠️ Ollama Detected: NO, falling back to WebLLM');
+            console.log('⚠️ Ollama Detected: NO, 使用 WebLLM');
             await initializeWebLLM();
         }
-    }, []);
+
+        // 启动心跳检测
+        startHeartbeat();
+    }, [initializeOllama, initializeWebLLM, startHeartbeat]);
 
     /**
-     * 初始化 WebLLM
+     * 构建上下文增强的系统提示词
      */
-    const initializeWebLLM = async () => {
-        setProviderType('webllm');
-        setModelName(DEFAULT_WEBLLM_MODEL);
-        setStatus('loading');
+    const buildContextPrompt = useCallback((userInput: string): string => {
+        if (activeFileContent && activeFileName) {
+            const truncatedContent = activeFileContent.slice(0, MAX_CONTEXT_LENGTH);
+            const isTruncated = activeFileContent.length > MAX_CONTEXT_LENGTH;
 
-        const webllmService = new WebLLMService();
+            return `${SYSTEM_PROMPT}
 
-        // 设置进度回调
-        webllmService.setProgressCallback((progress) => {
-            setLoadProgress(progress);
-            console.log(`📥 加载进度: ${progress.progress}% - ${progress.text}`);
-        });
+[上下文: 用户正在编辑 "${activeFileName}"]
+文件内容:
+"""
+${truncatedContent}${isTruncated ? '\n... (内容已截断)' : ''}
+"""
 
-        try {
-            await webllmService.initialize();
-            webllmServiceRef.current = webllmService;
-            setStatus('ready');
-            setLoadProgress(null);
-
-            console.log('🧪 WebLLM 自测通过');
-        } catch (error) {
-            console.error('❌ WebLLM 初始化失败:', error);
-            const errMsg = error instanceof Error ? error.message : '未知错误';
-            setErrorMessage(`WebLLM 初始化失败: ${errMsg}`);
-            setStatus('error');
+用户问题: ${userInput}`;
         }
-    };
+        return userInput;
+    }, [activeFileContent, activeFileName]);
 
     /**
      * 发送消息
@@ -156,7 +323,7 @@ export function useLLM(): UseLLMReturn {
             timestamp: Date.now()
         };
 
-        // 添加空的助手消息（用于流式填充）
+        // 添加空的助手消息
         const assistantMessage: ChatMessage = {
             id: generateId(),
             role: 'assistant',
@@ -165,15 +332,19 @@ export function useLLM(): UseLLMReturn {
             isStreaming: true
         };
 
-        setMessages(prev => [...prev, userMessage, assistantMessage]);
+        const newMessages = [...messages, userMessage, assistantMessage];
+        setMessages(newMessages);
         setIsGenerating(true);
 
-        // 准备历史消息
+        // 构建历史消息（带上下文）
         const historyMessages: LLMMessage[] = messages.map(m => ({
             role: m.role,
             content: m.content
         }));
-        historyMessages.push({ role: 'user', content: content.trim() });
+
+        // 为用户消息添加上下文
+        const contextEnhancedInput = buildContextPrompt(content.trim());
+        historyMessages.push({ role: 'user', content: contextEnhancedInput });
 
         // 流式回调
         const onToken = (token: string) => {
@@ -187,7 +358,7 @@ export function useLLM(): UseLLMReturn {
             });
         };
 
-        const onComplete = () => {
+        const onComplete = async () => {
             setMessages(prev => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
@@ -197,6 +368,18 @@ export function useLLM(): UseLLMReturn {
                 return updated;
             });
             setIsGenerating(false);
+
+            // 自动保存聊天记录
+            if (activeFilePath && window.chat) {
+                try {
+                    const finalMessages = [...newMessages];
+                    finalMessages[finalMessages.length - 1].isStreaming = false;
+                    await window.chat.save(activeFilePath, finalMessages);
+                    console.log('💾 聊天记录已保存');
+                } catch (error) {
+                    console.error('保存聊天记录失败:', error);
+                }
+            }
         };
 
         const onError = (error: Error) => {
@@ -213,7 +396,7 @@ export function useLLM(): UseLLMReturn {
             setIsGenerating(false);
         };
 
-        // 根据当前提供者调用对应服务
+        // 调用对应服务
         try {
             if (providerType === 'ollama' && ollamaServiceRef.current) {
                 await ollamaServiceRef.current.streamChat(historyMessages, onToken, onComplete, onError);
@@ -225,7 +408,22 @@ export function useLLM(): UseLLMReturn {
         } catch (error) {
             onError(error instanceof Error ? error : new Error('未知错误'));
         }
-    }, [messages, isGenerating, status, providerType]);
+    }, [messages, isGenerating, status, providerType, activeFilePath, buildContextPrompt]);
+
+    /**
+     * 加载聊天历史
+     */
+    const loadChatHistory = useCallback(async (filePath: string) => {
+        if (!window.chat) return;
+        try {
+            const history = await window.chat.load(filePath) as ChatMessage[];
+            setMessages(history);
+            console.log(`📂 加载聊天记录: ${history.length} 条消息`);
+        } catch (error) {
+            console.error('加载聊天记录失败:', error);
+            setMessages([]);
+        }
+    }, []);
 
     /**
      * 中止生成
@@ -269,13 +467,15 @@ export function useLLM(): UseLLMReturn {
     useEffect(() => {
         detectAndInitialize();
 
-        // 清理
         return () => {
+            if (heartbeatRef.current) {
+                clearInterval(heartbeatRef.current);
+            }
             if (webllmServiceRef.current) {
                 webllmServiceRef.current.destroy();
             }
         };
-    }, [detectAndInitialize]);
+    }, []);
 
     return {
         providerType,
@@ -288,10 +488,17 @@ export function useLLM(): UseLLMReturn {
         setSelectedOllamaModel: handleSetSelectedOllamaModel,
         messages,
         isGenerating,
+        activeFilePath,
+        activeFileName,
+        activeFileContent,
+        setActiveFileContext,
         sendMessage,
         abortGeneration,
         clearMessages,
-        retryDetection
+        setMessages,
+        retryDetection,
+        loadChatHistory,
+        onEngineChange
     };
 }
 

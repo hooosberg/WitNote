@@ -6,13 +6,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../services/types';
 import StatusIndicator from './StatusIndicator';
+import ContextIndicator from './ContextIndicator';
 import { UseLLMReturn } from '../hooks/useLLM';
 
 interface ChatPanelProps {
     llm: UseLLMReturn;
+    activeFileName: string | null;
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, activeFileName }) => {
     const [inputValue, setInputValue] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -78,6 +80,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                 loadProgress={loadProgress}
             />
 
+            {/* 上下文指示器 */}
+            <ContextIndicator
+                fileName={activeFileName}
+                isActive={!!activeFileName}
+            />
+
             {/* 加载进度条 */}
             {status === 'loading' && loadProgress && (
                 <div className="loading-progress">
@@ -129,7 +137,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                         <div className="empty-state-title">禅意助手</div>
                         <div className="empty-state-desc">
                             {status === 'ready'
-                                ? '有什么我可以帮助你的吗？'
+                                ? activeFileName
+                                    ? `我已阅读 "${activeFileName}"，有什么可以帮您的？`
+                                    : '选择一个文件，我可以帮您分析内容'
                                 : status === 'error'
                                     ? '请点击上方按钮重试'
                                     : '正在准备 AI 引擎...'}
