@@ -6,8 +6,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import {
     Panel,
-    PanelGroup,
-    PanelResizeHandle
+    PanelGroup
 } from 'react-resizable-panels'
 import {
     FolderPlus,
@@ -341,7 +340,7 @@ const AppContent: React.FC = () => {
                 {/* 左侧边栏 */}
                 {!leftCollapsed && (
                     <>
-                        <Panel defaultSize={20} minSize={15} maxSize={35} className="panel-sidebar">
+                        <Panel defaultSize={25} minSize={25} maxSize={25} className="panel-sidebar">
                             <div className="sidebar-inner">
                                 <div className="sidebar-header">
                                     <span className="sidebar-spacer" />
@@ -385,7 +384,6 @@ const AppContent: React.FC = () => {
                                 </div>
                             </div>
                         </Panel>
-                        <PanelResizeHandle className="resize-handle" />
                     </>
                 )}
 
@@ -473,8 +471,7 @@ const AppContent: React.FC = () => {
                 {/* 右侧 AI 面板 */}
                 {!rightCollapsed && (
                     <>
-                        <PanelResizeHandle className="resize-handle" />
-                        <Panel defaultSize={30} minSize={20} maxSize={45} className="panel-chat">
+                        <Panel defaultSize={25} minSize={25} maxSize={25} className="panel-chat">
                             <ChatPanel llm={llm} />
                         </Panel>
                     </>
