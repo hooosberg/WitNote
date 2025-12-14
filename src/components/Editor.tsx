@@ -1,10 +1,10 @@
 /**
- * Medium 风格编辑器
- * 优化：右上角布局（图标+格式徽标）
+ * 编辑器组件
+ * 中文占位符 + 右上角新建按钮
  */
 
 import React, { useRef, useEffect, useState } from 'react'
-import { FileText, FileCode } from 'lucide-react'
+import { FileText, FileCode, Plus } from 'lucide-react'
 
 interface EditorProps {
     content: string
@@ -13,7 +13,7 @@ interface EditorProps {
     fileExtension: string
     onTitleChange?: (newName: string) => void
     onFormatToggle?: () => void
-    placeholder?: string
+    onNewFile?: () => void
 }
 
 export const Editor: React.FC<EditorProps> = ({
@@ -23,19 +23,17 @@ export const Editor: React.FC<EditorProps> = ({
     fileExtension,
     onTitleChange,
     onFormatToggle,
-    placeholder = '写下你的想法...'
+    onNewFile
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const titleRef = useRef<HTMLInputElement>(null)
     const [title, setTitle] = useState('')
 
-    // 从文件名提取标题
     useEffect(() => {
         const baseName = fileName.replace(/\.[^/.]+$/, '')
         setTitle(baseName)
     }, [fileName])
 
-    // 自动调整 textarea 高度
     useEffect(() => {
         const textarea = textareaRef.current
         if (textarea) {
@@ -44,12 +42,10 @@ export const Editor: React.FC<EditorProps> = ({
         }
     }, [content])
 
-    // 处理标题变化
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value)
     }
 
-    // 标题失焦时保存
     const handleTitleBlur = () => {
         if (onTitleChange && title.trim()) {
             const ext = fileExtension.startsWith('.') ? fileExtension.slice(1) : fileExtension
@@ -60,7 +56,6 @@ export const Editor: React.FC<EditorProps> = ({
         }
     }
 
-    // 标题回车
     const handleTitleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             e.preventDefault()
@@ -73,7 +68,7 @@ export const Editor: React.FC<EditorProps> = ({
 
     return (
         <div className="medium-editor">
-            {/* 右上角：图标 + 格式徽标 */}
+            {/* 右上角：格式 + 新建 */}
             <div className="editor-top-bar">
                 <div className="editor-spacer" />
 
@@ -93,9 +88,16 @@ export const Editor: React.FC<EditorProps> = ({
                         {isMarkdown ? 'MD' : 'TXT'}
                     </button>
                 </div>
+
+                {/* 新建按钮 */}
+                {onNewFile && (
+                    <button className="editor-new-btn" onClick={onNewFile} title="新建日记">
+                        <Plus size={18} strokeWidth={1.5} />
+                    </button>
+                )}
             </div>
 
-            {/* 标题 */}
+            {/* 标题 - 中文占位符 */}
             <input
                 ref={titleRef}
                 type="text"
@@ -114,7 +116,7 @@ export const Editor: React.FC<EditorProps> = ({
                 className="editor-body"
                 value={content}
                 onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
+                placeholder="写下你的想法..."
                 spellCheck={false}
             />
         </div>

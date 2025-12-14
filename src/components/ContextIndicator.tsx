@@ -1,14 +1,15 @@
 /**
- * 上下文指示器组件
- * 极简设计：淡化的胶囊样式
+ * 上下文指示器
+ * 咖啡杯图标（阅读模式）+ 文件夹线稿图标
  */
 
 import React from 'react'
+import { Coffee, Folder } from 'lucide-react'
 
 interface ContextIndicatorProps {
-    fileName: string | null
-    folderName: string | null
-    contextType: 'file' | 'folder' | null
+    fileName?: string | null
+    folderName?: string | null
+    contextType?: 'file' | 'folder' | null
 }
 
 export const ContextIndicator: React.FC<ContextIndicatorProps> = ({
@@ -18,19 +19,27 @@ export const ContextIndicator: React.FC<ContextIndicatorProps> = ({
 }) => {
     if (!contextType) return null
 
-    return (
-        <div className="context-indicator">
-            <span className="context-icon">
-                {contextType === 'file' ? '👁️' : '📂'}
-            </span>
-            <span className="context-label">
-                {contextType === 'file' ? 'Reading:' : 'Focused:'}
-            </span>
-            <span className="context-filename">
-                {contextType === 'file' ? fileName : folderName}
-            </span>
-        </div>
-    )
+    if (contextType === 'file' && fileName) {
+        return (
+            <div className="context-indicator">
+                <Coffee size={12} strokeWidth={1.5} />
+                <span>阅读：</span>
+                <span className="context-name">{fileName}</span>
+            </div>
+        )
+    }
+
+    if (contextType === 'folder' && folderName) {
+        return (
+            <div className="context-indicator">
+                <Folder size={12} strokeWidth={1.5} />
+                <span>在看文件夹：</span>
+                <span className="context-name">{folderName}</span>
+            </div>
+        )
+    }
+
+    return null
 }
 
 export default ContextIndicator

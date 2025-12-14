@@ -273,7 +273,7 @@ select:focus {
 }
 
 /* 右键菜单 */
-.finder-context-menu {
+.context-menu {
   min-width: 140px;
   padding: 4px;
   background: white;
@@ -283,13 +283,11 @@ select:focus {
   z-index: 10000;
 }
 
-.finder-context-menu button {
+.context-menu button {
   width: 100%;
   padding: 6px 10px;
   font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  text-align: left;
   color: var(--text-primary);
   background: transparent;
   border: none;
@@ -298,11 +296,11 @@ select:focus {
   transition: background var(--transition-fast);
 }
 
-.finder-context-menu button:hover {
+.context-menu button:hover {
   background: var(--bg-hover);
 }
 
-.finder-context-menu button.danger {
+.context-menu button.danger {
   color: var(--error-color);
 }
 
@@ -312,19 +310,34 @@ select:focus {
   margin: 4px 0;
 }
 
-.menu-arrow {
-  color: var(--text-tertiary);
-}
-
-/* 颜色选择器 */
-.color-picker {
-  padding: 4px 0;
-}
-
-.color-picker .color-option {
+/* 内联颜色点 */
+.color-dots {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding: 8px 10px;
+  justify-content: center;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.color-dot:hover {
+  transform: scale(1.2);
+}
+
+/* 侧边栏颜色圆点指示器 */
+.finder-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
 /* ============ 主内容区 ============ */
@@ -346,19 +359,91 @@ select:focus {
   overflow: hidden;
 }
 
-.gallery-header {
+/* 清洁空状态 */
+.gallery-empty-clean {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
+  justify-content: center;
 }
 
-.gallery-title {
-  font-size: 24px;
-  font-weight: 700;
+.empty-create-btn {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  background: var(--bg-hover);
+  border: 2px dashed var(--border-color);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
 }
 
-.gallery-add-btn {
+.empty-create-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.06);
+  border-color: var(--text-tertiary);
+}
+
+/* 正方形卡片网格 */
+.gallery-grid-square {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  align-content: start;
+  padding-top: calc(var(--titlebar-height) - 24px);
+}
+
+/* 正方形卡片 */
+.file-card-square {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.file-card-square:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.file-card-square .card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-card-square .card-summary {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.file-card-square .card-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* 编辑器新建按钮 */
+.editor-new-btn {
   width: 32px;
   height: 32px;
   display: flex;
@@ -369,77 +454,13 @@ select:focus {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
+  margin-left: 8px;
   transition: all var(--transition-fast);
 }
 
-.gallery-add-btn:hover {
+.editor-new-btn:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
-}
-
-.gallery-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 16px;
-  overflow-y: auto;
-  align-content: start;
-}
-
-.gallery-empty {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  height: 200px;
-  color: var(--text-tertiary);
-}
-
-.gallery-empty button {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  background: var(--bg-hover);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.gallery-empty button:hover {
-  color: var(--text-primary);
-}
-
-/* 简化文件卡片 */
-.file-card-simple {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 12px;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.file-card-simple:hover {
-  background: var(--bg-hover);
-}
-
-.file-card-simple .card-icon {
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.file-card-simple .card-name {
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
-  color: var(--text-secondary);
-  word-break: break-all;
 }
 
 /* ============ 编辑器 ============ */

@@ -1,12 +1,12 @@
 /**
  * 主应用组件
- * 简化版本 - 移除 react-resizable-panels
+ * Phase 7：清理空状态、正方形卡片、颜色系统
  */
 
 import React, { useEffect, useState } from 'react'
-import { FolderPlus, Plus, FileText, FileCode, Folder } from 'lucide-react'
+import { FolderPlus, Plus } from 'lucide-react'
 import Onboarding from './components/Onboarding'
-import FileTree from './components/FileTree'
+import FileTree, { ColorKey } from './components/FileTree'
 import Editor from './components/Editor'
 import ChatPanel from './components/ChatPanel'
 import InputDialog from './components/InputDialog'
@@ -15,11 +15,11 @@ import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import './styles/index.css'
 
-// 生成唯一文件名
-const generateUntitledName = (): string => {
+// 生成文件名 - 默认 .txt
+const generateFileName = (): string => {
     const now = new Date()
     const timestamp = `${now.getMonth() + 1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`
-    return `Untitled_${timestamp}.md`
+    return `Untitled_${timestamp}.txt`
 }
 
 const AppContent: React.FC = () => {
@@ -30,6 +30,7 @@ const AppContent: React.FC = () => {
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false)
     const [showRenameDialog, setShowRenameDialog] = useState(false)
     const [renameTarget, setRenameTarget] = useState<FileNode | null>(null)
+    const [colors, setColors] = useState<Record<string, ColorKey>>({})
 
     const {
         vaultPath,
@@ -79,6 +80,17 @@ const AppContent: React.FC = () => {
         }
     }, [fileContent])
 
+    // 颜色系统
+    const getColor = (path: string): ColorKey => colors[path] || 'none'
+    const setColor = (path: string, color: ColorKey) => {
+        setColors(prev => {
+            const next = { ...prev }
+            if (color === 'none') delete next[path]
+            else next[path] = color
+            return next
+        })
+    }
+
     // 加载中
     if (!isInitialized) {
         return (
@@ -100,7 +112,7 @@ const AppContent: React.FC = () => {
     }
 
     const handleQuickCreate = async () => {
-        const fileName = generateUntitledName()
+        const fileName = generateFileName()
         await createNewFile(fileName)
     }
 
@@ -130,6 +142,23 @@ const AppContent: React.FC = () => {
         }
         return fileTree.filter(n => !n.isDirectory)
     }
+
+    // 颜色边框样式
+    const getCardStyle = (path: string) => {
+        const color = getColor(path)
+        const colorMap: Record<string, { border: string; bg: string }> = {
+            red: { border: '#ff453a', bg: 'rgba(255,69,58,0.05)' },
+            orange: { border: '#ff9500', bg: 'rgba(255,149,0,0.05)' },
+            yellow: { border: '#ffcc00', bg: 'rgba(255,204,0,0.05)' },
+            green: { border: '#30d158', bg: 'rgba(48,209,88,0.05)' },
+            blue: { border: '#007aff', bg: 'rgba(0,122,255,0.05)' },
+            purple: { border: '#bf5af2', bg: 'rgba(191,90,242,0.05)' },
+            gray: { border: '#8e8e93', bg: 'rgba(142,142,147,0.05)' },
+        }
+        return colorMap[color] || { border: 'rgba(0,0,0,0.08)', bg: 'transparent' }
+    }
+
+    const files = getCurrentFolderFiles()
 
     return (
         <div className="app-container">
@@ -166,7 +195,7 @@ const AppContent: React.FC = () => {
 
                 <div className="sidebar-content">
                     {fileTree.length === 0 ? (
-                        <div className="sidebar-empty">空文件夹</div>
+                        <div className="sidebar-empty">空</div>
                     ) : (
                         <FileTree
                             nodes={fileTree}
@@ -177,6 +206,8 @@ const AppContent: React.FC = () => {
                                 setShowRenameDialog(true)
                             }}
                             onDelete={handleDelete}
+                            getColor={getColor}
+                            onColorChange={setColor}
                         />
                     )}
                 </div>
@@ -192,48 +223,45 @@ const AppContent: React.FC = () => {
                         fileExtension={activeFile.extension || 'txt'}
                         onTitleChange={handleTitleChange}
                         onFormatToggle={toggleFileFormat}
+                        onNewFile={handleQuickCreate}
                     />
                 ) : (
-                    /* Gallery 视图 */
+                    /* 正方形卡片网格 - 清理空状态 */
                     <div className="gallery-view">
-                        <div className="gallery-header">
-                            <h2 className="gallery-title">
-                                {activeFolder ? `📁 ${activeFolder.name}` : '所有文件'}
-                            </h2>
-                            <button className="gallery-add-btn" onClick={handleQuickCreate}>
-                                <Plus size={18} strokeWidth={1.5} />
-                            </button>
-                        </div>
-
-                        <div className="gallery-grid">
-                            {getCurrentFolderFiles().length === 0 ? (
-                                <div className="gallery-empty">
-                                    <p>空</p>
-                                    <button onClick={handleQuickCreate}>
-                                        <Plus size={20} strokeWidth={1.5} />
-                                    </button>
-                                </div>
-                            ) : (
-                                getCurrentFolderFiles().map(file => (
-                                    <div
-                                        key={file.path}
-                                        className="file-card-simple"
-                                        onClick={() => openFile(file)}
-                                    >
-                                        <div className="card-icon">
-                                            {file.extension === 'md' ? (
-                                                <FileCode size={28} strokeWidth={1.2} />
-                                            ) : (
-                                                <FileText size={28} strokeWidth={1.2} />
-                                            )}
+                        {files.length === 0 ? (
+                            <div className="gallery-empty-clean">
+                                <button className="empty-create-btn" onClick={handleQuickCreate}>
+                                    <Plus size={24} strokeWidth={1.2} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="gallery-grid-square">
+                                {files.map(file => {
+                                    const style = getCardStyle(file.path)
+                                    return (
+                                        <div
+                                            key={file.path}
+                                            className="file-card-square"
+                                            onClick={() => openFile(file)}
+                                            style={{
+                                                borderColor: style.border,
+                                                background: style.bg
+                                            }}
+                                        >
+                                            <div className="card-title">
+                                                {file.name.replace(/\.[^/.]+$/, '')}
+                                            </div>
+                                            <div className="card-summary">
+                                                点击查看内容...
+                                            </div>
+                                            <div className="card-date">
+                                                {file.extension === 'md' ? 'Markdown' : 'Text'}
+                                            </div>
                                         </div>
-                                        <div className="card-name">
-                                            {file.name.replace(/\.[^/.]+$/, '')}
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
