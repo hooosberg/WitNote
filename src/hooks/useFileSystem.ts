@@ -12,6 +12,7 @@ export interface FileNode {
     isDirectory: boolean
     children?: FileNode[]
     extension?: string
+    modifiedAt?: number  // 修改时间戳（毫秒）
 }
 
 // 文件变化事件

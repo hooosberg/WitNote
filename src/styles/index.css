@@ -736,15 +736,20 @@ select:focus {
   overflow: hidden;
 }
 
-/* 工具栏 - 右对齐 */
+/* 工具栏 - 与标题栏同高度，与画廊头部一致 */
 .editor-toolbar {
-  height: calc(var(--titlebar-height) + 44px);
-  padding: 0 48px;
-  padding-top: var(--titlebar-height);
+  height: var(--titlebar-height);
+  padding: 0 24px;
+  /* 与内容区左右 padding 对齐 */
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* 专注模式下给布局按钮留出空间 */
+.editor-toolbar.focus-mode {
+  padding-right: 56px;
 }
 
 .toolbar-group {
@@ -761,6 +766,7 @@ select:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
+  -webkit-app-region: no-drag;
   transition: all var(--transition-fast);
 }
 

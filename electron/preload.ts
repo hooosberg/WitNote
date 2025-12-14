@@ -18,6 +18,7 @@ interface FileNode {
     isDirectory: boolean
     children?: FileNode[]
     extension?: string
+    modifiedAt?: number  // 修改时间戳（毫秒）
 }
 
 // 暴露文件系统 API

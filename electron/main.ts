@@ -46,6 +46,7 @@ interface FileNode {
     isDirectory: boolean
     children?: FileNode[]
     extension?: string
+    modifiedAt?: number  // 修改时间戳（毫秒）
 }
 
 // ============ 文件系统工具函数 ============
@@ -76,6 +77,7 @@ async function readDirectoryTree(dirPath: string, rootPath: string): Promise<Fil
 
         const fullPath = join(dirPath, entry.name)
         const relativePath = relative(rootPath, fullPath)
+        const stat = await fs.stat(fullPath)
 
         if (entry.isDirectory()) {
             const children = await readDirectoryTree(fullPath, rootPath)
@@ -83,7 +85,8 @@ async function readDirectoryTree(dirPath: string, rootPath: string): Promise<Fil
                 name: entry.name,
                 path: relativePath,
                 isDirectory: true,
-                children
+                children,
+                modifiedAt: stat.mtimeMs
             })
         } else {
             const ext = extname(entry.name).toLowerCase()
@@ -93,17 +96,19 @@ async function readDirectoryTree(dirPath: string, rootPath: string): Promise<Fil
                     name: entry.name,
                     path: relativePath,
                     isDirectory: false,
-                    extension: ext
+                    extension: ext,
+                    modifiedAt: stat.mtimeMs
                 })
             }
         }
     }
 
-    // 排序: 文件夹在前，然后按名称
+    // 排序: 文件夹在前，然后按修改时间倒序（最新的在前）
     return nodes.sort((a, b) => {
         if (a.isDirectory && !b.isDirectory) return -1
         if (!a.isDirectory && b.isDirectory) return 1
-        return a.name.localeCompare(b.name)
+        // 文件按修改时间倒序
+        return (b.modifiedAt || 0) - (a.modifiedAt || 0)
     })
 }
 

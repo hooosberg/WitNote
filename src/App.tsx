@@ -14,8 +14,8 @@ import {
     Plus,
     Minus,
     Columns,
-    ArrowUpDown,
-    Filter
+    ArrowUp,
+    ArrowDown
 } from 'lucide-react'
 import Onboarding from './components/Onboarding'
 import FileTree, { ColorKey } from './components/FileTree'
@@ -71,11 +71,9 @@ const AppContent: React.FC = () => {
     // 颜色系统
     const [colors, setColors] = useState<Record<string, ColorKey>>({})
 
-    // 排序和筛选
-    const [sortBy, setSortBy] = useState<SortOption>('name-asc')
+    // 排序（默认最新优先 time-desc，点击切换为最早优先 time-asc）
+    const [sortBy, setSortBy] = useState<SortOption>('time-desc')
     const [filterColor, setFilterColor] = useState<ColorKey | 'all'>('all')
-    const [showSortMenu, setShowSortMenu] = useState(false)
-    const [showFilterMenu, setShowFilterMenu] = useState(false)
 
     // 文件预览缓存
     const [previews, setPreviews] = useState<Record<string, string>>({})
@@ -162,10 +160,8 @@ const AppContent: React.FC = () => {
     useEffect(() => {
         const close = (e: MouseEvent) => {
             const target = e.target as HTMLElement
-            // 排除菜单本身和触发按钮
-            if (!target.closest('.dropdown-menu') && !target.closest('.gallery-menu') && !target.closest('.action-btn')) {
-                setShowSortMenu(false)
-                setShowFilterMenu(false)
+            // 关闭画廊右键菜单
+            if (!target.closest('.gallery-menu')) {
                 setGalleryMenu(prev => ({ ...prev, show: false }))
             }
         }
@@ -209,16 +205,16 @@ const AppContent: React.FC = () => {
                 case 'name-desc':
                     return b.name.localeCompare(a.name)
                 case 'time-asc':
-                    return (a.name).localeCompare(b.name) // 暂用名称代替时间
+                    return (a.modifiedAt || 0) - (b.modifiedAt || 0)
                 case 'time-desc':
-                    return (b.name).localeCompare(a.name)
+                    return (b.modifiedAt || 0) - (a.modifiedAt || 0)
                 default:
                     return 0
             }
         })
 
         return files
-    }, [activeFolder, fileTree, sortBy, filterColor, colors])
+    }, [fileTree, activeFolder, filterColor, sortBy, colors])
 
     // 加载中
     if (!isInitialized) {
@@ -404,7 +400,7 @@ const AppContent: React.FC = () => {
                                 fileExtension={activeFile.extension || 'txt'}
                                 onTitleChange={handleTitleChange}
                                 onFormatToggle={toggleFileFormat}
-                                onNewFile={handleQuickCreate}
+                                focusMode={focusMode}
                             />
                         ) : (
                             /* 画廊视图 */
@@ -412,31 +408,18 @@ const AppContent: React.FC = () => {
                                 {/* 画廊头部 - 只有操作按钮 */}
                                 <div className={`gallery-header ${focusMode ? 'focus-mode' : ''}`}>
                                     <div className="gallery-actions">
-                                        {/* 排序 */}
-                                        <div className="dropdown">
-                                            <button
-                                                className="action-btn"
-                                                onClick={(e) => { e.stopPropagation(); setShowSortMenu(!showSortMenu) }}
-                                            >
-                                                <ArrowUpDown size={16} strokeWidth={1.5} />
-                                            </button>
-                                            {showSortMenu && (
-                                                <div className="dropdown-menu">
-                                                    <button onClick={() => { setSortBy('name-asc'); setShowSortMenu(false) }}>
-                                                        <span className="menu-check">{sortBy === 'name-asc' ? '✓' : ''}</span>名称 A-Z
-                                                    </button>
-                                                    <button onClick={() => { setSortBy('name-desc'); setShowSortMenu(false) }}>
-                                                        <span className="menu-check">{sortBy === 'name-desc' ? '✓' : ''}</span>名称 Z-A
-                                                    </button>
-                                                    <button onClick={() => { setSortBy('time-desc'); setShowSortMenu(false) }}>
-                                                        <span className="menu-check">{sortBy === 'time-desc' ? '✓' : ''}</span>最新优先
-                                                    </button>
-                                                    <button onClick={() => { setSortBy('time-asc'); setShowSortMenu(false) }}>
-                                                        <span className="menu-check">{sortBy === 'time-asc' ? '✓' : ''}</span>最早优先
-                                                    </button>
-                                                </div>
+                                        {/* 排序切换按钮 */}
+                                        <button
+                                            className="action-btn"
+                                            onClick={() => setSortBy(prev => prev === 'time-desc' ? 'time-asc' : 'time-desc')}
+                                            title={sortBy === 'time-desc' ? '最新优先' : '最早优先'}
+                                        >
+                                            {sortBy === 'time-desc' ? (
+                                                <ArrowUp size={16} strokeWidth={1.5} />
+                                            ) : (
+                                                <ArrowDown size={16} strokeWidth={1.5} />
                                             )}
-                                        </div>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -473,7 +456,10 @@ const AppContent: React.FC = () => {
                                                     {preview || '...'}
                                                 </div>
                                                 <div className="card-date">
-                                                    {new Date().toLocaleDateString()}
+                                                    {file.modifiedAt ? (() => {
+                                                        const d = new Date(file.modifiedAt)
+                                                        return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+                                                    })() : '--'}
                                                 </div>
                                             </div>
                                         )

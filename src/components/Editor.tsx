@@ -4,7 +4,7 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react'
-import { FileText, FileCode, Plus } from 'lucide-react'
+import { FileText, FileCode } from 'lucide-react'
 
 interface EditorProps {
     content: string
@@ -13,7 +13,7 @@ interface EditorProps {
     fileExtension: string
     onTitleChange?: (newName: string) => void
     onFormatToggle?: () => void
-    onNewFile?: () => void
+    focusMode?: boolean
 }
 
 export const Editor: React.FC<EditorProps> = ({
@@ -23,7 +23,7 @@ export const Editor: React.FC<EditorProps> = ({
     fileExtension,
     onTitleChange,
     onFormatToggle,
-    onNewFile
+    focusMode = false
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const titleRef = useRef<HTMLTextAreaElement>(null)
@@ -67,7 +67,12 @@ export const Editor: React.FC<EditorProps> = ({
     const handleTitleBlur = () => {
         if (onTitleChange) {
             const ext = fileExtension.startsWith('.') ? fileExtension.slice(1) : fileExtension
-            const newTitle = title.trim() || 'Untitled'
+            // 默认标题使用当前时间
+            let newTitle = title.trim()
+            if (!newTitle) {
+                const now = new Date()
+                newTitle = `未命名：${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+            }
             const newFileName = `${newTitle}.${ext}`
             if (newFileName !== fileName) {
                 onTitleChange(newFileName)
@@ -89,7 +94,7 @@ export const Editor: React.FC<EditorProps> = ({
     return (
         <div className="editor-container">
             {/* 顶部工具栏 - 水平对齐 */}
-            <div className="editor-toolbar">
+            <div className={`editor-toolbar ${focusMode ? 'focus-mode' : ''}`}>
                 <div className="toolbar-group">
                     <div className="format-badge">
                         <span className="format-icon">
@@ -107,12 +112,6 @@ export const Editor: React.FC<EditorProps> = ({
                             {isMarkdown ? 'MD' : 'TXT'}
                         </button>
                     </div>
-
-                    {onNewFile && (
-                        <button className="toolbar-btn" onClick={onNewFile} title="新建">
-                            <Plus size={16} strokeWidth={1.5} />
-                        </button>
-                    )}
                 </div>
             </div>
 
