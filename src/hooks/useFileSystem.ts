@@ -382,16 +382,43 @@ export function useFileSystem(): UseFileSystemReturn {
 
     /**
      * 重命名文件/文件夹
+     * 如果是 TXT/MD 文件，同时重命名配对的 MD/TXT 文件
      */
     const renameItem = useCallback(async (oldPath: string, newName: string) => {
         try {
             // 获取目录路径
             const pathParts = oldPath.split('/')
-            pathParts.pop()
+            const oldFileName = pathParts.pop() || ''
             const dir = pathParts.join('/')
             const newPath = dir ? `${dir}/${newName}` : newName
 
             await window.fs.renameFile(oldPath, newPath)
+
+            // 检查是否是 TXT/MD 文件，如果是则同步重命名配对文件
+            const oldExt = oldFileName.split('.').pop()?.toLowerCase()
+            const newExt = newName.split('.').pop()?.toLowerCase()
+            const oldBaseName = oldFileName.replace(/\.[^/.]+$/, '')
+            const newBaseName = newName.replace(/\.[^/.]+$/, '')
+
+            if ((oldExt === 'txt' || oldExt === 'md') && oldBaseName !== newBaseName) {
+                // 查找配对文件
+                const pairExt = oldExt === 'txt' ? 'md' : 'txt'
+                const pairOldName = `${oldBaseName}.${pairExt}`
+                const pairNewName = `${newBaseName}.${pairExt}`
+                const pairOldPath = dir ? `${dir}/${pairOldName}` : pairOldName
+                const pairNewPath = dir ? `${dir}/${pairNewName}` : pairNewName
+
+                // 检查配对文件是否存在
+                const pairFile = findNodeByPath(fileTree, pairOldPath)
+                if (pairFile) {
+                    try {
+                        await window.fs.renameFile(pairOldPath, pairNewPath)
+                        console.log(`📝 同步重命名配对文件: ${pairOldName} → ${pairNewName}`)
+                    } catch (e) {
+                        console.error('重命名配对文件失败:', e)
+                    }
+                }
+            }
 
             // 更新引用
             if (activeFile?.path === oldPath) {
@@ -412,7 +439,7 @@ export function useFileSystem(): UseFileSystemReturn {
         } catch (error) {
             console.error('重命名失败:', error)
         }
-    }, [activeFile, activeFolder])
+    }, [activeFile, activeFolder, fileTree])
 
     /**
      * 格式转换器
