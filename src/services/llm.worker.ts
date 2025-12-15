@@ -4,7 +4,7 @@
  */
 
 import * as webllm from '@mlc-ai/web-llm';
-import { WorkerMessage, SYSTEM_PROMPT, DEFAULT_WEBLLM_MODEL, LLMMessage } from './types';
+import { WorkerMessage, DEFAULT_WEBLLM_MODEL, LLMMessage } from './types';
 
 // WebGPU 类型扩展
 declare global {
@@ -121,14 +121,11 @@ async function streamChat(messages: LLMMessage[]) {
     }
 
     try {
-        // 添加系统提示词
-        const fullMessages: webllm.ChatCompletionMessageParam[] = [
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...messages.map(m => ({
-                role: m.role as 'user' | 'assistant' | 'system',
-                content: m.content
-            }))
-        ];
+        // 不再添加系统提示词，useLLM 的 buildContextPrompt 已经包含
+        const fullMessages: webllm.ChatCompletionMessageParam[] = messages.map(m => ({
+            role: m.role as 'user' | 'assistant' | 'system',
+            content: m.content
+        }));
 
         const asyncChunkGenerator = await engine.chat.completions.create({
             messages: fullMessages,

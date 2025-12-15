@@ -12,7 +12,8 @@ import {
     LoadProgress,
     OllamaModel,
     DEFAULT_WEBLLM_MODEL,
-    SYSTEM_PROMPT
+    SYSTEM_PROMPT_LITE,
+    SYSTEM_PROMPT_FULL
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
 import { WebLLMService } from '../services/WebLLMService';
@@ -313,41 +314,109 @@ export function useLLM(): UseLLMReturn {
     }, [initializeOllama, initializeWebLLM, startHeartbeat]);
 
     /**
+     * 根据模型类型获取合适的系统提示词
+     */
+    const getSystemPrompt = useCallback(() => {
+        // Ollama 大模型用完整版，WebLLM 微型模型用精简版
+        return providerType === 'ollama' ? SYSTEM_PROMPT_FULL : SYSTEM_PROMPT_LITE;
+    }, [providerType]);
+
+    /**
      * 构建上下文增强的系统提示词
      */
     const buildContextPrompt = useCallback((userInput: string): string => {
-        // 文件上下文
+        const systemPrompt = getSystemPrompt();
+        const isLiteMode = providerType === 'webllm';
+
+        // 文件上下文 - 用户正在编辑某篇文章
         if (activeFileContent && activeFileName) {
             const truncatedContent = activeFileContent.slice(0, MAX_CONTEXT_LENGTH);
             const isTruncated = activeFileContent.length > MAX_CONTEXT_LENGTH;
 
-            return `${SYSTEM_PROMPT}
+            if (isLiteMode) {
+                // WebLLM 精简版
+                return `${systemPrompt}
 
-[上下文: 用户正在编辑 "${activeFileName}"]
-文件内容:
+文章「${activeFileName}」:
+"""
+${truncatedContent}${isTruncated ? '\n...' : ''}
+"""
+
+用户: ${userInput}`;
+            } else {
+                // Ollama 完整版
+                return `${systemPrompt}
+
+【当前状态】用户正在编辑文章「${activeFileName}」
+【你的角色】专注于这篇文章的写作助手
+【可以帮助】润色文字、续写内容、修改段落、提取要点、回答文章相关问题
+
+文章内容:
 """
 ${truncatedContent}${isTruncated ? '\n... (内容已截断)' : ''}
 """
 
-用户问题: ${userInput}`;
+用户: ${userInput}`;
+            }
         }
 
-        // 文件夹上下文
+        // 子文件夹上下文 - 用户正在浏览某个主题文件夹
         if (activeFolderName && activeFolderFiles.length > 0) {
-            const fileList = activeFolderFiles.slice(0, 20).map(f => `- ${f}`).join('\n');
-            const hasMore = activeFolderFiles.length > 20;
+            const fileList = activeFolderFiles.slice(0, isLiteMode ? 10 : 20).map(f => `- ${f}`).join('\n');
+            const hasMore = activeFolderFiles.length > (isLiteMode ? 10 : 20);
 
-            return `${SYSTEM_PROMPT}
+            if (isLiteMode) {
+                return `${systemPrompt}
 
-[上下文: 用户正在浏览文件夹 "${activeFolderName}"]
-该文件夹包含以下文件:
+文件夹「${activeFolderName}」包含 ${activeFolderFiles.length} 个文件:
+${fileList}${hasMore ? '\n...' : ''}
+
+用户: ${userInput}`;
+            } else {
+                return `${systemPrompt}
+
+【当前状态】用户正在浏览文件夹「${activeFolderName}」
+【你的角色】这个主题目录的导航助手
+【可以帮助】介绍目录内容、查找特定文件、总结主题、回答目录相关问题
+
+目录包含 ${activeFolderFiles.length} 个文件:
 ${fileList}${hasMore ? '\n... (更多文件)' : ''}
 
-用户问题: ${userInput}`;
+用户: ${userInput}`;
+            }
         }
 
-        return userInput;
-    }, [activeFileContent, activeFileName, activeFolderName, activeFolderFiles]);
+        // 根目录上下文 - 用户在全局视图
+        if (activeFolderFiles.length > 0) {
+            const fileList = activeFolderFiles.slice(0, isLiteMode ? 15 : 30).map(f => `- ${f}`).join('\n');
+            const hasMore = activeFolderFiles.length > (isLiteMode ? 15 : 30);
+
+            if (isLiteMode) {
+                return `${systemPrompt}
+
+笔记库共 ${activeFolderFiles.length} 篇文章:
+${fileList}${hasMore ? '\n...' : ''}
+
+用户: ${userInput}`;
+            } else {
+                return `${systemPrompt}
+
+【当前状态】用户正在查看全部笔记（根目录）
+【你的角色】全局写作顾问
+【可以帮助】回顾整体写作情况、分析写作习惯、查找文件、提供写作建议
+
+笔记库共有 ${activeFolderFiles.length} 篇文章:
+${fileList}${hasMore ? '\n... (更多文章)' : ''}
+
+用户: ${userInput}`;
+            }
+        }
+
+        // 无上下文
+        return `${systemPrompt}
+
+用户: ${userInput}`;
+    }, [activeFileContent, activeFileName, activeFolderName, activeFolderFiles, providerType, getSystemPrompt]);
 
     /**
      * 发送消息

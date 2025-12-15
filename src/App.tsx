@@ -11,6 +11,7 @@ import {
 import {
     FolderPlus,
     Folder,
+    FolderOpen,
     Home,
     Plus,
     Minus,
@@ -455,8 +456,9 @@ const AppContent: React.FC = () => {
                                         </>
                                     ) : (
                                         <div className="sidebar-empty-guide">
+                                            <div className="empty-icon">🧘</div>
                                             <span className="sidebar-hint">
-                                                如果本地没有文件夹可以点击下方按钮新建一个文件夹，如果有以前的文件夹点击下方链接文件夹
+                                                请点击下方新建或者链接一个本地文件夹作为本地数据存储位置
                                             </span>
                                         </div>
                                     )}
@@ -499,9 +501,18 @@ const AppContent: React.FC = () => {
                                             <button
                                                 className="sidebar-footer-btn connected"
                                                 onClick={async () => {
-                                                    // 断开连接：清除存储的路径并重新加载
-                                                    await window.fs.disconnectVault()
-                                                    window.location.reload()
+                                                    // 确认对话框
+                                                    const confirmed = window.confirm(
+                                                        '确定要断开此文件夹的链接吗？\n\n' +
+                                                        '⚠️ 这将断开应用与本地文件夹的连接，但不会删除文件夹中的任何文件。\n\n' +
+                                                        '您的所有笔记和文件都会保留完好。'
+                                                    )
+
+                                                    if (confirmed) {
+                                                        // 断开连接：清除存储的路径并重新加载
+                                                        await window.fs.disconnectVault()
+                                                        window.location.reload()
+                                                    }
                                                 }}
                                                 title="断开连接"
                                             >

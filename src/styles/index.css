@@ -261,6 +261,8 @@ select:focus {
 
 .sidebar-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: 0 8px 8px 8px;
 }
@@ -281,12 +283,30 @@ select:focus {
   justify-content: center;
   padding: 24px 16px;
   text-align: center;
+  gap: 16px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .sidebar-hint {
   font-size: 12px;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 /* 已连接时的空状态提示 */
@@ -361,17 +381,17 @@ select:focus {
   border-color: #28a745;
 }
 
-/* 未连接状态 - 灰色 */
+/* 未连接状态 - 深灰色 */
 .sidebar-footer-btn.disconnected {
-  color: var(--text-tertiary);
-  border-color: var(--border-color);
-  border-style: dashed;
+  color: var(--text-secondary);
+  border-color: var(--text-secondary);
+  border-style: solid;
 }
 
 .sidebar-footer-btn.disconnected:hover {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   background: var(--bg-hover);
-  border-color: var(--text-muted);
+  border-color: var(--text-primary);
 }
 
 /* ============ Finder 文件树 ============ */

@@ -10,8 +10,7 @@ import {
     OllamaTagsResponse,
     OllamaChatChunk,
     OLLAMA_BASE_URL,
-    OLLAMA_DETECT_TIMEOUT,
-    SYSTEM_PROMPT
+    OLLAMA_DETECT_TIMEOUT
 } from './types';
 
 export class OllamaService implements LLMProvider {
@@ -104,11 +103,8 @@ export class OllamaService implements LLMProvider {
     ): Promise<void> {
         this.abortController = new AbortController();
 
-        // 添加系统提示词
-        const fullMessages: LLMMessage[] = [
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...messages
-        ];
+        // 不再添加系统提示词，useLLM 的 buildContextPrompt 已经包含
+        const fullMessages: LLMMessage[] = messages;
 
         try {
             const response = await fetch(`${this.baseUrl}/api/chat`, {
