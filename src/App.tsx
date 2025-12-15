@@ -135,10 +135,14 @@ const AppContent: React.FC = () => {
         } else if (activeFolder) {
             const files = activeFolder.children?.filter(c => !c.isDirectory).map(c => c.name) || []
             llm.setActiveFolderContext(activeFolder.name, files)
+        } else if (vaultPath) {
+            // 根目录：传递所有文件
+            const allFiles = getAllFiles().map(f => f.name)
+            llm.setActiveFolderContext(null, allFiles)
         } else {
             llm.setActiveFileContext(null, null, null)
         }
-    }, [activeFile?.path, activeFolder?.path])
+    }, [activeFile?.path, activeFolder?.path, vaultPath, getAllFiles, llm, fileContent])
 
     useEffect(() => {
         if (activeFile) {

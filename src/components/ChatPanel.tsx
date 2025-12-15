@@ -101,7 +101,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                 ? `我看到文章`
                                 : contextType === 'folder' && activeFolderName
                                     ? `我看到文件夹`
-                                    : '选择文件或文件夹'}
+                                    : contextType === 'folder' && !activeFolderName
+                                        ? `我看到全部文件`
+                                        : '选择文件或文件夹'}
                         </span>
                     </div>
 

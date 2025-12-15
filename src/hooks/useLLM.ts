@@ -164,7 +164,8 @@ export function useLLM(): UseLLMReturn {
         name: string | null,
         files: string[]
     ) => {
-        setContextType(name ? 'folder' : null);
+        // 调用此函数即表示选中了文件夹（包括空文件夹和根目录）
+        setContextType('folder');
         setActiveFolderName(name);
         setActiveFolderFiles(files);
         // 清空文件上下文
