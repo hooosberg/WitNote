@@ -57,7 +57,7 @@ export interface UseLLMReturn {
     activeFolderName: string | null;
     activeFolderFiles: string[];
     setActiveFileContext: (path: string | null, name: string | null, content: string | null) => void;
-    setActiveFolderContext: (name: string | null, files: string[]) => void;
+    setActiveFolderContext: (name: string | null, files: string[], previews?: Map<string, string>) => void;
 
     // 方法
     sendMessage: (content: string) => Promise<void>;
@@ -99,6 +99,8 @@ export function useLLM(): UseLLMReturn {
     const [activeFileContent, setActiveFileContent] = useState<string | null>(null);
     const [activeFolderName, setActiveFolderName] = useState<string | null>(null);
     const [activeFolderFiles, setActiveFolderFiles] = useState<string[]>([]);
+    // 文件摘要 Map：文件名 -> 前 N 字内容
+    const [filePreviews, setFilePreviews] = useState<Map<string, string>>(new Map());
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
@@ -163,12 +165,14 @@ export function useLLM(): UseLLMReturn {
      */
     const setActiveFolderContext = useCallback((
         name: string | null,
-        files: string[]
+        files: string[],
+        previews?: Map<string, string>
     ) => {
         // 调用此函数即表示选中了文件夹（包括空文件夹和根目录）
         setContextType('folder');
         setActiveFolderName(name);
         setActiveFolderFiles(files);
+        setFilePreviews(previews || new Map());
         // 清空文件上下文
         setActiveFilePath(null);
         setActiveFileName(null);
@@ -350,40 +354,50 @@ ${truncatedContent}${isTruncated ? '\n... (内容已截断)' : ''}
 
         // 子文件夹上下文
         if (activeFolderName && activeFolderFiles.length > 0) {
-            const fileList = activeFolderFiles.slice(0, isLiteMode ? 10 : 20).map(f => `- ${f}`).join('\n');
-            const hasMore = activeFolderFiles.length > (isLiteMode ? 10 : 20);
+            const limit = isLiteMode ? 10 : 20;
+            const filesToShow = activeFolderFiles.slice(0, limit);
+            const hasMore = activeFolderFiles.length > limit;
+
+            // 构建文件列表（带摘要）
+            const fileListWithPreviews = filesToShow.map((f, i) => {
+                const preview = filePreviews.get(f);
+                return preview ? `${i + 1}. ${f}：${preview}` : `${i + 1}. ${f}`;
+            }).join('\n');
 
             if (isLiteMode) {
-                return `文件夹「${activeFolderName}」包含 ${activeFolderFiles.length} 个文件:
-${fileList}${hasMore ? '\n...' : ''}`;
+                return `【你能看到的文件】文件夹「${activeFolderName}」共 ${activeFolderFiles.length} 个文件：
+${fileListWithPreviews}${hasMore ? '\n...' : ''}`;
             } else {
                 return `【当前状态】用户正在浏览文件夹「${activeFolderName}」
-【你的角色】这个主题目录的导航助手
-
-目录包含 ${activeFolderFiles.length} 个文件:
-${fileList}${hasMore ? '\n... (更多文件)' : ''}`;
+【你能看到的文件】共 ${activeFolderFiles.length} 个：
+${fileListWithPreviews}${hasMore ? '\n... (更多文件)' : ''}`;
             }
         }
 
         // 根目录上下文
         if (activeFolderFiles.length > 0) {
-            const fileList = activeFolderFiles.slice(0, isLiteMode ? 15 : 30).map(f => `- ${f}`).join('\n');
-            const hasMore = activeFolderFiles.length > (isLiteMode ? 15 : 30);
+            const limit = isLiteMode ? 15 : 30;
+            const filesToShow = activeFolderFiles.slice(0, limit);
+            const hasMore = activeFolderFiles.length > limit;
+
+            // 构建文件列表（带摘要）
+            const fileListWithPreviews = filesToShow.map((f, i) => {
+                const preview = filePreviews.get(f);
+                return preview ? `${i + 1}. ${f}：${preview}` : `${i + 1}. ${f}`;
+            }).join('\n');
 
             if (isLiteMode) {
-                return `笔记库共 ${activeFolderFiles.length} 篇文章:
-${fileList}${hasMore ? '\n...' : ''}`;
+                return `【你能看到的文件】笔记库共 ${activeFolderFiles.length} 篇文章：
+${fileListWithPreviews}${hasMore ? '\n...' : ''}`;
             } else {
                 return `【当前状态】用户正在查看全部笔记（根目录）
-【你的角色】全局写作顾问
-
-笔记库共有 ${activeFolderFiles.length} 篇文章:
-${fileList}${hasMore ? '\n... (更多文章)' : ''}`;
+【你能看到的文件】共 ${activeFolderFiles.length} 篇文章：
+${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
             }
         }
 
         return null;
-    }, [activeFileContent, activeFileName, activeFolderName, activeFolderFiles, providerType]);
+    }, [activeFileContent, activeFileName, activeFolderName, activeFolderFiles, filePreviews, providerType]);
 
     /**
      * 构建上下文增强的系统提示词

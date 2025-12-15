@@ -130,21 +130,55 @@ const AppContent: React.FC = () => {
         })
     }, [llm, showToast])
 
+    // 加载文件摘要函数
+    const loadFilePreviews = async (files: FileNode[]): Promise<Map<string, string>> => {
+        const previewMap = new Map<string, string>();
+        const PREVIEW_LENGTH = 80; // 每个文件摘要长度
+
+        // 限制并发数量
+        const filesToLoad = files.slice(0, 15); // 最多加载 15 个文件
+
+        await Promise.all(filesToLoad.map(async (file) => {
+            try {
+                const content = await window.fs.readFile(file.path);
+                if (content) {
+                    // 去掉标题行，取正文前 N 字
+                    const lines = content.split('\n').filter((l: string) => l.trim() && !l.startsWith('#'));
+                    const preview = lines.join(' ').slice(0, PREVIEW_LENGTH);
+                    if (preview) {
+                        previewMap.set(file.name, preview + (preview.length >= PREVIEW_LENGTH ? '...' : ''));
+                    }
+                }
+            } catch {
+                // 忽略读取错误
+            }
+        }));
+
+        return previewMap;
+    }
+
     // 上下文同步
     useEffect(() => {
-        if (activeFile) {
-            llm.loadChatHistory(activeFile.path)
-            llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
-        } else if (activeFolder) {
-            const files = activeFolder.children?.filter(c => !c.isDirectory).map(c => c.name) || []
-            llm.setActiveFolderContext(activeFolder.name, files)
-        } else if (vaultPath) {
-            // 根目录：传递所有文件
-            const allFiles = getAllFiles().map(f => f.name)
-            llm.setActiveFolderContext(null, allFiles)
-        } else {
-            llm.setActiveFileContext(null, null, null)
+        const syncContext = async () => {
+            if (activeFile) {
+                llm.loadChatHistory(activeFile.path)
+                llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
+            } else if (activeFolder) {
+                const files = activeFolder.children?.filter(c => !c.isDirectory) || []
+                const fileNames = files.map(c => c.name)
+                const previewMap = await loadFilePreviews(files as FileNode[])
+                llm.setActiveFolderContext(activeFolder.name, fileNames, previewMap)
+            } else if (vaultPath) {
+                // 根目录：传递所有文件
+                const allFiles = getAllFiles()
+                const fileNames = allFiles.map(f => f.name)
+                const previewMap = await loadFilePreviews(allFiles)
+                llm.setActiveFolderContext(null, fileNames, previewMap)
+            } else {
+                llm.setActiveFileContext(null, null, null)
+            }
         }
+        syncContext()
     }, [activeFile?.path, activeFolder?.path, vaultPath, getAllFiles, llm, fileContent])
 
     useEffect(() => {
