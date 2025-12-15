@@ -382,43 +382,16 @@ export function useFileSystem(): UseFileSystemReturn {
 
     /**
      * 重命名文件/文件夹
-     * 如果是 TXT/MD 文件，同时重命名配对的 MD/TXT 文件
      */
     const renameItem = useCallback(async (oldPath: string, newName: string) => {
         try {
             // 获取目录路径
             const pathParts = oldPath.split('/')
-            const oldFileName = pathParts.pop() || ''
+            pathParts.pop()
             const dir = pathParts.join('/')
             const newPath = dir ? `${dir}/${newName}` : newName
 
             await window.fs.renameFile(oldPath, newPath)
-
-            // 检查是否是 TXT/MD 文件，如果是则同步重命名配对文件
-            const oldExt = oldFileName.split('.').pop()?.toLowerCase()
-            const newExt = newName.split('.').pop()?.toLowerCase()
-            const oldBaseName = oldFileName.replace(/\.[^/.]+$/, '')
-            const newBaseName = newName.replace(/\.[^/.]+$/, '')
-
-            if ((oldExt === 'txt' || oldExt === 'md') && oldBaseName !== newBaseName) {
-                // 查找配对文件
-                const pairExt = oldExt === 'txt' ? 'md' : 'txt'
-                const pairOldName = `${oldBaseName}.${pairExt}`
-                const pairNewName = `${newBaseName}.${pairExt}`
-                const pairOldPath = dir ? `${dir}/${pairOldName}` : pairOldName
-                const pairNewPath = dir ? `${dir}/${pairNewName}` : pairNewName
-
-                // 检查配对文件是否存在
-                const pairFile = findNodeByPath(fileTree, pairOldPath)
-                if (pairFile) {
-                    try {
-                        await window.fs.renameFile(pairOldPath, pairNewPath)
-                        console.log(`📝 同步重命名配对文件: ${pairOldName} → ${pairNewName}`)
-                    } catch (e) {
-                        console.error('重命名配对文件失败:', e)
-                    }
-                }
-            }
 
             // 更新引用
             if (activeFile?.path === oldPath) {
@@ -439,7 +412,7 @@ export function useFileSystem(): UseFileSystemReturn {
         } catch (error) {
             console.error('重命名失败:', error)
         }
-    }, [activeFile, activeFolder, fileTree])
+    }, [activeFile, activeFolder])
 
     /**
      * 格式转换器
@@ -557,13 +530,38 @@ export function useFileSystem(): UseFileSystemReturn {
 
         try {
             if (existingFile) {
-                // 目标 TXT 已存在，覆盖它
-                await window.fs.writeFile(newPath, convertedContent)
-                await refreshTree()
-                await openFile({
-                    ...existingFile,
-                    extension: 'txt'
-                })
+                // 目标 TXT 已存在
+                // 检查 MD 是否有修改（与 TXT 内容比较）
+                const existingTxtContent = await window.fs.readFile(existingFile.path)
+
+                // 如果转换后的内容与现有 TXT 相同，说明 MD 没有实质性修改，直接打开
+                if (convertedContent === existingTxtContent.trim()) {
+                    await openFile(existingFile)
+                } else {
+                    // MD 有修改，创建带编号的新 TXT 文件
+                    let counter = 2
+                    let numberedName = `${baseName}_${counter}.txt`
+                    let numberedPath = dir ? `${dir}/${numberedName}` : numberedName
+
+                    // 查找可用的编号
+                    while (findNodeByPath(fileTree, numberedPath)) {
+                        counter++
+                        numberedName = `${baseName}_${counter}.txt`
+                        numberedPath = dir ? `${dir}/${numberedName}` : numberedName
+                    }
+
+                    await window.fs.createFile(numberedPath)
+                    await window.fs.writeFile(numberedPath, convertedContent)
+                    await refreshTree()
+
+                    const newNode: FileNode = {
+                        name: numberedName,
+                        path: numberedPath,
+                        isDirectory: false,
+                        extension: 'txt'
+                    }
+                    await openFile(newNode)
+                }
             } else {
                 // 目标 TXT 不存在，创建新文件
                 await window.fs.createFile(newPath)
