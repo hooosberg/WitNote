@@ -7,6 +7,8 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { marked } from 'marked'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 interface EditorProps {
     content: string
@@ -25,12 +27,45 @@ marked.setOptions({
 })
 
 /**
- * 使用 marked 库渲染 Markdown
- * 支持完整的 GitHub 风格语法
+ * 渲染 LaTeX 公式
+ */
+const renderLatex = (html: string): string => {
+    // 渲染块级公式 $$...$$
+    html = html.replace(/\$\$([^$]+)\$\$/g, (_, formula) => {
+        try {
+            return katex.renderToString(formula.trim(), {
+                displayMode: true,
+                throwOnError: false
+            })
+        } catch {
+            return `<span class="latex-error">$$${formula}$$</span>`
+        }
+    })
+
+    // 渲染行内公式 $...$（避免匹配 $$）
+    html = html.replace(/\$([^$\n]+)\$/g, (_, formula) => {
+        try {
+            return katex.renderToString(formula.trim(), {
+                displayMode: false,
+                throwOnError: false
+            })
+        } catch {
+            return `<span class="latex-error">$${formula}$</span>`
+        }
+    })
+
+    return html
+}
+
+/**
+ * 使用 marked + KaTeX 渲染 Markdown
+ * 支持完整的 GitHub 风格语法 + LaTeX 数学公式
  */
 const renderMarkdown = (md: string): string => {
     try {
-        return marked(md) as string
+        let html = marked(md) as string
+        html = renderLatex(html)
+        return html
     } catch {
         return md
     }
@@ -77,6 +112,27 @@ export const Editor: React.FC<EditorProps> = ({
             setShowPreview(false)
         }
     }, [isMarkdown])
+
+    // 切换预览/编辑模式时同步滚动位置
+    const togglePreview = () => {
+        const scrollContainer = scrollRef.current
+        if (scrollContainer) {
+            // 计算当前滚动位置的百分比
+            const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight
+            const scrollRatio = scrollHeight > 0 ? scrollContainer.scrollTop / scrollHeight : 0
+
+            // 切换预览状态
+            setShowPreview(prev => !prev)
+
+            // 在下一帧应用相同的滚动比例
+            requestAnimationFrame(() => {
+                const newScrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight
+                scrollContainer.scrollTop = newScrollHeight * scrollRatio
+            })
+        } else {
+            setShowPreview(prev => !prev)
+        }
+    }
 
     // 自动调整文本域高度
     useEffect(() => {
@@ -136,7 +192,7 @@ export const Editor: React.FC<EditorProps> = ({
                         {isMarkdown && (
                             <button
                                 className={`preview-btn ${showPreview ? 'active' : ''}`}
-                                onClick={() => setShowPreview(!showPreview)}
+                                onClick={togglePreview}
                                 title={showPreview ? '关闭预览' : '预览效果'}
                             >
                                 {showPreview ? (

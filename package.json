@@ -15,6 +15,7 @@
     "@mlc-ai/web-llm": "^0.2.73",
     "chokidar": "^5.0.0",
     "electron-store": "^11.0.2",
+    "katex": "^0.16.27",
     "lucide-react": "^0.561.0",
     "marked": "^17.0.1",
     "react": "^18.2.0",
