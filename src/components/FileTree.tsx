@@ -308,6 +308,12 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
             <div
                 className={`finder-tree-item ${isActive ? 'active' : ''}`}
                 onClick={handleClick}
+                onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    if (node.isDirectory) {
+                        setIsExpanded(!isExpanded)
+                    }
+                }}
                 onContextMenu={(e) => onContextMenu(e, node)}
                 style={{ paddingLeft: `${12 + level * 16}px` }}
             >
