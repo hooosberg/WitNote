@@ -103,10 +103,14 @@ async function readDirectoryTree(dirPath: string, rootPath: string): Promise<Fil
         }
     }
 
-    // 排序: 文件夹在前，然后按修改时间倒序（最新的在前）
+    // 排序: 文件夹在前按名称排序，文件按修改时间倒序
     return nodes.sort((a, b) => {
         if (a.isDirectory && !b.isDirectory) return -1
         if (!a.isDirectory && b.isDirectory) return 1
+        // 文件夹按名称字母顺序排序（避免因修改时间变化导致位置改变）
+        if (a.isDirectory && b.isDirectory) {
+            return a.name.localeCompare(b.name, 'zh-CN')
+        }
         // 文件按修改时间倒序
         return (b.modifiedAt || 0) - (a.modifiedAt || 0)
     })

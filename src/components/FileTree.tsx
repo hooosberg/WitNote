@@ -293,7 +293,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
     // 只有文件夹图标
     const getIcon = () => {
-        return isExpanded ? (
+        // 只有当文件夹有子文件夹且展开时才显示打开图标
+        return (isExpanded && hasSubFolders) ? (
             <FolderOpen size={16} strokeWidth={1.5} />
         ) : (
             <Folder size={16} strokeWidth={1.5} />
