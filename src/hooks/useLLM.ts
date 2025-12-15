@@ -497,6 +497,51 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
     }, [activeFileContent, activeFileName, activeFolderName, activeFolderFiles, providerType, getSystemPrompt]);
 
     /**
+     * 从用户消息中搜索匹配的文件
+     * 提取关键词，在 filePreviews 中搜索
+     */
+    const searchFiles = useCallback((userMessage: string): string | null => {
+        if (filePreviews.size === 0) return null;
+
+        // 提取关键词（去掉常见无意义词）
+        const stopWords = ['有没有', '有什么', '关于', '的', '吗', '呢', '啊', '文章', '文件', '笔记', '是'];
+        let query = userMessage;
+        stopWords.forEach(word => {
+            query = query.replace(new RegExp(word, 'g'), '');
+        });
+        query = query.trim();
+
+        if (!query || query.length < 1) return null;
+
+        // 在文件名和摘要中搜索
+        const matches: Array<{ name: string, preview: string }> = [];
+
+        filePreviews.forEach((preview, name) => {
+            // 文件名或摘要包含关键词
+            if (name.includes(query) || preview.includes(query)) {
+                matches.push({ name, preview });
+            }
+        });
+
+        // 也在 activeFolderFiles 中搜索（文件名）
+        activeFolderFiles.forEach(name => {
+            if (name.includes(query) && !matches.find(m => m.name === name)) {
+                const preview = filePreviews.get(name) || '';
+                matches.push({ name, preview });
+            }
+        });
+
+        if (matches.length === 0) return null;
+
+        // 构建搜索结果
+        const resultList = matches.slice(0, 5).map((m, i) =>
+            `${i + 1}. ${m.name}${m.preview ? `：${m.preview}` : ''}`
+        ).join('\n');
+
+        return `【搜索结果】关键词"${query}"匹配到 ${matches.length} 个文件：\n${resultList}`;
+    }, [filePreviews, activeFolderFiles]);
+
+    /**
      * 发送消息
      */
     const sendMessage = useCallback(async (content: string) => {
@@ -532,12 +577,21 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
 
         // 1. 添加系统提示词 + 上下文信息（合并为一条 system 消息）
         const contextInfo = buildContextInfo();
-        const systemContent = contextInfo
-            ? `${getSystemPrompt()}\n\n${contextInfo}`
-            : getSystemPrompt();
+
+        // 2. 执行前端搜索
+        const searchResult = searchFiles(content.trim());
+
+        // 3. 合并系统内容
+        let systemContent = getSystemPrompt();
+        if (contextInfo) {
+            systemContent += '\n\n' + contextInfo;
+        }
+        if (searchResult) {
+            systemContent += '\n\n' + searchResult;
+        }
         llmMessages.push({ role: 'system', content: systemContent });
 
-        // 2. 添加历史消息
+        // 4. 添加历史消息
         messages.forEach(m => {
             llmMessages.push({ role: m.role, content: m.content });
         });
@@ -607,7 +661,7 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
         } catch (error) {
             onError(error instanceof Error ? error : new Error('未知错误'));
         }
-    }, [messages, isGenerating, status, providerType, activeFilePath, buildContextInfo, getSystemPrompt]);
+    }, [messages, isGenerating, status, providerType, activeFilePath, buildContextInfo, getSystemPrompt, searchFiles]);
 
     /**
      * 加载聊天历史
