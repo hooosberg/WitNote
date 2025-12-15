@@ -106,6 +106,7 @@ const AppContent: React.FC = () => {
         selectVault,
         openFile,
         selectFolder,
+        getAllFiles,
         setFileContent,
         toggleFileFormat,
         createNewFile,
@@ -202,9 +203,19 @@ const AppContent: React.FC = () => {
         return fileTree.filter(n => !n.isDirectory)
     }
 
+    // 根据 activeFolder 获取当前显示的文件列表
+    const currentFiles = useMemo(() => {
+        if (!activeFolder) {
+            // 根目录：显示所有文件夹内的所有文件
+            return getAllFiles()
+        }
+        // 文件夹：显示该文件夹内的文件
+        return activeFolder.children?.filter(n => !n.isDirectory) || []
+    }, [activeFolder, getAllFiles])
+
     // 排序和筛选后的文件
     const sortedFilteredFiles = useMemo(() => {
-        let files = getCurrentFolderFiles()
+        let files = currentFiles
 
         // 颜色筛选
         if (filterColor !== 'all') {
@@ -221,14 +232,13 @@ const AppContent: React.FC = () => {
                 case 'time-asc':
                     return (a.modifiedAt || 0) - (b.modifiedAt || 0)
                 case 'time-desc':
-                    return (b.modifiedAt || 0) - (a.modifiedAt || 0)
                 default:
-                    return 0
+                    return (b.modifiedAt || 0) - (a.modifiedAt || 0)
             }
         })
 
         return files
-    }, [fileTree, activeFolder, filterColor, sortBy, colors])
+    }, [currentFiles, filterColor, sortBy, getColor])
 
     // 加载中
     if (!isInitialized) {
@@ -395,6 +405,9 @@ const AppContent: React.FC = () => {
                                                     <Home size={16} strokeWidth={1.5} />
                                                 </span>
                                                 <span className="finder-name">{vaultPath.split('/').pop()}</span>
+                                                <span className="finder-spacer" />
+                                                {/* 显示总文件数量 */}
+                                                <span className="finder-count">{getAllFiles().length}</span>
                                             </div>
 
                                             {/* 子文件夹 */}

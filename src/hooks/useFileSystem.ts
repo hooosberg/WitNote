@@ -37,6 +37,7 @@ export interface UseFileSystemReturn {
     refreshTree: () => Promise<void>
     openFile: (node: FileNode) => Promise<void>
     selectFolder: (node: FileNode | null) => void
+    getAllFiles: () => FileNode[]  // 递归获取所有文件
     saveFile: () => Promise<void>
     setFileContent: (content: string) => void
     createNewFile: (name: string, inDirectory?: string) => Promise<void>
@@ -163,15 +164,32 @@ export function useFileSystem(): UseFileSystemReturn {
         if (node && !node.isDirectory) return
         setActiveFolder(node)
         setActiveFile(null)
-        setFileContent('')
     }, [])
+
+    /**
+     * 递归获取所有文件（不包括文件夹）
+     */
+    const getAllFiles = useCallback((): FileNode[] => {
+        const collectFiles = (nodes: FileNode[]): FileNode[] => {
+            const files: FileNode[] = []
+            for (const node of nodes) {
+                if (!node.isDirectory) {
+                    files.push(node)
+                } else if (node.children) {
+                    files.push(...collectFiles(node.children))
+                }
+            }
+            return files
+        }
+        return collectFiles(fileTree)
+    }, [fileTree])
 
     /**
      * 打开文件
      */
     const openFile = useCallback(async (node: FileNode) => {
+        // 如果是文件夹，选中它
         if (node.isDirectory) {
-            // 如果是文件夹，选中它
             selectFolder(node)
             return
         }
@@ -184,13 +202,26 @@ export function useFileSystem(): UseFileSystemReturn {
         try {
             const content = await window.fs.readFile(node.path)
             setActiveFile(node)
-            setActiveFolder(null)
+
+            // 自动选中文件的父文件夹
+            const parentPath = node.path.includes('/')
+                ? node.path.substring(0, node.path.lastIndexOf('/'))
+                : null
+
+            if (parentPath) {
+                const parentNode = findNodeByPath(fileTree, parentPath)
+                setActiveFolder(parentNode)
+            } else {
+                // 文件在根目录
+                setActiveFolder(null)
+            }
+
             setFileContent(content)
             lastContentRef.current = content
         } catch (error) {
             console.error('打开文件失败:', error)
         }
-    }, [activeFile, fileContent, selectFolder])
+    }, [activeFile, fileContent, fileTree, selectFolder])
 
     /**
      * 保存当前文件
@@ -394,6 +425,7 @@ export function useFileSystem(): UseFileSystemReturn {
         refreshTree,
         openFile,
         selectFolder,
+        getAllFiles,
         saveFile,
         setFileContent: handleContentChange,
         createNewFile,
