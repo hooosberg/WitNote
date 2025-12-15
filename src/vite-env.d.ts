@@ -20,6 +20,7 @@ interface FileSystemAPI {
     getVaultPath(): Promise<string | null>
     setVaultPath(path: string): Promise<boolean>
     selectDirectory(): Promise<string | null>
+    disconnectVault(): Promise<boolean>
     readDirectory(path?: string): Promise<FileNode[]>
     readFile(path: string): Promise<string>
     writeFile(path: string, content: string): Promise<boolean>

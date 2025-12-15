@@ -173,6 +173,12 @@ function setupIpcHandlers() {
         return selectedPath
     })
 
+    // 断开连接（清除存储的路径）
+    ipcMain.handle('fs:disconnectVault', async () => {
+        store.delete('vaultPath')
+        return true
+    })
+
     // 读取目录树
     ipcMain.handle('fs:readDirectory', async (_event, path?: string) => {
         const vaultPath = path || store.get('vaultPath')

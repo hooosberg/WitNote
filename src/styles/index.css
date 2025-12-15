@@ -300,6 +300,9 @@ select:focus {
 /* 侧边栏底部操作区 */
 .sidebar-footer {
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .sidebar-footer-btn {
@@ -331,6 +334,44 @@ select:focus {
 
 .sidebar-footer-btn.connect:hover {
   background: rgba(0, 122, 255, 0.08);
+}
+
+/* 主要按钮 - 黑底白字 */
+.sidebar-footer-btn.primary {
+  color: white;
+  background: #1c1c1e;
+  border-color: #1c1c1e;
+  border-style: solid;
+}
+
+.sidebar-footer-btn.primary:hover {
+  background: #2c2c2e;
+  border-color: #2c2c2e;
+}
+
+/* 已连接状态 - 绿色 */
+.sidebar-footer-btn.connected {
+  color: #34c759;
+  border-color: #34c759;
+  border-style: solid;
+}
+
+.sidebar-footer-btn.connected:hover {
+  background: rgba(52, 199, 89, 0.08);
+  border-color: #28a745;
+}
+
+/* 未连接状态 - 灰色 */
+.sidebar-footer-btn.disconnected {
+  color: var(--text-tertiary);
+  border-color: var(--border-color);
+  border-style: dashed;
+}
+
+.sidebar-footer-btn.disconnected:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
 }
 
 /* ============ Finder 文件树 ============ */

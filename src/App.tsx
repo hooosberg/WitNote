@@ -16,7 +16,9 @@ import {
     Minus,
     Columns,
     ArrowUp,
-    ArrowDown
+    ArrowDown,
+    Link,
+    Unlink
 } from 'lucide-react'
 import Onboarding from './components/Onboarding'
 import FileTree, { ColorKey } from './components/FileTree'
@@ -481,25 +483,40 @@ const AppContent: React.FC = () => {
                                 {/* 底部操作按钮 */}
                                 <div className="sidebar-footer">
                                     {vaultPath ? (
-                                        <button
-                                            className="sidebar-footer-btn"
-                                            onClick={async () => {
-                                                const actualPath = await createNewFolder('未命名文件夹')
-                                                if (actualPath) {
-                                                    setEditingFolderPath(actualPath)
-                                                }
-                                            }}
-                                        >
-                                            <FolderPlus size={14} strokeWidth={1.5} />
-                                            <span>新建文件夹</span>
-                                        </button>
+                                        <>
+                                            <button
+                                                className="sidebar-footer-btn primary"
+                                                onClick={async () => {
+                                                    const actualPath = await createNewFolder('未命名文件夹')
+                                                    if (actualPath) {
+                                                        setEditingFolderPath(actualPath)
+                                                    }
+                                                }}
+                                            >
+                                                <FolderPlus size={14} strokeWidth={1.5} />
+                                                <span>新建文件夹</span>
+                                            </button>
+                                            <button
+                                                className="sidebar-footer-btn connected"
+                                                onClick={async () => {
+                                                    // 断开连接：清除存储的路径并重新加载
+                                                    await window.fs.disconnectVault()
+                                                    window.location.reload()
+                                                }}
+                                                title="断开连接"
+                                            >
+                                                <Link size={14} strokeWidth={1.5} />
+                                                <span>已链接文件夹</span>
+                                            </button>
+                                        </>
                                     ) : (
                                         <button
-                                            className="sidebar-footer-btn connect"
+                                            className="sidebar-footer-btn disconnected"
                                             onClick={selectVault}
+                                            title="连接本地文件夹"
                                         >
-                                            <FolderPlus size={14} strokeWidth={1.5} />
-                                            <span>新建/链接本地文件夹</span>
+                                            <Unlink size={14} strokeWidth={1.5} />
+                                            <span>链接本地文件夹</span>
                                         </button>
                                     )}
                                 </div>

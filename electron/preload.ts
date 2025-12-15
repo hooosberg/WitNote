@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('fs', {
     selectDirectory: (): Promise<string | null> =>
         ipcRenderer.invoke('fs:selectDirectory'),
 
+    disconnectVault: (): Promise<boolean> =>
+        ipcRenderer.invoke('fs:disconnectVault'),
+
     // 文件操作
     readDirectory: (path?: string): Promise<FileNode[]> =>
         ipcRenderer.invoke('fs:readDirectory', path),

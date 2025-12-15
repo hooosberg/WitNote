@@ -5,6 +5,7 @@ electron.contextBridge.exposeInMainWorld("fs", {
   getVaultPath: () => electron.ipcRenderer.invoke("fs:getVaultPath"),
   setVaultPath: (path) => electron.ipcRenderer.invoke("fs:setVaultPath", path),
   selectDirectory: () => electron.ipcRenderer.invoke("fs:selectDirectory"),
+  disconnectVault: () => electron.ipcRenderer.invoke("fs:disconnectVault"),
   // 文件操作
   readDirectory: (path) => electron.ipcRenderer.invoke("fs:readDirectory", path),
   readFile: (path) => electron.ipcRenderer.invoke("fs:readFile", path),
