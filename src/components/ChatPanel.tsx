@@ -1,18 +1,61 @@
-/**
- * 聊天面板 - 底部重心布局
- * 状态栏移到输入框上方，顶部留空
- */
-
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Square, Sparkles, Brain, Coffee } from 'lucide-react'
 import { ChatMessage } from '../services/types'
 import { UseLLMReturn } from '../hooks/useLLM'
+import { marked } from 'marked'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
+import DOMPurify from 'dompurify'
+import '../styles/chat-markdown.css'
+
+// 配置 marked
+marked.setOptions({
+    gfm: true,
+    breaks: true
+})
+
+// 渲染 LaTeX 公式
+const renderLatex = (html: string): string => {
+    // 保护代码块：将 <code>...</code> 和 <pre>...</pre> 替换为占位符
+    const codeBlocks: string[] = []
+    html = html.replace(/(<code[^>]*>[\s\S]*?<\/code>)|(<pre[^>]*>[\s\S]*?<\/pre>)/gi, (match) => {
+        codeBlocks.push(match)
+        return `__CODE_BLOCK_${codeBlocks.length - 1}__`
+    })
+
+    // 渲染块级公式 $$...$$
+    html = html.replace(/\$\$([^$]+)\$\$/g, (_, formula) => {
+        try {
+            return katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false })
+        } catch {
+            return formula
+        }
+    })
+
+    // 渲染行内公式 $...$
+    html = html.replace(/\$([^$\n]+)\$/g, (_, formula) => {
+        try {
+            return katex.renderToString(formula.trim(), { displayMode: false, throwOnError: false })
+        } catch {
+            return formula
+        }
+    })
+
+    // 还原代码块
+    html = html.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => {
+        return codeBlocks[parseInt(index)]
+    })
+
+    return html
+}
 
 interface ChatPanelProps {
     llm: UseLLMReturn
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
+    // ... 组件逻辑 ... (不再重复)
+
     const [inputValue, setInputValue] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -172,13 +215,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
     )
 }
 
+
 const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
+    const rawHtml = message.role === 'user'
+        ? message.content.replace(/\n/g, '<br/>') // 用户消息简单换行
+        : renderLatex(marked(message.content) as string) // AI 消息使用 Markdown + LaTeX
+
+    // 净化 HTML
+    const sanitizedHtml = DOMPurify.sanitize(rawHtml)
+
     return (
         <div className={`chat-bubble ${message.role}`}>
-            <div className="bubble-content">
-                {message.content}
-                {message.isStreaming && <span className="typing-cursor" />}
-            </div>
+            <div
+                className="bubble-content markdown-body" // 添加 markdown-body 类以复用样式
+                dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+            />
+            {message.isStreaming && <span className="typing-cursor" />}
         </div>
     )
 }

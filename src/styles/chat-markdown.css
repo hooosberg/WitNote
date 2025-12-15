@@ -1,0 +1,104 @@
+/* 聊天气泡中的 Markdown 样式 */
+.chat-bubble .markdown-body {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.chat-bubble .markdown-body p {
+    margin: 8px 0;
+}
+
+.chat-bubble .markdown-body p:first-child {
+    margin-top: 0;
+}
+
+.chat-bubble .markdown-body p:last-child {
+    margin-bottom: 0;
+}
+
+.chat-bubble .markdown-body pre {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.chat-bubble.user .markdown-body pre {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.chat-bubble .markdown-body code {
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    padding: 2px 4px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+
+.chat-bubble.user .markdown-body code {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.chat-bubble .markdown-body ul,
+.chat-bubble .markdown-body ol {
+    padding-left: 20px;
+    margin: 8px 0;
+}
+
+.chat-bubble .markdown-body li {
+    list-style: inherit;
+    margin: 4px 0;
+}
+
+.chat-bubble .markdown-body a {
+    text-decoration: underline;
+    color: inherit;
+    opacity: 0.8;
+}
+
+.chat-bubble .markdown-body a:hover {
+    opacity: 1;
+}
+
+/* 引用块 */
+.chat-bubble .markdown-body blockquote {
+    border-left: 3px solid rgba(0, 0, 0, 0.1);
+    padding-left: 10px;
+    margin: 8px 0;
+    color: inherit;
+    opacity: 0.8;
+}
+
+.chat-bubble.user .markdown-body blockquote {
+    border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 标题 */
+.chat-bubble .markdown-body h1,
+.chat-bubble .markdown-body h2,
+.chat-bubble .markdown-body h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 12px 0 6px;
+}
+
+/* 表格 */
+.chat-bubble .markdown-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0;
+    font-size: 0.9em;
+}
+
+.chat-bubble .markdown-body th,
+.chat-bubble .markdown-body td {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 6px;
+    text-align: left;
+}
+
+.chat-bubble.user .markdown-body th,
+.chat-bubble.user .markdown-body td {
+    border-color: rgba(255, 255, 255, 0.2);
+}

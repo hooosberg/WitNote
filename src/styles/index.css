@@ -155,6 +155,9 @@ select:focus {
 .panel-chat {
   background: var(--bg-chat);
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Panel 内部容器 */
@@ -1250,17 +1253,24 @@ select:focus {
 /* ============ ChatPanel ============ */
 .chat-panel-v2 {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  /* 改为 flex: 1 以适应 flex 父容器 */
   display: flex;
   flex-direction: column;
   background: var(--bg-chat);
+  overflow: hidden;
+  /* 防止溢出撑开 */
+  min-height: 0;
 }
 
 .chat-messages {
   flex: 1;
+  min-height: 0;
+  /* 关键：允许 flex 子项收缩 */
   overflow-y: auto;
   padding: 16px;
-  margin-top: var(--titlebar-height);
+  /* 需要避让顶部的红绿灯区域 */
+  padding-top: calc(16px + var(--titlebar-height));
 }
 
 .chat-empty {

@@ -63,9 +63,11 @@ export interface UseLLMReturn {
     sendMessage: (content: string) => Promise<void>;
     abortGeneration: () => void;
     clearMessages: () => void;
+    // 注入消息（不触发生成）
+    injectMessage: (role: 'system' | 'user' | 'assistant', content: string) => void;
     setMessages: (messages: ChatMessage[]) => void;
     retryDetection: () => void;
-    loadChatHistory: (filePath: string) => Promise<void>;
+    loadChatHistory: (filePath: string) => Promise<ChatMessage[]>;
     unloadModel: () => void;  // 卸载模型释放内存
 
     // 事件
@@ -688,18 +690,20 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
     /**
      * 加载聊天历史
      */
-    const loadChatHistory = useCallback(async (chatPath: string) => {
+    const loadChatHistory = useCallback(async (chatPath: string): Promise<ChatMessage[]> => {
         // 保存当前聊天路径（用于后续自动保存）
         setActiveChatPath(chatPath);
 
-        if (!window.chat) return;
+        if (!window.chat) return [];
         try {
             const history = await window.chat.load(chatPath) as ChatMessage[];
             setMessages(history || []);
             console.log(`📂 加载聊天记录 [${chatPath}]: ${history?.length || 0} 条消息`);
+            return history || [];
         } catch (error) {
             console.error('加载聊天记录失败:', error);
             setMessages([]);
+            return [];
         }
     }, []);
 
@@ -770,6 +774,19 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
         console.log('✅ 语言模型已卸载');
     }, []);
 
+    /**
+     * 注入消息（不触发生成）
+     */
+    const injectMessage = useCallback((role: 'system' | 'user' | 'assistant', content: string) => {
+        const newMessage: ChatMessage = {
+            id: generateId(),
+            role,
+            content,
+            timestamp: Date.now()
+        };
+        setMessages(prev => [...prev, newMessage]);
+    }, []);
+
     // 启动时检测
     useEffect(() => {
         detectAndInitialize();
@@ -806,6 +823,7 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
         sendMessage,
         abortGeneration,
         clearMessages,
+        injectMessage,   // 导出注入方法
         setMessages,
         retryDetection,
         loadChatHistory,

@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.73",
+    "@types/dompurify": "^3.0.5",
     "chokidar": "^5.0.0",
+    "dompurify": "^3.3.1",
     "electron-store": "^11.0.2",
     "katex": "^0.16.27",
     "lucide-react": "^0.561.0",
