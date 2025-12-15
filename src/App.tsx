@@ -157,35 +157,43 @@ const AppContent: React.FC = () => {
         return previewMap;
     }
 
-    // 上下文同步
+    // 上下文同步（仅在切换文件/文件夹时触发）
     useEffect(() => {
         const syncContext = async () => {
             if (activeFile) {
+                // 文件：使用文件路径作为聊天记录标识
                 llm.loadChatHistory(activeFile.path)
                 llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
             } else if (activeFolder) {
+                // 文件夹：使用虚拟路径 __folder__/文件夹名
+                const chatPath = `__folder__/${activeFolder.name}`
+                llm.loadChatHistory(chatPath)
                 const files = activeFolder.children?.filter(c => !c.isDirectory) || []
                 const fileNames = files.map(c => c.name)
                 const previewMap = await loadFilePreviews(files as FileNode[])
                 llm.setActiveFolderContext(activeFolder.name, fileNames, previewMap)
             } else if (vaultPath) {
-                // 根目录：传递所有文件
+                // 根目录：使用虚拟路径 __root__
+                llm.loadChatHistory('__root__')
                 const allFiles = getAllFiles()
                 const fileNames = allFiles.map(f => f.name)
                 const previewMap = await loadFilePreviews(allFiles)
                 llm.setActiveFolderContext(null, fileNames, previewMap)
             } else {
+                // 未连接：清空聊天
+                llm.clearMessages()
                 llm.setActiveFileContext(null, null, null)
             }
         }
         syncContext()
-    }, [activeFile?.path, activeFolder?.path, vaultPath, getAllFiles, llm, fileContent])
+    }, [activeFile?.path, activeFolder?.path, vaultPath])  // 移除 fileContent 避免编辑时重复触发
 
+    // 单独处理 fileContent 变化（编辑文件时）
     useEffect(() => {
-        if (activeFile) {
+        if (activeFile && fileContent !== null) {
             llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
         }
-    }, [fileContent])
+    }, [fileContent])  // 只监听 fileContent
 
     // 加载文件预览
     useEffect(() => {
@@ -587,66 +595,89 @@ const AppContent: React.FC = () => {
                         ) : (
                             /* 画廊视图 */
                             <div className="gallery-view">
-                                {/* 画廊头部 - 只有操作按钮 */}
-                                <div className={`gallery-header ${focusMode ? 'focus-mode' : ''}`}>
-                                    <div className="gallery-actions">
-                                        {/* 排序切换按钮 */}
-                                        <button
-                                            className="action-btn"
-                                            onClick={() => setSortBy(prev => prev === 'time-desc' ? 'time-asc' : 'time-desc')}
-                                            title={sortBy === 'time-desc' ? '最新优先' : '最早优先'}
-                                        >
-                                            {sortBy === 'time-desc' ? (
-                                                <ArrowUp size={16} strokeWidth={1.5} />
-                                            ) : (
-                                                <ArrowDown size={16} strokeWidth={1.5} />
-                                            )}
-                                        </button>
+                                {!vaultPath ? (
+                                    /* 未连接状态：显示莎士比亚节选 */
+                                    <div className="unconnected-poetry">
+                                        <div className="poetry-content">
+                                            <p className="poetry-en">
+                                                Shall I compare thee to a summer's day?<br />
+                                                Thou art more lovely and more temperate:<br />
+                                                Rough winds do shake the darling buds of May,<br />
+                                                And summer's lease hath all too short a date.
+                                            </p>
+                                            <p className="poetry-zh">
+                                                我是否应该将你比作夏日？<br />
+                                                你比夏日更可爱，更温和：<br />
+                                                狂风会摧残五月的娇蕾，<br />
+                                                夏日的芳华转瞬即逝。
+                                            </p>
+                                            <p className="poetry-author">— William Shakespeare, Sonnet 18</p>
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* 文件网格 - 第一个永远是新建卡片 */}
-                                <div className="gallery-grid-square">
-                                    {/* 新建文章卡片 */}
-                                    <div
-                                        className="file-card-square create-card"
-                                        onClick={handleQuickCreate}
-                                    >
-                                        <Plus size={32} strokeWidth={1.2} className="create-card-icon" />
-                                        <div className="create-card-text">新建文章</div>
-                                    </div>
-
-                                    {/* 文件卡片列表 */}
-                                    {sortedFilteredFiles.map(file => {
-                                        const style = getCardStyle(file.path)
-                                        const preview = previews[file.path] || ''
-                                        return (
-                                            <div
-                                                key={file.path}
-                                                className="file-card-square"
-                                                onClick={() => openFile(file)}
-                                                onContextMenu={(e) => handleCardContextMenu(e, file)}
-                                                style={{
-                                                    borderColor: style.border,
-                                                    background: style.bg
-                                                }}
-                                            >
-                                                <div className="card-title">
-                                                    {file.name.replace(/\.[^/.]+$/, '')}
-                                                </div>
-                                                <div className="card-summary">
-                                                    {preview || '...'}
-                                                </div>
-                                                <div className="card-date">
-                                                    {file.modifiedAt ? (() => {
-                                                        const d = new Date(file.modifiedAt)
-                                                        return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
-                                                    })() : '--'}
-                                                </div>
+                                ) : (
+                                    <>
+                                        {/* 画廊头部 - 只有操作按钮 */}
+                                        <div className={`gallery-header ${focusMode ? 'focus-mode' : ''}`}>
+                                            <div className="gallery-actions">
+                                                {/* 排序切换按钮 */}
+                                                <button
+                                                    className="action-btn"
+                                                    onClick={() => setSortBy(prev => prev === 'time-desc' ? 'time-asc' : 'time-desc')}
+                                                    title={sortBy === 'time-desc' ? '最新优先' : '最早优先'}
+                                                >
+                                                    {sortBy === 'time-desc' ? (
+                                                        <ArrowUp size={16} strokeWidth={1.5} />
+                                                    ) : (
+                                                        <ArrowDown size={16} strokeWidth={1.5} />
+                                                    )}
+                                                </button>
                                             </div>
-                                        )
-                                    })}
-                                </div>
+                                        </div>
+
+                                        {/* 文件网格 - 第一个永远是新建卡片 */}
+                                        <div className="gallery-grid-square">
+                                            {/* 新建文章卡片 */}
+                                            <div
+                                                className="file-card-square create-card"
+                                                onClick={handleQuickCreate}
+                                            >
+                                                <Plus size={32} strokeWidth={1.2} className="create-card-icon" />
+                                                <div className="create-card-text">新建文章</div>
+                                            </div>
+
+                                            {/* 文件卡片列表 */}
+                                            {sortedFilteredFiles.map(file => {
+                                                const style = getCardStyle(file.path)
+                                                const preview = previews[file.path] || ''
+                                                return (
+                                                    <div
+                                                        key={file.path}
+                                                        className="file-card-square"
+                                                        onClick={() => openFile(file)}
+                                                        onContextMenu={(e) => handleCardContextMenu(e, file)}
+                                                        style={{
+                                                            borderColor: style.border,
+                                                            background: style.bg
+                                                        }}
+                                                    >
+                                                        <div className="file-card-name">
+                                                            {file.name.replace(/\.[^/.]+$/, '')}
+                                                        </div>
+                                                        <div className="file-card-preview">
+                                                            {preview || '...'}
+                                                        </div>
+                                                        <div className="file-card-time">
+                                                            {file.modifiedAt ? (() => {
+                                                                const d = new Date(file.modifiedAt)
+                                                                return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+                                                            })() : '--'}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

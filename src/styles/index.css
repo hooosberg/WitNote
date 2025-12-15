@@ -1433,3 +1433,39 @@ select:focus {
     transform: translateY(0);
   }
 }
+
+/* ============ 未连接状态诗歌样式 ============ */
+.unconnected-poetry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+}
+
+.poetry-content {
+  max-width: 480px;
+  text-align: center;
+}
+
+.poetry-en {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 2;
+  margin-bottom: 24px;
+  letter-spacing: 0.2px;
+}
+
+.poetry-zh {
+  font-size: 15px;
+  color: var(--text-tertiary);
+  line-height: 2.2;
+  margin-bottom: 32px;
+}
+
+.poetry-author {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}

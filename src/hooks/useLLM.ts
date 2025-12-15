@@ -101,6 +101,8 @@ export function useLLM(): UseLLMReturn {
     const [activeFolderFiles, setActiveFolderFiles] = useState<string[]>([]);
     // 文件摘要 Map：文件名 -> 前 N 字内容
     const [filePreviews, setFilePreviews] = useState<Map<string, string>>(new Map());
+    // 当前聊天记录路径（文件路径或虚拟路径）
+    const [activeChatPath, setActiveChatPath] = useState<string | null>(null);
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
@@ -498,17 +500,27 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
 
     /**
      * 从用户消息中搜索匹配的文件
-     * 提取关键词，在 filePreviews 中搜索
+     * 只在用户有明确搜索意图时触发
      */
     const searchFiles = useCallback((userMessage: string): string | null => {
         if (filePreviews.size === 0) return null;
 
-        // 提取关键词（去掉常见无意义词，支持口语化搜索）
+        // 判断是否有搜索意图（包含搜索相关词汇）
+        const searchIntentWords = [
+            '有没有', '有什么', '有啥', '关于', '找', '搜索', '搜', '查',
+            '在哪', '哪里', '哪个', '哪些', '什么文件', '什么文章', '什么笔记'
+        ];
+        const hasSearchIntent = searchIntentWords.some(word => userMessage.includes(word));
+
+        // 没有搜索意图，不执行搜索
+        if (!hasSearchIntent) return null;
+
+        // 提取关键词（去掉无意义词）
         const stopWords = [
             '有没有', '有什么', '有啥', '关于', '的', '吗', '呢', '啊', '了',
             '文章', '文件', '笔记', '是', '找', '搜索', '搜', '查', '看看',
             '帮我', '帮忙', '给我', '我要', '我想', '能不能', '可以', '请',
-            '找找', '找一下', '查一下', '看一下', '在哪', '哪里', '什么'
+            '找找', '找一下', '查一下', '看一下', '在哪', '哪里', '什么', '哪个', '哪些'
         ];
         let query = userMessage;
         stopWords.forEach(word => {
@@ -516,7 +528,8 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
         });
         query = query.trim();
 
-        if (!query || query.length < 1) return null;
+        // 关键词太短或为空，不搜索
+        if (!query || query.length < 2) return null;
 
         // 在文件名和摘要中搜索
         const matches: Array<{ name: string, preview: string, location: string }> = [];
@@ -630,13 +643,13 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
             });
             setIsGenerating(false);
 
-            // 自动保存聊天记录
-            if (activeFilePath && window.chat) {
+            // 自动保存聊天记录（支持文件、文件夹和根目录）
+            if (activeChatPath && window.chat) {
                 try {
                     const finalMessages = [...newMessages];
                     finalMessages[finalMessages.length - 1].isStreaming = false;
-                    await window.chat.save(activeFilePath, finalMessages);
-                    console.log('💾 聊天记录已保存');
+                    await window.chat.save(activeChatPath, finalMessages);
+                    console.log(`💾 聊天记录已保存 [${activeChatPath}]`);
                 } catch (error) {
                     console.error('保存聊天记录失败:', error);
                 }
@@ -669,17 +682,20 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
         } catch (error) {
             onError(error instanceof Error ? error : new Error('未知错误'));
         }
-    }, [messages, isGenerating, status, providerType, activeFilePath, buildContextInfo, getSystemPrompt, searchFiles]);
+    }, [messages, isGenerating, status, providerType, activeChatPath, buildContextInfo, getSystemPrompt, searchFiles]);
 
     /**
      * 加载聊天历史
      */
-    const loadChatHistory = useCallback(async (filePath: string) => {
+    const loadChatHistory = useCallback(async (chatPath: string) => {
+        // 保存当前聊天路径（用于后续自动保存）
+        setActiveChatPath(chatPath);
+
         if (!window.chat) return;
         try {
-            const history = await window.chat.load(filePath) as ChatMessage[];
-            setMessages(history);
-            console.log(`📂 加载聊天记录: ${history.length} 条消息`);
+            const history = await window.chat.load(chatPath) as ChatMessage[];
+            setMessages(history || []);
+            console.log(`📂 加载聊天记录 [${chatPath}]: ${history?.length || 0} 条消息`);
         } catch (error) {
             console.error('加载聊天记录失败:', error);
             setMessages([]);
