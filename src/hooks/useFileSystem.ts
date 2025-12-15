@@ -158,13 +158,28 @@ export function useFileSystem(): UseFileSystemReturn {
     }, [])
 
     /**
-     * 选择文件夹
+     * 选择文件夹（退出编辑时检查空文件）
      */
-    const selectFolder = useCallback((node: FileNode | null) => {
+    const selectFolder = useCallback(async (node: FileNode | null) => {
         if (node && !node.isDirectory) return
+
+        // 检查当前文件：如果内容为空，删除该空文件（新建后未编辑）
+        if (activeFile && !fileContent.trim()) {
+            try {
+                await window.fs.deleteFile(activeFile.path)
+                console.log('🗑️ 删除空文件:', activeFile.path)
+                await refreshTree()
+            } catch (error) {
+                console.error('删除空文件失败:', error)
+            }
+        } else if (activeFile && fileContent !== lastContentRef.current) {
+            // 保存当前文件（如果有修改）
+            await window.fs.writeFile(activeFile.path, fileContent)
+        }
+
         setActiveFolder(node)
         setActiveFile(null)
-    }, [])
+    }, [activeFile, fileContent, refreshTree])
 
     /**
      * 递归获取所有文件（不包括文件夹）
@@ -194,8 +209,16 @@ export function useFileSystem(): UseFileSystemReturn {
             return
         }
 
-        // 保存当前文件（如果有修改）
-        if (activeFile && fileContent !== lastContentRef.current) {
+        // 检查当前文件：如果内容为空，删除该空文件（新建后未编辑）
+        if (activeFile && !fileContent.trim()) {
+            try {
+                await window.fs.deleteFile(activeFile.path)
+                console.log('🗑️ 删除空文件:', activeFile.path)
+            } catch (error) {
+                console.error('删除空文件失败:', error)
+            }
+        } else if (activeFile && fileContent !== lastContentRef.current) {
+            // 保存当前文件（如果有修改）
             await window.fs.writeFile(activeFile.path, fileContent)
         }
 
@@ -393,24 +416,22 @@ export function useFileSystem(): UseFileSystemReturn {
 
     /**
      * 格式转换器
-     * - MD → TXT：创建去除格式的 TXT 副本
-     * - TXT → MD：如果同名 MD 存在则打开，否则创建副本
+     * - MD → TXT：去除 MD 格式符号，保存为 TXT（覆盖或创建）
+     * - TXT → MD：如果同名 MD 存在则打开，否则重命名当前文件
      */
     const convertFileFormat = useCallback(async () => {
         if (!activeFile) return
 
-        const currentExt = activeFile.extension?.toLowerCase()
-        let newExt: string
+        const currentExt = activeFile.extension?.toLowerCase()?.replace('.', '')
 
-        if (currentExt === '.txt' || currentExt === 'txt') {
-            newExt = 'md'
-        } else if (currentExt === '.md' || currentExt === 'md') {
-            newExt = 'txt'
-        } else {
-            return
-        }
+        // 判断当前是 TXT 还是 MD
+        const isTxt = currentExt === 'txt'
+        const isMd = currentExt === 'md'
+
+        if (!isTxt && !isMd) return
 
         const baseName = activeFile.name.replace(/\.[^/.]+$/, '')
+        const newExt = isTxt ? 'md' : 'txt'
         const newName = `${baseName}.${newExt}`
 
         // 获取目录路径
@@ -422,53 +443,114 @@ export function useFileSystem(): UseFileSystemReturn {
         // 检查目标文件是否已存在
         const existingFile = findNodeByPath(fileTree, newPath)
 
-        if (existingFile) {
-            // 目标文件已存在，直接打开它
-            await openFile(existingFile)
+        // 如果文件内容为空，直接重命名当前文件（不创建新文件）
+        if (!fileContent.trim()) {
+            try {
+                await window.fs.renameFile(activeFile.path, newPath)
+                await refreshTree()
+                const newNode: FileNode = {
+                    name: newName,
+                    path: newPath,
+                    isDirectory: false,
+                    extension: newExt
+                }
+                await openFile(newNode)
+            } catch (error) {
+                console.error('格式转换失败:', error)
+            }
             return
         }
 
-        // 目标文件不存在，创建新副本
-        let convertedContent = fileContent
+        // ========== TXT → MD ==========
+        if (isTxt) {
+            if (existingFile) {
+                // 目标 MD 已存在，直接打开
+                await openFile(existingFile)
+            } else {
+                // 目标 MD 不存在，重命名当前文件（内容不变）
+                try {
+                    await window.fs.writeFile(activeFile.path, fileContent) // 先保存当前内容
+                    await window.fs.renameFile(activeFile.path, newPath)
+                    await refreshTree()
 
-        // 只有 MD → TXT 需要去除格式
-        if (newExt === 'txt') {
-            convertedContent = convertedContent
-                // 移除标题标记
-                .replace(/^#{1,6}\s+/gm, '')
-                // 移除加粗
-                .replace(/\*\*(.+?)\*\*/g, '$1')
-                .replace(/__(.+?)__/g, '$1')
-                // 移除斜体
-                .replace(/\*(.+?)\*/g, '$1')
-                .replace(/_(.+?)_/g, '$1')
-                // 移除行内代码
-                .replace(/`(.+?)`/g, '$1')
-                // 移除链接，保留文字
-                .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-                // 移除图片
-                .replace(/!\[.*?\]\(.+?\)/g, '')
-                // 移除引用标记
-                .replace(/^>\s+/gm, '')
-                // 移除列表标记
-                .replace(/^[-*+]\s+/gm, '')
-                .replace(/^\d+\.\s+/gm, '')
+                    const newNode: FileNode = {
+                        name: newName,
+                        path: newPath,
+                        isDirectory: false,
+                        extension: newExt
+                    }
+                    await openFile(newNode)
+                } catch (error) {
+                    console.error('格式转换失败:', error)
+                }
+            }
+            return
         }
 
-        try {
-            // 创建新文件
-            await window.fs.createFile(newPath)
-            await window.fs.writeFile(newPath, convertedContent)
-            await refreshTree()
+        // ========== MD → TXT ==========
+        // 总是去除 MD 格式符号
+        const convertedContent = fileContent
+            // 移除代码块（先处理多行代码块）
+            .replace(/```[\s\S]*?```/g, (match) => {
+                // 提取代码块内容（去掉首尾的 ``` 和语言标识）
+                const lines = match.split('\n')
+                lines.shift() // 移除开头的 ```language
+                lines.pop()   // 移除结尾的 ```
+                return lines.join('\n')
+            })
+            // 移除标题标记
+            .replace(/^#{1,6}\s+/gm, '')
+            // 移除加粗
+            .replace(/\*\*(.+?)\*\*/g, '$1')
+            .replace(/__(.+?)__/g, '$1')
+            // 移除斜体
+            .replace(/\*(.+?)\*/g, '$1')
+            .replace(/_(.+?)_/g, '$1')
+            // 移除删除线
+            .replace(/~~(.+?)~~/g, '$1')
+            // 移除行内代码
+            .replace(/`(.+?)`/g, '$1')
+            // 移除链接，保留文字
+            .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+            // 移除图片
+            .replace(/!\[.*?\]\(.+?\)/g, '')
+            // 移除引用标记
+            .replace(/^>\s*/gm, '')
+            // 移除无序列表标记
+            .replace(/^[-*+]\s+/gm, '')
+            // 移除有序列表标记
+            .replace(/^\d+\.\s+/gm, '')
+            // 移除任务列表标记
+            .replace(/^-\s*\[[ x]\]\s*/gm, '')
+            // 移除水平线
+            .replace(/^[-*_]{3,}\s*$/gm, '')
+            // 清理多余空行（最多保留两个连续空行）
+            .replace(/\n{3,}/g, '\n\n')
+            .trim()
 
-            // 打开新创建的文件
-            const newNode: FileNode = {
-                name: newName,
-                path: newPath,
-                isDirectory: false,
-                extension: newExt
+        try {
+            if (existingFile) {
+                // 目标 TXT 已存在，覆盖它
+                await window.fs.writeFile(newPath, convertedContent)
+                await refreshTree()
+                await openFile({
+                    ...existingFile,
+                    extension: 'txt'
+                })
+            } else {
+                // 目标 TXT 不存在，创建新文件
+                await window.fs.createFile(newPath)
+                await window.fs.writeFile(newPath, convertedContent)
+                await refreshTree()
+
+                const newNode: FileNode = {
+                    name: newName,
+                    path: newPath,
+                    isDirectory: false,
+                    extension: newExt
+                }
+                await openFile(newNode)
             }
-            await openFile(newNode)
         } catch (error) {
             console.error('格式转换失败:', error)
         }
