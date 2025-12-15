@@ -96,7 +96,11 @@ export const Editor: React.FC<EditorProps> = ({
             {/* 顶部工具栏 - 水平对齐 */}
             <div className={`editor-toolbar ${focusMode ? 'focus-mode' : ''}`}>
                 <div className="toolbar-group">
-                    <div className="format-badge">
+                    <button
+                        className="format-badge"
+                        onClick={onFormatToggle}
+                        title="切换格式"
+                    >
                         <span className="format-icon">
                             {isMarkdown ? (
                                 <FileCode size={14} strokeWidth={1.5} />
@@ -104,14 +108,10 @@ export const Editor: React.FC<EditorProps> = ({
                                 <FileText size={14} strokeWidth={1.5} />
                             )}
                         </span>
-                        <button
-                            className="format-toggle"
-                            onClick={onFormatToggle}
-                            title="切换格式"
-                        >
+                        <span className="format-label">
                             {isMarkdown ? 'MD' : 'TXT'}
-                        </button>
-                    </div>
+                        </span>
+                    </button>
                 </div>
             </div>
 
