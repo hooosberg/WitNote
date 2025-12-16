@@ -311,6 +311,45 @@ export function useLLM(): UseLLMReturn {
     }, [initializeOllama, initializeWebLLM, emitEngineChange]);
 
     /**
+     * 扫描已缓存的 WebLLM 模型
+     */
+    const scanCachedModels = useCallback(async () => {
+        try {
+            // WebLLM 使用 Cache API 存储模型
+            const cacheNames = await caches.keys();
+            const cachedModelIds = new Set<string>();
+
+            // 遍历所有缓存
+            for (const cacheName of cacheNames) {
+                // WebLLM 缓存通常包含模型 ID 在 URL 中
+                const cache = await caches.open(cacheName);
+                const requests = await cache.keys();
+
+                for (const request of requests) {
+                    const url = request.url;
+                    // 检查 URL 是否包含已知模型 ID
+                    for (const model of WEBLLM_MODELS) {
+                        if (url.includes(model.id) || url.includes(model.id.replace(/-/g, '_'))) {
+                            cachedModelIds.add(model.id);
+                        }
+                    }
+                }
+            }
+
+            if (cachedModelIds.size > 0) {
+                console.log('📦 检测到已缓存的模型:', Array.from(cachedModelIds));
+                setDownloadedModels(prev => {
+                    const newSet = new Set(prev);
+                    cachedModelIds.forEach(id => newSet.add(id));
+                    return newSet;
+                });
+            }
+        } catch (error) {
+            console.log('缓存扫描失败:', error);
+        }
+    }, []);
+
+    /**
      * 检测并初始化 LLM 引擎
      */
     const detectAndInitialize = useCallback(async () => {
@@ -318,6 +357,9 @@ export function useLLM(): UseLLMReturn {
         setStatus('detecting');
         setLoadProgress(null);
         setErrorMessage(null);
+
+        // 先扫描已缓存的模型
+        await scanCachedModels();
 
         const models = await OllamaService.detect();
 
@@ -338,7 +380,7 @@ export function useLLM(): UseLLMReturn {
 
         // 启动心跳检测
         startHeartbeat();
-    }, [initializeOllama, initializeWebLLM, startHeartbeat]);
+    }, [initializeOllama, initializeWebLLM, startHeartbeat, scanCachedModels]);
 
     /**
      * 根据模型类型获取合适的系统提示词

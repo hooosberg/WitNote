@@ -48,7 +48,8 @@ interface FileTreeProps {
     // 内联编辑
     editingPath?: string | null
     onEditComplete?: (path: string, newName: string) => void
-    onStartEdit?: (path: string) => void  // 开始编辑回调
+    onStartEdit?: (path: string) => void
+    onMove?: (sourcePath: string, targetDir: string) => void  // 拖拽移动回调
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({
@@ -65,7 +66,8 @@ export const FileTree: React.FC<FileTreeProps> = ({
     onRootSelect,
     editingPath,
     onEditComplete,
-    onStartEdit
+    onStartEdit,
+    onMove
 }) => {
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
         show: false,
@@ -143,11 +145,31 @@ export const FileTree: React.FC<FileTreeProps> = ({
 
     return (
         <div className="finder-tree">
-            {/* 根目录项 */}
+            {/* 根目录项 - 支持接收拖拽（移动到根目录） */}
             {rootName && (
                 <div
                     className={`finder-tree-item root-item ${isRootSelected ? 'active' : ''}`}
                     onClick={() => onRootSelect?.()}
+                    onDragOver={(e) => {
+                        e.preventDefault()
+                        e.currentTarget.classList.add('drag-over-inside')
+                    }}
+                    onDragLeave={(e) => {
+                        e.currentTarget.classList.remove('drag-over-inside')
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault()
+                        e.currentTarget.classList.remove('drag-over-inside')
+                        try {
+                            const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                            if (data.path && onMove) {
+                                // 移动到根目录（空字符串表示根目录）
+                                onMove(data.path, '')
+                            }
+                        } catch {
+                            console.error('拖拽数据解析失败')
+                        }
+                    }}
                     style={{ paddingLeft: '12px' }}
                 >
                     <span className="finder-icon">
@@ -170,6 +192,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     editingPath={editingPath}
                     onEditComplete={onEditComplete}
                     onStartEdit={onStartEdit}
+                    onMove={onMove}
                 />
             ))}
 
@@ -224,9 +247,10 @@ interface FileTreeItemProps {
     onContextMenu: (e: React.MouseEvent, node: FileNode) => void
     getColor?: (path: string) => ColorKey
     level: number
-    editingPath?: string | null  // 正在编辑的文件夹路径
-    onEditComplete?: (path: string, newName: string) => void  // 编辑完成回调
-    onStartEdit?: (path: string) => void  // 开始编辑回调
+    editingPath?: string | null
+    onEditComplete?: (path: string, newName: string) => void
+    onStartEdit?: (path: string) => void
+    onMove?: (sourcePath: string, targetPath: string) => void  // 拖拽移动回调
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
@@ -238,11 +262,15 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     level,
     editingPath,
     onEditComplete,
-    onStartEdit
+    onStartEdit,
+    onMove
 }) => {
     const [isExpanded, setIsExpanded] = useState(level < 1)
     const [editValue, setEditValue] = useState(node.name)
+    const [dragOver, setDragOver] = useState<'top' | 'bottom' | 'inside' | null>(null)
+    const [isDragging, setIsDragging] = useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
+    const dragTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
     const isEditing = editingPath === node.path
 
@@ -308,10 +336,96 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
     const fileCount = getFileCount()
 
+    // ========== 拖拽处理 ==========
+    const handleDragStart = (e: React.DragEvent) => {
+        setIsDragging(true)
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            type: 'folder',
+            path: node.path,
+            name: node.name
+        }))
+        e.dataTransfer.effectAllowed = 'move'
+    }
+
+    const handleDragEnd = () => {
+        setIsDragging(false)
+        setDragOver(null)
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current)
+        }
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        // 计算放置位置（上方/内部/下方）
+        const rect = e.currentTarget.getBoundingClientRect()
+        const y = e.clientY - rect.top
+        const height = rect.height
+
+        if (y < height * 0.25) {
+            setDragOver('top')
+        } else if (y > height * 0.75) {
+            setDragOver('bottom')
+        } else {
+            setDragOver('inside')
+            // 悬停 500ms 后展开文件夹
+            if (!dragTimeoutRef.current) {
+                dragTimeoutRef.current = setTimeout(() => {
+                    setIsExpanded(true)
+                }, 500)
+            }
+        }
+    }
+
+    const handleDragLeave = () => {
+        setDragOver(null)
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current)
+            dragTimeoutRef.current = null
+        }
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setDragOver(null)
+
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current)
+            dragTimeoutRef.current = null
+        }
+
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('application/json'))
+            if (!data.path || data.path === node.path) return
+
+            // 根据放置位置决定目标
+            if (dragOver === 'inside' && onMove) {
+                // 移动到此文件夹内
+                onMove(data.path, node.path)
+            }
+            // top/bottom 可用于排序，暂不实现
+        } catch {
+            console.error('拖拽数据解析失败')
+        }
+    }
+
+    // 拖拽样式类
+    const dragClass = isDragging ? 'dragging' : ''
+    const dropClass = dragOver ? `drag-over-${dragOver}` : ''
+
     return (
         <div className="finder-tree-node">
             <div
-                className={`finder-tree-item ${isActive ? 'active' : ''}`}
+                className={`finder-tree-item ${isActive ? 'active' : ''} ${dragClass} ${dropClass}`}
+                draggable={!isEditing}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
                 onClick={handleClick}
                 onDoubleClick={(e) => {
                     e.stopPropagation()
@@ -393,6 +507,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                             editingPath={editingPath}
                             onEditComplete={onEditComplete}
                             onStartEdit={onStartEdit}
+                            onMove={onMove}
                         />
                     ))}
                 </div>

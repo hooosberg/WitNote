@@ -1,9 +1,9 @@
 /**
  * Glass Gallery 文件卡片
- * 4:3 画框风格 + 颜色边框系统
+ * 4:3 画框风格 + 颜色边框系统 + 拖拽支持
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Folder, FileText, FileCode } from 'lucide-react'
 import { FileNode } from '../hooks/useFileSystem'
 import { TAG_COLORS, TagColor } from '../hooks/useColorTags'
@@ -13,15 +13,18 @@ interface FileCardProps {
     color: TagColor
     onClick: () => void
     onContextMenu: (e: React.MouseEvent) => void
+    onDragStart?: (node: FileNode) => void  // 拖拽开始回调
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
     node,
     color,
     onClick,
-    onContextMenu
+    onContextMenu,
+    onDragStart
 }) => {
     const colorStyles = TAG_COLORS[color]
+    const [isDragging, setIsDragging] = useState(false)
 
     // 格式化日期
     const formatDate = (timestamp?: number) => {
@@ -47,9 +50,30 @@ export const FileCard: React.FC<FileCardProps> = ({
         ? node.name
         : node.name.replace(/\.[^/.]+$/, '')
 
+    // 拖拽事件处理
+    const handleDragStart = (e: React.DragEvent) => {
+        setIsDragging(true)
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            type: 'file',
+            path: node.path,
+            name: node.name
+        }))
+        e.dataTransfer.effectAllowed = 'move'
+        if (onDragStart) {
+            onDragStart(node)
+        }
+    }
+
+    const handleDragEnd = () => {
+        setIsDragging(false)
+    }
+
     return (
         <div
-            className={`file-card-glass ${colorStyles.border} ${colorStyles.bg}`}
+            className={`file-card-glass ${colorStyles.border} ${colorStyles.bg} ${isDragging ? 'dragging' : ''}`}
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             onClick={onClick}
             onContextMenu={onContextMenu}
         >

@@ -105,14 +105,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [showModelMenu, downloadingModel])
 
+    // 获取当前流式消息的内容长度，用于触发滚动
+    const streamingContent = messages.find(m => m.isStreaming)?.content || ''
+
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }, [messages])
+        // 每当消息变化或流式内容更新时，滚动到底部
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' })
+    }, [messages, streamingContent])
 
     const handleSend = async () => {
         if (!inputValue.trim() || isGenerating || status !== 'ready') return
         const message = inputValue
         setInputValue('')
+        // 重置输入框高度
+        if (inputRef.current) {
+            inputRef.current.style.height = '20px'
+        }
         await sendMessage(message)
     }
 
@@ -126,8 +134,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInputValue(e.target.value)
         const textarea = e.target
-        textarea.style.height = 'auto'
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`
+        // 重置高度为最小值，让 scrollHeight 正确计算
+        textarea.style.height = '20px'
+        // 根据内容调整高度，但不超过最大值
+        const newHeight = Math.min(Math.max(textarea.scrollHeight, 20), 100)
+        textarea.style.height = `${newHeight}px`
     }
 
     const formatModelName = (name: string) => {
@@ -151,9 +162,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                         <p>AI 助手</p>
                     </div>
                 ) : (
-                    messages.map((msg) => (
-                        <ChatBubble key={msg.id} message={msg} />
-                    ))
+                    <>
+                        {messages.map((msg) => (
+                            <ChatBubble key={msg.id} message={msg} />
+                        ))}
+                        {/* AI 等待动画 - 当正在生成且没有流式消息时显示 */}
+                        {isGenerating && !messages.some(m => m.isStreaming) && (
+                            <div className="chat-bubble assistant">
+                                <div className="bubble-content typing-indicator">
+                                    <span className="typing-dot"></span>
+                                    <span className="typing-dot"></span>
+                                    <span className="typing-dot"></span>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
                 <div ref={messagesEndRef} />
             </div>
@@ -379,10 +402,11 @@ const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
     return (
         <div className={`chat-bubble ${message.role}`}>
             <div
-                className="bubble-content markdown-body" // 添加 markdown-body 类以复用样式
-                dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-            />
-            {message.isStreaming && <span className="typing-cursor" />}
+                className={`bubble-content markdown-body ${message.isStreaming ? 'streaming' : ''}`}
+            >
+                <span dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+                {message.isStreaming && <span className="typing-cursor" />}
+            </div>
         </div>
     )
 }

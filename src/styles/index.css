@@ -58,6 +58,9 @@ body,
   color: var(--text-primary);
   background: var(--bg-main);
   -webkit-font-smoothing: antialiased;
+  /* 全局禁用文字选择，让应用更像原生应用 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 input,
@@ -425,6 +428,9 @@ select:focus {
   cursor: pointer;
   transition: background var(--transition-fast);
   overflow: hidden;
+  /* 禁用文字选择，允许拖拽 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .finder-tree-item:hover {
@@ -498,6 +504,34 @@ select:focus {
   padding: 1px 5px;
   background: var(--bg-hover);
   border-radius: 6px;
+}
+
+/* 拖拽样式 */
+.finder-tree-item.dragging {
+  opacity: 0.4;
+}
+
+.finder-tree-item.drag-over-inside {
+  background: var(--accent-color-light, rgba(0, 122, 255, 0.15)) !important;
+  border-radius: var(--radius-md);
+}
+
+.finder-tree-item.drag-over-top {
+  box-shadow: inset 0 2px 0 var(--accent-color);
+}
+
+.finder-tree-item.drag-over-bottom {
+  box-shadow: inset 0 -2px 0 var(--accent-color);
+}
+
+/* 文件卡片拖拽 */
+.file-card-glass.dragging {
+  opacity: 0.4;
+}
+
+.file-card-glass.drag-over {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 2px var(--accent-color);
 }
 
 /* 右键菜单 */
@@ -803,6 +837,9 @@ select:focus {
   background: var(--bg-main);
   /* 保存标注颜色用于悬停效果 */
   --card-shadow-color: rgba(59, 130, 246, 0.3);
+  /* 禁用文字选择，允许拖拽 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .file-card-square:hover {
@@ -933,6 +970,9 @@ select:focus {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 编辑区允许文字选择 */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* 工具栏 - 与标题栏同高度，与画廊头部一致 */
@@ -1389,6 +1429,9 @@ select:focus {
   font-size: 13px;
   line-height: 1.5;
   border-radius: 16px;
+  /* 聊天内容允许文字选择 */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .chat-bubble.user .bubble-content {
@@ -1406,10 +1449,51 @@ select:focus {
 .typing-cursor {
   display: inline-block;
   width: 2px;
-  height: 13px;
-  background: currentColor;
+  height: 1em;
+  background: var(--accent-color);
   margin-left: 2px;
-  animation: blink 0.7s ease infinite;
+  animation: blink 0.8s ease infinite;
+  border-radius: 1px;
+  vertical-align: text-bottom;
+}
+
+/* AI 等待动画 - 三个圆圈上下跳动 */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
 }
 
 @keyframes blink {
@@ -1424,26 +1508,46 @@ select:focus {
   }
 }
 
-/* Chat Footer */
-.chat-footer {
-  border-top: 1px solid var(--border-color);
+/* 流式文字出现效果 */
+.bubble-content.streaming {
+  animation: text-glow 0.5s ease;
 }
 
-/* 状态栏 - 靠左布局 */
+@keyframes text-glow {
+  from {
+    text-shadow: 0 0 8px rgba(0, 122, 255, 0.4);
+  }
+
+  to {
+    text-shadow: none;
+  }
+}
+
+/* Chat Footer - 精致现代设计 */
+.chat-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 状态栏 - 居中对齐 */
 .chat-status-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 10px 14px;
+  justify-content: center;
+  padding: 0;
   font-size: 12px;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* 模型选择区 */
+/* 模型选择区 - 居中 */
 .chat-model-info {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
 }
 
 .model-brain {
@@ -1764,28 +1868,32 @@ select:focus {
 
 .chat-input-wrapper {
   display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 10px 14px;
-  margin: 12px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0;
   background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 16px;
+  transition: all var(--transition-normal);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .chat-input-wrapper:focus-within {
   border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
 .chat-input {
   flex: 1;
   min-height: 20px;
   max-height: 100px;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.5;
   background: transparent;
   border: none;
   resize: none;
+  color: var(--text-primary);
 }
 
 .chat-input::placeholder {
@@ -1793,29 +1901,32 @@ select:focus {
 }
 
 .send-btn {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-color);
+  background: linear-gradient(135deg, #007aff, #0056b3);
   color: white;
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
 }
 
 .send-btn:hover:not(:disabled) {
-  filter: brightness(1.1);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.4);
 }
 
 .send-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
+  background: var(--text-muted);
 }
 
 .send-btn.stop {
-  background: var(--error-color);
+  background: linear-gradient(135deg, #ff453a, #d9372e);
 }
 
 /* ============ Onboarding ============ */

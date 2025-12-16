@@ -47,6 +47,7 @@ export interface UseFileSystemReturn {
     deleteFile: (path: string) => Promise<void>
     renameItem: (oldPath: string, newName: string) => Promise<void>
     convertFileFormat: () => Promise<void>
+    moveItem: (sourcePath: string, targetDir: string) => Promise<boolean>  // 移动文件/文件夹
 }
 
 export function useFileSystem(): UseFileSystemReturn {
@@ -426,6 +427,61 @@ export function useFileSystem(): UseFileSystemReturn {
     }, [activeFile, activeFolder])
 
     /**
+     * 移动文件或文件夹到新目录
+     * @param sourcePath 源路径
+     * @param targetDir 目标目录路径（空字符串表示根目录）
+     * @returns 是否成功
+     */
+    const moveItem = useCallback(async (sourcePath: string, targetDir: string): Promise<boolean> => {
+        try {
+            // 获取源文件/文件夹的名称
+            const name = sourcePath.split('/').pop()
+            if (!name) return false
+
+            // 计算新路径
+            const newPath = targetDir ? `${targetDir}/${name}` : name
+
+            // 检查是否移动到自身或子目录（防止循环引用）
+            if (sourcePath === newPath) return false
+            if (newPath.startsWith(sourcePath + '/')) {
+                console.error('不能将文件夹移动到其子目录中')
+                return false
+            }
+
+            // 检查目标是否已存在同名文件
+            const existingItem = findNodeByPath(fileTree, newPath)
+            if (existingItem) {
+                console.error('目标位置已存在同名文件或文件夹')
+                return false
+            }
+
+            // 执行移动（使用 rename 实现）
+            await window.fs.renameFile(sourcePath, newPath)
+            await refreshTree()
+
+            // 更新引用
+            if (activeFile?.path === sourcePath) {
+                setActiveFile({
+                    ...activeFile,
+                    path: newPath
+                })
+            }
+            if (activeFolder?.path === sourcePath) {
+                setActiveFolder({
+                    ...activeFolder,
+                    path: newPath
+                })
+            }
+
+            console.log(`✅ 已移动: ${sourcePath} → ${newPath}`)
+            return true
+        } catch (error) {
+            console.error('移动失败:', error)
+            return false
+        }
+    }, [activeFile, activeFolder, fileTree, refreshTree])
+
+    /**
      * 格式转换器
      * - MD → TXT：去除 MD 格式符号，保存为 TXT（覆盖或创建）
      * - TXT → MD：如果同名 MD 存在则打开，否则重命名当前文件
@@ -644,7 +700,8 @@ export function useFileSystem(): UseFileSystemReturn {
         createNewFolder,
         deleteFile,
         renameItem,
-        convertFileFormat
+        convertFileFormat,
+        moveItem
     }
 }
 

@@ -128,6 +128,7 @@ const AppContent: React.FC = () => {
         createNewFolder,
         renameItem,
         deleteFile,
+        moveItem,
     } = fileSystem
 
     // 引擎切换
@@ -570,6 +571,9 @@ const AppContent: React.FC = () => {
                                                         }
                                                     }}
                                                     onStartEdit={(path) => setEditingFolderPath(path)}
+                                                    onMove={async (sourcePath, targetDir) => {
+                                                        await moveItem(sourcePath, targetDir)
+                                                    }}
                                                 />
                                             ) : (
                                                 <div className="sidebar-empty-hint">
