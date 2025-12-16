@@ -479,11 +479,11 @@ const AppContent: React.FC = () => {
         const color = getColor(path)
         const c = COLORS.find(x => x.key === color)
         if (!c || color === 'none') {
-            // 默认白色背景 + 蓝色投影
+            // 默认白色背景 + 灰色投影
             return {
                 border: 'rgba(0,0,0,0.08)',
                 bg: 'rgba(255, 255, 255, 0.95)',
-                shadow: 'rgba(59, 130, 246, 0.25)'
+                shadow: 'rgba(0, 0, 0, 0.12)'
             }
         }
         // 根据标注颜色设置投影颜色
