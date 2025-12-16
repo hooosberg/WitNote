@@ -350,6 +350,16 @@ function setupIpcHandlers() {
         }
         return true
     })
+
+    // 调整窗口宽度
+    ipcMain.handle('window:setWidth', (_event, width: number) => {
+        if (mainWindow) {
+            const bounds = mainWindow.getBounds()
+            mainWindow.setBounds({ ...bounds, width })
+            return true
+        }
+        return false
+    })
 }
 
 // ============ 窗口创建 ============
@@ -358,8 +368,8 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
-        minWidth: 1000,
-        minHeight: 700,
+        minWidth: 400,  // 允许更小的窗口（触发专注模式）
+        minHeight: 300,
 
         // macOS 原生视觉效果
         vibrancy: 'sidebar',

@@ -59,12 +59,64 @@ const AppContent: React.FC = () => {
     const { showToast } = useToast()
     const folderOrder = useFolderOrder()
 
-    // 专注模式：true = 两侧关闭，false = 两侧打开
-    const [focusMode, setFocusMode] = useState(false)
+    // 专注模式和响应式布局状态
+    const [manualFocusMode, setManualFocusMode] = useState(false) // 用户手动开启的专注模式
+    const [autoHideRight, setAutoHideRight] = useState(false)     // 响应式隐藏右侧
+    const [autoHideLeft, setAutoHideLeft] = useState(false)       // 响应式隐藏左侧
 
-    // 切换专注模式
+    // 响应式布局：渐进式隐藏面板
+    // > 1000px: 三栏（完整布局）
+    // 800-1000px: 两栏（先隐藏右侧AI面板）
+    // 800-1000px: 两栏（先隐藏左侧文件栏）
+    // < 800px: 单栏（再隐藏右侧AI栏）
+    useEffect(() => {
+        // 如果用户手动开启了专注模式，不受窗口尺寸影响
+        if (manualFocusMode) return
+
+        const THREE_COL_THRESHOLD = 1000  // 三栏阈值
+        const TWO_COL_THRESHOLD = 800     // 两栏阈值
+
+        const handleResize = () => {
+            const width = window.innerWidth
+            console.log('窗口宽度:', width)
+
+            if (width >= THREE_COL_THRESHOLD) {
+                // 宽屏：三栏布局，恢复所有面板
+                setAutoHideLeft(false)
+                setAutoHideRight(false)
+            } else if (width >= TWO_COL_THRESHOLD) {
+                // 中等：两栏布局，先隐藏左侧文件栏
+                setAutoHideLeft(true)
+                setAutoHideRight(false)
+            } else {
+                // 窄屏：单栏，再隐藏右侧AI栏
+                setAutoHideLeft(true)
+                setAutoHideRight(true)
+            }
+        }
+
+        // 初始检测
+        handleResize()
+
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [manualFocusMode])
+
+    // 派生的专注模式状态（用户手动隐藏两侧 或 响应式自动隐藏两侧）
+    const focusMode = manualFocusMode || (autoHideLeft && autoHideRight)
+
+    // 切换专注模式（手动控制）
     const toggleFocusMode = () => {
-        setFocusMode(prev => !prev)
+        if (autoHideLeft && autoHideRight && !manualFocusMode) {
+            // 在自动专注模式下（窗口<800px），调整窗口宽度到1000px
+            const appWindow = (window as unknown as { appWindow?: { setWidth: (w: number) => Promise<boolean> } }).appWindow
+            if (appWindow) {
+                appWindow.setWidth(1000)
+            }
+        } else {
+            // 正常切换手动专注模式
+            setManualFocusMode(prev => !prev)
+        }
     }
 
     // 专注模式变化时管理语言模型
@@ -78,9 +130,9 @@ const AppContent: React.FC = () => {
         }
     }, [focusMode])
 
-    // 派生状态
-    const leftCollapsed = focusMode
-    const rightCollapsed = focusMode
+    // 派生状态：左右面板独立控制
+    const leftCollapsed = manualFocusMode || autoHideLeft   // 手动专注模式或响应式隐藏左侧
+    const rightCollapsed = manualFocusMode || autoHideRight // 手动专注模式或响应式隐藏右侧
 
     // 对话框状态
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false)

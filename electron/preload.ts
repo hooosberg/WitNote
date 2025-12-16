@@ -93,4 +93,10 @@ contextBridge.exposeInMainWorld('platform', {
     isMac: process.platform === 'darwin'
 })
 
+// 暴露窗口控制 API
+contextBridge.exposeInMainWorld('appWindow', {
+    setWidth: (width: number): Promise<boolean> =>
+        ipcRenderer.invoke('window:setWidth', width)
+})
+
 console.log('🔗 Preload 脚本已加载')

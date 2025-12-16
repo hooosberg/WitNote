@@ -35,4 +35,7 @@ electron.contextBridge.exposeInMainWorld("platform", {
   os: process.platform,
   isMac: process.platform === "darwin"
 });
+electron.contextBridge.exposeInMainWorld("appWindow", {
+  setWidth: (width) => electron.ipcRenderer.invoke("window:setWidth", width)
+});
 console.log("🔗 Preload 脚本已加载");
