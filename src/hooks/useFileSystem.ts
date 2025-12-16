@@ -499,43 +499,75 @@ export function useFileSystem(): UseFileSystemReturn {
         }
 
         // ========== MD → TXT ==========
-        // 总是去除 MD 格式符号
-        const convertedContent = fileContent
-            // 移除代码块（先处理多行代码块）
-            .replace(/```[\s\S]*?```/g, (match) => {
-                // 提取代码块内容（去掉首尾的 ``` 和语言标识）
-                const lines = match.split('\n')
-                lines.shift() // 移除开头的 ```language
-                lines.pop()   // 移除结尾的 ```
-                return lines.join('\n')
-            })
-            // 移除标题标记
+        // 完整去除 MD 格式符号，产出干净的纯文本
+        let convertedContent = fileContent
+
+        // 1. 处理代码块（支持 ```, ````, 等多个反引号）
+        // 先移除四反引号代码块
+        convertedContent = convertedContent.replace(/````\w*\n([\s\S]*?)````/g, '$1')
+        // 再移除三反引号代码块
+        convertedContent = convertedContent.replace(/```\w*\n([\s\S]*?)```/g, '$1')
+
+        // 2. 处理表格 - 转换为制表符分隔的格式
+        convertedContent = convertedContent.replace(/^\|(.+)\|$/gm, (line) => {
+            // 跳过分隔行（只包含 -, :, |, 空格）
+            if (/^[\s|:\-]+$/.test(line)) return ''
+            // 提取单元格内容
+            return line
+                .split('|')
+                .filter(cell => cell.trim())
+                .map(cell => cell.trim())
+                .join('\t')
+        })
+
+        // 3. 处理各种格式标记（按顺序处理，避免冲突）
+        convertedContent = convertedContent
+            // 处理水平分隔线（单独一行的 --- 或 *** 或 ___）
+            .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+            // 移除标题标记（保留内容）
             .replace(/^#{1,6}\s+/gm, '')
-            // 移除加粗
-            .replace(/\*\*(.+?)\*\*/g, '$1')
-            .replace(/__(.+?)__/g, '$1')
-            // 移除斜体
-            .replace(/\*(.+?)\*/g, '$1')
-            .replace(/_(.+?)_/g, '$1')
-            // 移除删除线
-            .replace(/~~(.+?)~~/g, '$1')
-            // 移除行内代码
-            .replace(/`(.+?)`/g, '$1')
-            // 移除链接，保留文字
-            .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-            // 移除图片
-            .replace(/!\[.*?\]\(.+?\)/g, '')
-            // 移除引用标记
-            .replace(/^>\s*/gm, '')
-            // 移除无序列表标记
-            .replace(/^[-*+]\s+/gm, '')
-            // 移除有序列表标记
-            .replace(/^\d+\.\s+/gm, '')
-            // 移除任务列表标记
-            .replace(/^-\s*\[[ x]\]\s*/gm, '')
-            // 移除水平线
-            .replace(/^[-*_]{3,}\s*$/gm, '')
-            // 清理多余空行（最多保留两个连续空行）
+            // 处理图片 ![alt](url) 或 ![alt](url "title") → 移除
+            .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+            // 处理链接 [文字](链接) → 文字
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            // 处理粗体斜体组合 ***text*** 或 ___text___
+            .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+            .replace(/___([^_]+)___/g, '$1')
+            // 处理粗体 **text** 或 __text__
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            .replace(/__([^_]+)__/g, '$1')
+            // 处理斜体 *text* 或 _text_ (需要小心不匹配 ** 或 __)
+            .replace(/(?<![*])\*([^*\n]+)\*(?![*])/g, '$1')
+            .replace(/(?<![_])_([^_\n]+)_(?![_])/g, '$1')
+            // 处理删除线 ~~text~~
+            .replace(/~~([^~]+)~~/g, '$1')
+            // 处理行内代码 `code` (包括空的反引号)
+            .replace(/`+([^`]*)`+/g, '$1')
+            // 处理引用标记 > text（每行开头）
+            .replace(/^>\s?/gm, '')
+            // 处理无序列表标记（保留缩进）- 修复：匹配行首空格后的 */-/+
+            .replace(/^(\s*)[\-\*\+]\s+/gm, '$1')
+            // 处理有序列表标记（保留缩进）
+            .replace(/^(\s*)\d+\.\s+/gm, '$1')
+            // 处理任务列表 - [ ] 或 - [x]
+            .replace(/^(\s*)[\-\*]\s*\[[ xX]\]\s*/gm, '$1')
+            // 处理转义字符 \* \_ \` \\ 等（还原为原始字符）
+            .replace(/\\([\\`*_{}[\]()#+\-.!|>~])/g, '$1')
+            // 清理 LaTeX 公式块 (保留公式内容但移除 $$)
+            .replace(/\$\$([^$]+)\$\$/g, '$1')
+            // 保留行内公式的 $ 作为数学符号
+            // 清理 HTML 注释
+            .replace(/<!--[\s\S]*?-->/g, '')
+            // 清理可能残留的 HTML 标签
+            .replace(/<[^>]+>/g, '')
+
+        // 4. 最后清理
+        convertedContent = convertedContent
+            // 清理行首的全角空格（首行缩进）后面紧跟的多余空格
+            .replace(/^(　+)\s+/gm, '$1')
+            // 清理每行末尾的空格
+            .replace(/[ \t]+$/gm, '')
+            // 合并多个连续空行为最多两个
             .replace(/\n{3,}/g, '\n\n')
             .trim()
 
