@@ -30,10 +30,21 @@ marked.setOptions({
 
 /**
  * 渲染 LaTeX 公式
+ * 注意：需要保护 <code> 和 <pre> 标签内的内容不被渲染
  */
 const renderLatex = (html: string): string => {
-    // 渲染块级公式 $$...$$
-    html = html.replace(/\$\$([^$]+)\$\$/g, (_, formula) => {
+    // 临时占位符保护 code 和 pre 标签内容
+    const codeBlocks: string[] = []
+    const placeholder = '___CODE_BLOCK_PLACEHOLDER___'
+
+    // 1. 提取并保护所有 code 和 pre 标签内容
+    html = html.replace(/<(code|pre)[^>]*>[\s\S]*?<\/\1>/gi, (match) => {
+        codeBlocks.push(match)
+        return placeholder + (codeBlocks.length - 1) + '___'
+    })
+
+    // 2. 渲染块级公式 $$...$$ (支持多行)
+    html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_, formula) => {
         try {
             return katex.renderToString(formula.trim(), {
                 displayMode: true,
@@ -44,8 +55,8 @@ const renderLatex = (html: string): string => {
         }
     })
 
-    // 渲染行内公式 $...$（避免匹配 $$）
-    html = html.replace(/\$([^$\n]+)\$/g, (_, formula) => {
+    // 3. 渲染行内公式 $...$ (单行，避免匹配 $$)
+    html = html.replace(/(?<!\$)\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, formula) => {
         try {
             return katex.renderToString(formula.trim(), {
                 displayMode: false,
@@ -54,6 +65,11 @@ const renderLatex = (html: string): string => {
         } catch {
             return `<span class="latex-error">$${formula}$</span>`
         }
+    })
+
+    // 4. 恢复 code 和 pre 标签内容
+    html = html.replace(new RegExp(placeholder + '(\\d+)___', 'g'), (_, index) => {
+        return codeBlocks[parseInt(index)]
     })
 
     return html

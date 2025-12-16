@@ -117,6 +117,7 @@ const AppContent: React.FC = () => {
         activeFile,
         activeFolder,
         fileContent,
+        isNewlyCreatedFile,
         selectVault,
         openFile,
         selectFolder,
@@ -172,14 +173,22 @@ const AppContent: React.FC = () => {
     useEffect(() => {
         const syncContext = async () => {
             if (activeFile) {
-                // 文件：使用文件路径作为聊天记录标识
-                llm.loadChatHistory(activeFile.path).then((history) => {
-                    // 如果是 Markdown 文件且聊天记录为空，发送语法提示
-                    if (
-                        (activeFile.extension === 'md' || activeFile.extension === '.md') &&
-                        (!history || history.length === 0)
-                    ) {
-                        const mdCheatSheet = `👋 欢迎使用 Markdown 编辑模式！
+                // 检查是否是新文件（使用标志或内容为空判断）
+                const isNewFile = isNewlyCreatedFile || (!fileContent || fileContent.trim() === '')
+
+                if (isNewFile) {
+                    // 新文件：清空聊天记录，不加载历史
+                    llm.clearMessages()
+                    console.log('📝 新文件，清空聊天记录')
+                } else {
+                    // 已有内容的文件：加载聊天记录
+                    llm.loadChatHistory(activeFile.path).then((history) => {
+                        // 如果是 Markdown 文件且聊天记录为空，发送语法提示
+                        if (
+                            (activeFile.extension === 'md' || activeFile.extension === '.md') &&
+                            (!history || history.length === 0)
+                        ) {
+                            const mdCheatSheet = `👋 欢迎使用 Markdown 编辑模式！
 
 💡 **小贴士**：
 点击顶部工具栏的 **[ MD | TXT ]** 按钮，可以将当前文件转换为纯文本（.txt），并自动去除所有 Markdown 符号，还原纯净内容。
@@ -218,9 +227,10 @@ const AppContent: React.FC = () => {
    \`$E=mc^2$\` → $E=mc^2$ (数学公式)
 
 希望这能辅助您的写作！`;
-                        llm.injectMessage('assistant', mdCheatSheet);
-                    }
-                })
+                            llm.injectMessage('assistant', mdCheatSheet);
+                        }
+                    })
+                }
                 llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
             } else if (activeFolder) {
                 // 文件夹：使用虚拟路径 __folder__/文件夹名

@@ -32,6 +32,7 @@ export interface UseFileSystemReturn {
     activeFolder: FileNode | null
     fileContent: string
     isLoading: boolean
+    isNewlyCreatedFile: boolean  // 新创建的文件标志
 
     // 方法
     selectVault: () => Promise<boolean>
@@ -61,6 +62,7 @@ export function useFileSystem(): UseFileSystemReturn {
     const [activeFile, setActiveFile] = useState<FileNode | null>(null)
     const [activeFolder, setActiveFolder] = useState<FileNode | null>(null)
     const [fileContent, setFileContent] = useState('')
+    const [isNewlyCreatedFile, setIsNewlyCreatedFile] = useState(false)
 
     // 防抖保存定时器
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -242,6 +244,11 @@ export function useFileSystem(): UseFileSystemReturn {
 
             setFileContent(content)
             lastContentRef.current = content
+
+            // 如果文件有内容，说明不是新创建的，重置标志
+            if (content.trim()) {
+                setIsNewlyCreatedFile(false)
+            }
         } catch (error) {
             console.error('打开文件失败:', error)
         }
@@ -294,6 +301,9 @@ export function useFileSystem(): UseFileSystemReturn {
         try {
             await window.fs.createFile(path)
             await refreshTree()
+
+            // 标记为新创建的文件
+            setIsNewlyCreatedFile(true)
 
             // 打开新创建的文件
             const newNode: FileNode = {
@@ -590,6 +600,7 @@ export function useFileSystem(): UseFileSystemReturn {
         activeFolder,
         fileContent,
         isLoading,
+        isNewlyCreatedFile,
         selectVault,
         refreshTree,
         openFile,

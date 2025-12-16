@@ -122,6 +122,8 @@ export function useLLM(): UseLLMReturn {
     const [filePreviews, setFilePreviews] = useState<Map<string, string>>(new Map());
     // 当前聊天记录路径（文件路径或虚拟路径）
     const [activeChatPath, setActiveChatPath] = useState<string | null>(null);
+    // 会话内存缓存：存储虚拟路径（文件夹/根目录）的聊天记录，重启后清空
+    const sessionChatCache = useRef<Map<string, ChatMessage[]>>(new Map());
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
@@ -662,15 +664,24 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
             });
             setIsGenerating(false);
 
-            // 自动保存聊天记录（支持文件、文件夹和根目录）
-            if (activeChatPath && window.chat) {
-                try {
-                    const finalMessages = [...newMessages];
-                    finalMessages[finalMessages.length - 1].isStreaming = false;
-                    await window.chat.save(activeChatPath, finalMessages);
-                    console.log(`💾 聊天记录已保存 [${activeChatPath}]`);
-                } catch (error) {
-                    console.error('保存聊天记录失败:', error);
+            // 保存聊天记录
+            if (activeChatPath) {
+                const finalMessages = [...newMessages];
+                finalMessages[finalMessages.length - 1].isStreaming = false;
+
+                const isVirtualPath = activeChatPath.startsWith('__');
+                if (isVirtualPath) {
+                    // 虚拟路径：保存到内存缓存（重启后清空）
+                    sessionChatCache.current.set(activeChatPath, finalMessages);
+                    console.log(`💾 会话缓存已更新 [${activeChatPath}]`);
+                } else if (window.chat) {
+                    // 真实文件路径：持久化到磁盘
+                    try {
+                        await window.chat.save(activeChatPath, finalMessages);
+                        console.log(`💾 聊天记录已保存 [${activeChatPath}]`);
+                    } catch (error) {
+                        console.error('保存聊天记录失败:', error);
+                    }
                 }
             }
         };
@@ -705,11 +716,24 @@ ${fileList}${hasMore ? '\n... (更多文章)' : ''}
 
     /**
      * 加载聊天历史
+     * - 虚拟路径（__folder__/xxx 或 __root__）：从内存缓存加载
+     * - 真实文件路径：从磁盘加载
      */
     const loadChatHistory = useCallback(async (chatPath: string): Promise<ChatMessage[]> => {
         // 保存当前聊天路径（用于后续自动保存）
         setActiveChatPath(chatPath);
 
+        const isVirtualPath = chatPath.startsWith('__');
+
+        if (isVirtualPath) {
+            // 虚拟路径：从内存缓存加载
+            const cached = sessionChatCache.current.get(chatPath) || [];
+            setMessages(cached);
+            console.log(`📂 加载会话缓存 [${chatPath}]: ${cached.length} 条消息`);
+            return cached;
+        }
+
+        // 真实文件路径：从磁盘加载
         if (!window.chat) return [];
         try {
             const history = await window.chat.load(chatPath) as ChatMessage[];
