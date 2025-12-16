@@ -101,6 +101,12 @@ const AppContent: React.FC = () => {
     const [sortBy, setSortBy] = useState<SortOption>('time-desc')
     const [filterColor, setFilterColor] = useState<ColorKey | 'all'>('all')
 
+    // 卡片拖拽排序状态
+    const [cardDragSort, setCardDragSort] = useState<{
+        draggingPath: string | null  // 正在拖拽的卡片路径
+        hoverIndex: number | null     // 悬停的目标索引
+    }>({ draggingPath: null, hoverIndex: null })
+
     // 文件预览缓存
     const [previews, setPreviews] = useState<Record<string, string>>({})
 
@@ -391,6 +397,26 @@ const AppContent: React.FC = () => {
         return files
     }, [currentFiles, filterColor, sortBy, getColor, activeFolder?.path, folderOrder])
 
+    // 拖拽时的虚拟排序预览
+    const virtualOrderFiles = useMemo(() => {
+        if (!cardDragSort.draggingPath || cardDragSort.hoverIndex === null) {
+            return sortedFilteredFiles
+        }
+
+        const files = [...sortedFilteredFiles]
+        const draggedIndex = files.findIndex(f => f.path === cardDragSort.draggingPath)
+        if (draggedIndex === -1) return sortedFilteredFiles
+
+        // 从原位置移除
+        const [draggedFile] = files.splice(draggedIndex, 1)
+        // 插入到新位置
+        const insertIndex = draggedIndex < cardDragSort.hoverIndex
+            ? cardDragSort.hoverIndex - 1
+            : cardDragSort.hoverIndex
+        files.splice(insertIndex, 0, draggedFile)
+
+        return files
+    }, [sortedFilteredFiles, cardDragSort.draggingPath, cardDragSort.hoverIndex])
 
     // 加载中
     if (!isInitialized) {
@@ -817,14 +843,15 @@ const AppContent: React.FC = () => {
                                                 <div className="create-card-text">新建文章</div>
                                             </div>
 
-                                            {/* 文件卡片列表 */}
-                                            {sortedFilteredFiles.map((file, index) => {
+                                            {/* 文件卡片列表 - 使用虚拟排序 */}
+                                            {virtualOrderFiles.map((file, index) => {
                                                 const style = getCardStyle(file.path)
                                                 const preview = previews[file.path] || ''
+                                                const isDragging = cardDragSort.draggingPath === file.path
                                                 return (
                                                     <div
                                                         key={file.path}
-                                                        className="file-card-square"
+                                                        className={`file-card-square ${isDragging ? 'dragging' : ''}`}
                                                         draggable
                                                         onDragStart={(e) => {
                                                             e.dataTransfer.setData('application/json', JSON.stringify({
@@ -834,10 +861,37 @@ const AppContent: React.FC = () => {
                                                                 index
                                                             }))
                                                             e.dataTransfer.effectAllowed = 'move'
-                                                            e.currentTarget.classList.add('dragging')
+                                                            // 设置拖拽状态
+                                                            setCardDragSort({
+                                                                draggingPath: file.path,
+                                                                hoverIndex: index
+                                                            })
                                                         }}
-                                                        onDragEnd={(e) => {
-                                                            e.currentTarget.classList.remove('dragging')
+                                                        onDragOver={(e) => {
+                                                            e.preventDefault()
+                                                            // 如果悬停在其他卡片上，更新 hoverIndex
+                                                            if (cardDragSort.draggingPath && cardDragSort.draggingPath !== file.path) {
+                                                                const rect = e.currentTarget.getBoundingClientRect()
+                                                                const midX = rect.left + rect.width / 2
+                                                                // 根据鼠标在卡片的左/右半边决定插入位置
+                                                                const newHoverIndex = e.clientX < midX ? index : index + 1
+                                                                if (newHoverIndex !== cardDragSort.hoverIndex) {
+                                                                    setCardDragSort(prev => ({
+                                                                        ...prev,
+                                                                        hoverIndex: newHoverIndex
+                                                                    }))
+                                                                }
+                                                            }
+                                                        }}
+                                                        onDragEnd={() => {
+                                                            // 应用排序
+                                                            if (cardDragSort.draggingPath && cardDragSort.hoverIndex !== null) {
+                                                                const paths = virtualOrderFiles.map(f => f.path)
+                                                                const orderKey = activeFolder?.path || '__root_files__'
+                                                                folderOrder.setOrder(orderKey, paths)
+                                                            }
+                                                            // 重置拖拽状态
+                                                            setCardDragSort({ draggingPath: null, hoverIndex: null })
                                                         }}
                                                         onClick={() => openFile(file)}
                                                         onContextMenu={(e) => handleCardContextMenu(e, file)}
