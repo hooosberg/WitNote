@@ -569,6 +569,7 @@ const AppContent: React.FC = () => {
                                                             await renameItem(path, newName)
                                                         }
                                                     }}
+                                                    onStartEdit={(path) => setEditingFolderPath(path)}
                                                 />
                                             ) : (
                                                 <div className="sidebar-empty-hint">

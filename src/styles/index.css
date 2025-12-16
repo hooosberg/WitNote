@@ -424,6 +424,7 @@ select:focus {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background var(--transition-fast);
+  overflow: hidden;
 }
 
 .finder-tree-item:hover {
@@ -473,6 +474,8 @@ select:focus {
 /* 内联编辑输入框 */
 .finder-name-input {
   flex: 1;
+  min-width: 50px;
+  max-width: 100%;
   font-size: 13px;
   padding: 2px 4px;
   margin: -2px 0;
@@ -481,6 +484,7 @@ select:focus {
   background: var(--bg-primary);
   color: var(--text-primary);
   outline: none;
+  box-sizing: border-box;
 }
 
 .finder-spacer {

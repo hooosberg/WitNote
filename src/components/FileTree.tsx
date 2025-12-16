@@ -48,6 +48,7 @@ interface FileTreeProps {
     // 内联编辑
     editingPath?: string | null
     onEditComplete?: (path: string, newName: string) => void
+    onStartEdit?: (path: string) => void  // 开始编辑回调
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({
@@ -63,7 +64,8 @@ export const FileTree: React.FC<FileTreeProps> = ({
     isRootSelected,
     onRootSelect,
     editingPath,
-    onEditComplete
+    onEditComplete,
+    onStartEdit
 }) => {
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
         show: false,
@@ -167,6 +169,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     level={rootName ? 1 : 0}
                     editingPath={editingPath}
                     onEditComplete={onEditComplete}
+                    onStartEdit={onStartEdit}
                 />
             ))}
 
@@ -223,6 +226,7 @@ interface FileTreeItemProps {
     level: number
     editingPath?: string | null  // 正在编辑的文件夹路径
     onEditComplete?: (path: string, newName: string) => void  // 编辑完成回调
+    onStartEdit?: (path: string) => void  // 开始编辑回调
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
@@ -233,7 +237,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     getColor,
     level,
     editingPath,
-    onEditComplete
+    onEditComplete,
+    onStartEdit
 }) => {
     const [isExpanded, setIsExpanded] = useState(level < 1)
     const [editValue, setEditValue] = useState(node.name)
@@ -341,7 +346,21 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     />
                 ) : (
-                    <span className="finder-name">{node.name}</span>
+                    <span
+                        className="finder-name"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            // 如果已选中，单击名称进入编辑模式
+                            if (isActive && onStartEdit) {
+                                onStartEdit(node.path)
+                            } else {
+                                // 未选中时，先选中
+                                onFileSelect(node)
+                            }
+                        }}
+                    >
+                        {node.name}
+                    </span>
                 )}
 
                 <span className="finder-spacer" />
@@ -373,6 +392,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                             level={level + 1}
                             editingPath={editingPath}
                             onEditComplete={onEditComplete}
+                            onStartEdit={onStartEdit}
                         />
                     ))}
                 </div>
