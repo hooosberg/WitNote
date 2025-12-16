@@ -629,7 +629,7 @@ const AppContent: React.FC = () => {
                                         <>
                                             {/* 根目录项 - 始终显示，支持拖拽放入 */}
                                             <div
-                                                className={`finder-tree-item root-item ${!activeFolder && !activeFile ? 'active' : ''}`}
+                                                className={`finder-tree-item root-item ${!activeFolder ? 'active' : ''}`}
                                                 onClick={() => selectFolder(null)}
                                                 onContextMenu={(e) => {
                                                     e.preventDefault()
