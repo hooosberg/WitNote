@@ -136,12 +136,23 @@ export function useFileSystem(): UseFileSystemReturn {
         try {
             const tree = await window.fs.readDirectory()
             setFileTree(tree)
+
+            // 同步更新 activeFolder（从新的 tree 中找到对应节点）
+            if (activeFolder) {
+                const updatedFolder = findNodeByPath(tree, activeFolder.path)
+                if (updatedFolder) {
+                    setActiveFolder(updatedFolder)
+                } else {
+                    // 文件夹被删除，回到根目录
+                    setActiveFolder(null)
+                }
+            }
         } catch (error) {
             console.error('刷新文件树失败:', error)
         } finally {
             setIsLoading(false)
         }
-    }, [vaultPath])
+    }, [vaultPath, activeFolder])
 
     /**
      * 选择 Vault 目录
@@ -167,14 +178,22 @@ export function useFileSystem(): UseFileSystemReturn {
     const selectFolder = useCallback(async (node: FileNode | null) => {
         if (node && !node.isDirectory) return
 
-        // 检查当前文件：如果内容为空，删除该空文件（新建后未编辑）
+        // 检查当前文件：只有当内容为空且标题未修改（仍是 Untitled_xxx）时才删除
+        // 如果用户已经修改了标题（文件名），则保留文件即使内容为空
         if (activeFile && !fileContent.trim()) {
-            try {
-                await window.fs.deleteFile(activeFile.path)
-                console.log('🗑️ 删除空文件:', activeFile.path)
-                await refreshTree()
-            } catch (error) {
-                console.error('删除空文件失败:', error)
+            const isUntitled = activeFile.name.startsWith('Untitled_')
+            if (isUntitled) {
+                // 默认标题 + 空内容 = 删除
+                try {
+                    await window.fs.deleteFile(activeFile.path)
+                    console.log('🗑️ 删除空文件:', activeFile.path)
+                    await refreshTree()
+                } catch (error) {
+                    console.error('删除空文件失败:', error)
+                }
+            } else {
+                // 用户已修改标题但内容为空 = 保留文件（只保存）
+                console.log('📝 保留标题但内容为空的文件:', activeFile.path)
             }
         } else if (activeFile && fileContent !== lastContentRef.current) {
             // 保存当前文件（如果有修改）

@@ -29,6 +29,7 @@ import InputDialog from './components/InputDialog'
 import { ToastProvider, useToast } from './components/Toast'
 import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
+import { useFolderOrder } from './hooks/useFolderOrder'
 import './styles/index.css'
 
 // 颜色配置 - 红黄绿蓝
@@ -54,6 +55,7 @@ const AppContent: React.FC = () => {
     const fileSystem = useFileSystem()
     const llm = useLLM()
     const { showToast } = useToast()
+    const folderOrder = useFolderOrder()
 
     // 专注模式：true = 两侧关闭，false = 两侧打开
     const [focusMode, setFocusMode] = useState(false)
@@ -109,6 +111,7 @@ const AppContent: React.FC = () => {
         x: number
         y: number
     }>({ show: false, x: 0, y: 0 })
+
 
     const {
         vaultPath,
@@ -324,12 +327,12 @@ const AppContent: React.FC = () => {
     // 根据 activeFolder 获取当前显示的文件列表
     const currentFiles = useMemo(() => {
         if (!activeFolder) {
-            // 根目录：显示所有文件夹内的所有文件
-            return getAllFiles()
+            // 根目录：只显示根目录下直接的文件（不包括子文件夹内的）
+            return fileTree.filter(n => !n.isDirectory)
         }
         // 文件夹：显示该文件夹内的文件
         return activeFolder.children?.filter(n => !n.isDirectory) || []
-    }, [activeFolder, getAllFiles])
+    }, [activeFolder, fileTree])
 
     // 排序和筛选后的文件
     const sortedFilteredFiles = useMemo(() => {
@@ -340,23 +343,41 @@ const AppContent: React.FC = () => {
             files = files.filter(f => getColor(f.path) === filterColor)
         }
 
-        // 排序
-        files.sort((a, b) => {
-            switch (sortBy) {
-                case 'name-asc':
-                    return a.name.localeCompare(b.name)
-                case 'name-desc':
-                    return b.name.localeCompare(a.name)
-                case 'time-asc':
-                    return (a.modifiedAt || 0) - (b.modifiedAt || 0)
-                case 'time-desc':
-                default:
-                    return (b.modifiedAt || 0) - (a.modifiedAt || 0)
-            }
-        })
+        // 检查是否有自定义排序
+        const orderKey = activeFolder?.path || '__root_files__'
+        const customOrder = folderOrder.getOrder(orderKey)
+
+        if (customOrder.length > 0) {
+            // 使用自定义排序
+            files = [...files].sort((a, b) => {
+                const indexA = customOrder.indexOf(a.path)
+                const indexB = customOrder.indexOf(b.path)
+                // 不在列表中的放到最后
+                if (indexA === -1 && indexB === -1) return 0
+                if (indexA === -1) return 1
+                if (indexB === -1) return -1
+                return indexA - indexB
+            })
+        } else {
+            // 使用默认排序
+            files = [...files].sort((a, b) => {
+                switch (sortBy) {
+                    case 'name-asc':
+                        return a.name.localeCompare(b.name)
+                    case 'name-desc':
+                        return b.name.localeCompare(a.name)
+                    case 'time-asc':
+                        return (a.modifiedAt || 0) - (b.modifiedAt || 0)
+                    case 'time-desc':
+                    default:
+                        return (b.modifiedAt || 0) - (a.modifiedAt || 0)
+                }
+            })
+        }
 
         return files
-    }, [currentFiles, filterColor, sortBy, getColor])
+    }, [currentFiles, filterColor, sortBy, getColor, activeFolder?.path, folderOrder])
+
 
     // 加载中
     if (!isInitialized) {
@@ -502,7 +523,7 @@ const AppContent: React.FC = () => {
                                     <span className="sidebar-spacer" />
                                 </div>
 
-                                {/* 侧边栏内容 */}
+                                {/* 侧边栏内容 - 支持拖拽到空白区域移到根目录 */}
                                 <div
                                     className="sidebar-content"
                                     onClick={(e) => {
@@ -517,10 +538,38 @@ const AppContent: React.FC = () => {
                                             setSidebarMenu({ show: true, x: e.clientX, y: e.clientY })
                                         }
                                     }}
+                                    onDragOver={(e) => {
+                                        // 只在空白区域高亮（非子元素）
+                                        if (e.target === e.currentTarget) {
+                                            e.preventDefault()
+                                            e.currentTarget.classList.add('drag-over-blank')
+                                        }
+                                    }}
+                                    onDragLeave={(e) => {
+                                        if (e.target === e.currentTarget) {
+                                            e.currentTarget.classList.remove('drag-over-blank')
+                                        }
+                                    }}
+                                    onDrop={async (e) => {
+                                        // 只在空白区域处理拖拽
+                                        if (e.target === e.currentTarget) {
+                                            e.preventDefault()
+                                            e.currentTarget.classList.remove('drag-over-blank')
+                                            try {
+                                                const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                                                if (data.path) {
+                                                    // 移动到根目录
+                                                    await moveItem(data.path, '')
+                                                }
+                                            } catch {
+                                                console.error('拖拽数据解析失败')
+                                            }
+                                        }
+                                    }}
                                 >
                                     {vaultPath ? (
                                         <>
-                                            {/* 根目录项 - 始终显示 */}
+                                            {/* 根目录项 - 始终显示，支持拖拽放入 */}
                                             <div
                                                 className={`finder-tree-item root-item ${!activeFolder && !activeFile ? 'active' : ''}`}
                                                 onClick={() => selectFolder(null)}
@@ -528,6 +577,26 @@ const AppContent: React.FC = () => {
                                                     e.preventDefault()
                                                     e.stopPropagation()
                                                     setSidebarMenu({ show: true, x: e.clientX, y: e.clientY })
+                                                }}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault()
+                                                    e.currentTarget.classList.add('drag-over-inside')
+                                                }}
+                                                onDragLeave={(e) => {
+                                                    e.currentTarget.classList.remove('drag-over-inside')
+                                                }}
+                                                onDrop={async (e) => {
+                                                    e.preventDefault()
+                                                    e.currentTarget.classList.remove('drag-over-inside')
+                                                    try {
+                                                        const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                                                        if (data.path) {
+                                                            // 移动到根目录（空字符串表示根目录）
+                                                            await moveItem(data.path, '')
+                                                        }
+                                                    } catch {
+                                                        console.error('拖拽数据解析失败')
+                                                    }
                                                 }}
                                                 style={{ paddingLeft: '12px' }}
                                             >
@@ -546,6 +615,7 @@ const AppContent: React.FC = () => {
                                                     nodes={fileTree}
                                                     activeFilePath={activeFolder?.path || null}
                                                     onFileSelect={openFile}
+                                                    onRootSelect={() => selectFolder(null)}
                                                     onRename={(node) => {
                                                         setRenameTarget(node)
                                                         setShowRenameDialog(true)
@@ -574,6 +644,8 @@ const AppContent: React.FC = () => {
                                                     onMove={async (sourcePath, targetDir) => {
                                                         await moveItem(sourcePath, targetDir)
                                                     }}
+                                                    orderedPaths={folderOrder.getOrder('__root__')}
+                                                    onReorder={(newOrder) => folderOrder.setOrder('__root__', newOrder)}
                                                 />
                                             ) : (
                                                 <div className="sidebar-empty-hint">
@@ -733,13 +805,27 @@ const AppContent: React.FC = () => {
                                             </div>
 
                                             {/* 文件卡片列表 */}
-                                            {sortedFilteredFiles.map(file => {
+                                            {sortedFilteredFiles.map((file, index) => {
                                                 const style = getCardStyle(file.path)
                                                 const preview = previews[file.path] || ''
                                                 return (
                                                     <div
                                                         key={file.path}
                                                         className="file-card-square"
+                                                        draggable
+                                                        onDragStart={(e) => {
+                                                            e.dataTransfer.setData('application/json', JSON.stringify({
+                                                                type: 'file',
+                                                                path: file.path,
+                                                                name: file.name,
+                                                                index
+                                                            }))
+                                                            e.dataTransfer.effectAllowed = 'move'
+                                                            e.currentTarget.classList.add('dragging')
+                                                        }}
+                                                        onDragEnd={(e) => {
+                                                            e.currentTarget.classList.remove('dragging')
+                                                        }}
                                                         onClick={() => openFile(file)}
                                                         onContextMenu={(e) => handleCardContextMenu(e, file)}
                                                         style={{

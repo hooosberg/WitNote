@@ -282,6 +282,11 @@ select:focus {
   padding: 0 8px 8px 8px;
 }
 
+/* 侧边栏空白区域拖拽高亮 */
+.sidebar-content.drag-over-blank {
+  background: rgba(0, 122, 255, 0.05);
+}
+
 .sidebar-empty {
   padding: 32px;
   text-align: center;
@@ -414,6 +419,20 @@ select:focus {
   user-select: none;
 }
 
+/* 空白区域拖拽高亮 */
+.finder-tree.drag-over-blank,
+.finder-tree-blank.drag-over-blank {
+  background: rgba(0, 122, 255, 0.05);
+  border-radius: var(--radius-md);
+}
+
+/* 空白填充区域 - 占据剩余空间并可点击 */
+.finder-tree-blank {
+  flex: 1;
+  min-height: 100px;
+  cursor: pointer;
+}
+
 .finder-tree-node {
   margin: 1px 0;
 }
@@ -509,11 +528,13 @@ select:focus {
 /* 拖拽样式 */
 .finder-tree-item.dragging {
   opacity: 0.4;
+  transform: scale(0.98);
 }
 
 .finder-tree-item.drag-over-inside {
   background: var(--accent-color-light, rgba(0, 122, 255, 0.15)) !important;
   border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 2px var(--accent-color);
 }
 
 .finder-tree-item.drag-over-top {

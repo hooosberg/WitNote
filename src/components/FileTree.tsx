@@ -3,7 +3,7 @@
  * 只显示文件夹 + 红黄绿颜色标记
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
     ChevronRight,
     ChevronDown,
@@ -50,6 +50,9 @@ interface FileTreeProps {
     onEditComplete?: (path: string, newName: string) => void
     onStartEdit?: (path: string) => void
     onMove?: (sourcePath: string, targetDir: string) => void  // 拖拽移动回调
+    // 排序相关
+    orderedPaths?: string[]  // 已排序的路径数组
+    onReorder?: (newOrder: string[]) => void  // 排序变化回调
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({
@@ -67,7 +70,9 @@ export const FileTree: React.FC<FileTreeProps> = ({
     editingPath,
     onEditComplete,
     onStartEdit,
-    onMove
+    onMove,
+    orderedPaths,
+    onReorder
 }) => {
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
         show: false,
@@ -76,8 +81,29 @@ export const FileTree: React.FC<FileTreeProps> = ({
         node: null
     })
 
-    // 只显示文件夹
-    const folderNodes = nodes.filter(n => n.isDirectory)
+    // 空白区域右键菜单状态
+    const [blankMenu, setBlankMenu] = useState<{ show: boolean; x: number; y: number }>({
+        show: false,
+        x: 0,
+        y: 0
+    })
+
+    // 只显示文件夹，并根据 orderedPaths 排序
+    const folderNodes = useMemo(() => {
+        const folders = nodes.filter(n => n.isDirectory)
+        if (!orderedPaths || orderedPaths.length === 0) {
+            return folders
+        }
+        // 根据保存的顺序排序
+        return [...folders].sort((a, b) => {
+            const indexA = orderedPaths.indexOf(a.path)
+            const indexB = orderedPaths.indexOf(b.path)
+            if (indexA === -1 && indexB === -1) return 0
+            if (indexA === -1) return 1
+            if (indexB === -1) return -1
+            return indexA - indexB
+        })
+    }, [nodes, orderedPaths])
 
     // 点击外部关闭
     useEffect(() => {
@@ -85,16 +111,18 @@ export const FileTree: React.FC<FileTreeProps> = ({
             const target = e.target as HTMLElement
             if (!target.closest('.context-menu')) {
                 setContextMenu(prev => ({ ...prev, show: false, node: null }))
+                setBlankMenu(prev => ({ ...prev, show: false }))
             }
         }
 
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 setContextMenu(prev => ({ ...prev, show: false, node: null }))
+                setBlankMenu(prev => ({ ...prev, show: false }))
             }
         }
 
-        if (contextMenu.show) {
+        if (contextMenu.show || blankMenu.show) {
             document.addEventListener('mousedown', handleClickOutside)
             document.addEventListener('keydown', handleEscape)
         }
@@ -103,7 +131,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             document.removeEventListener('mousedown', handleClickOutside)
             document.removeEventListener('keydown', handleEscape)
         }
-    }, [contextMenu.show])
+    }, [contextMenu.show, blankMenu.show])
 
     const openContextMenu = useCallback((e: React.MouseEvent, node: FileNode) => {
         e.preventDefault()
@@ -144,7 +172,40 @@ export const FileTree: React.FC<FileTreeProps> = ({
     }
 
     return (
-        <div className="finder-tree">
+        <div
+            className="finder-tree"
+            onClick={(e) => {
+                // 点击空白区域回到根目录
+                if (e.target === e.currentTarget && onRootSelect) {
+                    onRootSelect()
+                }
+            }}
+            onDragOver={(e) => {
+                // 允许空白区域接收拖拽
+                e.preventDefault()
+                if (e.target === e.currentTarget) {
+                    e.currentTarget.classList.add('drag-over-blank')
+                }
+            }}
+            onDragLeave={(e) => {
+                if (e.target === e.currentTarget) {
+                    e.currentTarget.classList.remove('drag-over-blank')
+                }
+            }}
+            onDrop={(e) => {
+                e.preventDefault()
+                e.currentTarget.classList.remove('drag-over-blank')
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                    if (data.path && onMove) {
+                        // 移动到根目录
+                        onMove(data.path, '')
+                    }
+                } catch {
+                    console.error('拖拽数据解析失败')
+                }
+            }}
+        >
             {/* 根目录项 - 支持接收拖拽（移动到根目录） */}
             {rootName && (
                 <div
@@ -193,6 +254,8 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     onEditComplete={onEditComplete}
                     onStartEdit={onStartEdit}
                     onMove={onMove}
+                    siblings={folderNodes}
+                    onReorder={onReorder}
                 />
             ))}
 
@@ -236,6 +299,53 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     <button onClick={() => handleAction('delete')} className="danger">删除</button>
                 </div>
             )}
+
+            {/* 空白填充区域 - 点击回到根目录 */}
+            <div
+                className="finder-tree-blank"
+                onClick={() => onRootSelect?.()}
+                onContextMenu={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    // 显示空白区域右键菜单
+                    setBlankMenu({ show: true, x: e.clientX, y: e.clientY })
+                }}
+                onDragOver={(e) => {
+                    e.preventDefault()
+                    e.currentTarget.classList.add('drag-over-blank')
+                }}
+                onDragLeave={(e) => {
+                    e.currentTarget.classList.remove('drag-over-blank')
+                }}
+                onDrop={(e) => {
+                    e.preventDefault()
+                    e.currentTarget.classList.remove('drag-over-blank')
+                    try {
+                        const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                        if (data.path && onMove) {
+                            onMove(data.path, '')
+                        }
+                    } catch {
+                        console.error('拖拽数据解析失败')
+                    }
+                }}
+            />
+
+            {/* 空白区域右键菜单 */}
+            {blankMenu.show && (
+                <div
+                    className="context-menu"
+                    style={{ position: 'fixed', left: blankMenu.x, top: blankMenu.y }}
+                    onMouseDown={e => e.stopPropagation()}
+                >
+                    {onCreateFolder && (
+                        <button onClick={() => {
+                            onCreateFolder(undefined)  // undefined 表示在根目录创建
+                            setBlankMenu({ show: false, x: 0, y: 0 })
+                        }}>新建文件夹</button>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
@@ -251,6 +361,9 @@ interface FileTreeItemProps {
     onEditComplete?: (path: string, newName: string) => void
     onStartEdit?: (path: string) => void
     onMove?: (sourcePath: string, targetPath: string) => void  // 拖拽移动回调
+    // 排序相关
+    siblings?: FileNode[]  // 同级节点列表
+    onReorder?: (newOrder: string[]) => void  // 排序变化回调
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
@@ -263,7 +376,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     editingPath,
     onEditComplete,
     onStartEdit,
-    onMove
+    onMove,
+    siblings,
+    onReorder
 }) => {
     const [isExpanded, setIsExpanded] = useState(level < 1)
     const [editValue, setEditValue] = useState(node.name)
@@ -313,6 +428,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation()
+        // 拖拽过程中不触发选中（防止拖拽结束时意外切换视图）
+        if (isDragging) return
         // 只选择，不展开（展开由箭头控制）
         onFileSelect(node)
     }
@@ -390,6 +507,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
+        const currentDragOver = dragOver  // 保存当前值因为 setDragOver 后会清空
         setDragOver(null)
 
         if (dragTimeoutRef.current) {
@@ -401,12 +519,35 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
             const data = JSON.parse(e.dataTransfer.getData('application/json'))
             if (!data.path || data.path === node.path) return
 
-            // 根据放置位置决定目标
-            if (dragOver === 'inside' && onMove) {
+            // 检查是否是同级排序（拖拽项和目标项在同一层级）
+            const draggedParent = data.path.split('/').slice(0, -1).join('/')
+            const targetParent = node.path.split('/').slice(0, -1).join('/')
+            const isSameLevel = draggedParent === targetParent
+
+            if (currentDragOver === 'inside' && onMove) {
                 // 移动到此文件夹内
                 onMove(data.path, node.path)
+            } else if ((currentDragOver === 'top' || currentDragOver === 'bottom') && isSameLevel && siblings && onReorder) {
+                // 同级排序：重新排列顺序
+                const currentPaths = siblings.map(s => s.path)
+                const draggedIndex = currentPaths.indexOf(data.path)
+                const targetIndex = currentPaths.indexOf(node.path)
+
+                if (draggedIndex !== -1) {
+                    // 从原位置移除
+                    currentPaths.splice(draggedIndex, 1)
+                    // 计算新位置
+                    const newTargetIndex = currentPaths.indexOf(node.path)
+                    const insertIndex = currentDragOver === 'top' ? newTargetIndex : newTargetIndex + 1
+                    // 插入到新位置
+                    currentPaths.splice(insertIndex, 0, data.path)
+                    // 调用排序回调
+                    onReorder(currentPaths)
+                }
+            } else if ((currentDragOver === 'top' || currentDragOver === 'bottom') && onMove) {
+                // 跨层级移动：移动到当前节点的父目录
+                onMove(data.path, targetParent)
             }
-            // top/bottom 可用于排序，暂不实现
         } catch {
             console.error('拖拽数据解析失败')
         }
