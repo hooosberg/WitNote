@@ -16,7 +16,7 @@
 **智简笔记本** 是一款本地优先的 macOS AI 写作伴侣。
 我们将强大的**双模 AI 引擎**封装在极致简约的**原生卡片界面**之下。无云端依赖，无隐私焦虑，让智能回归轻盈。
 
-![App Screenshot](docs/screenshot.png)
+![本地 AI](src/pic/本地ai.png)
 
 ---
 
@@ -93,7 +93,9 @@ ollama pull qwen2.5:3b
 
 ## 📸 截图
 
-*(待添加)*
+![多语言支持](src/pic/多语言.png)
+![深色模式](src/pic/深色模式.png)
+![智能引擎切换](src/pic/智能引擎切换.png)
 
 ---
 

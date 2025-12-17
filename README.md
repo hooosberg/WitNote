@@ -16,7 +16,7 @@
 **WitNote** is a local-first AI writing companion for macOS.
 We pack a powerful **dual AI engine** into an ultra-minimalist **native card interface**. No cloud dependency, no privacy concerns — intelligence made lightweight.
 
-![App Screenshot](docs/screenshot.png)
+![Local AI](src/pic/本地ai.png)
 
 ---
 
@@ -93,7 +93,9 @@ The app automatically detects local Ollama service and prioritizes it.
 
 ## 📸 Screenshots
 
-*(Coming soon)*
+![Multilingual Support](src/pic/多语言.png)
+![Dark Mode](src/pic/深色模式.png)
+![Smart Engine Switching](src/pic/智能引擎切换.png)
 
 ---
 
