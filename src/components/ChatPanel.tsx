@@ -320,6 +320,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                         className="model-use-btn"
                                                                         onClick={async (e) => {
                                                                             e.stopPropagation()
+                                                                            setShowModelMenu(false)
                                                                             await setSelectedWebLLMModel(model.id)
                                                                         }}
                                                                     >
