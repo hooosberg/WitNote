@@ -269,36 +269,6 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                                     </button>
                                 </div>
                             </div>
-                            <div className="settings-row">
-                                <label>{t('settings.enableOllama')}</label>
-                                <label className="toggle-switch">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.ollamaEnabled}
-                                        onChange={(e) => setSetting('ollamaEnabled', e.target.checked)}
-                                    />
-                                    <span className="toggle-slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* 引擎策略 */}
-                        <div className="settings-section">
-                            <h3 className="settings-section-title">{t('settings.engineStrategy')}</h3>
-                            <div className="settings-row">
-                                <label>{t('settings.autoFallback')}</label>
-                                <label className="toggle-switch">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.autoFallback}
-                                        onChange={(e) => setSetting('autoFallback', e.target.checked)}
-                                    />
-                                    <span className="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <p className="settings-hint">
-                                {t('settings.autoFallbackHint')}
-                            </p>
                         </div>
                     </div>
                 );
