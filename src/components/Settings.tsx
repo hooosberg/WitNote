@@ -9,6 +9,8 @@ import {
     Palette,
     Bot,
     MessageSquare,
+    HelpCircle,
+    ExternalLink,
     Sun,
     Moon,
     Coffee,
@@ -19,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useSettings, AppSettings } from '../hooks/useSettings';
 
-type TabType = 'appearance' | 'ai' | 'persona';
+type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
 
 interface SettingsProps {
     isOpen: boolean;
@@ -181,6 +183,18 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         {/* Ollama 配置 */}
                         <div className="settings-section">
                             <h3 className="settings-section-title">Ollama 配置</h3>
+                            <p className="settings-hint ollama-download-hint">
+                                想要更强大的 AI 体验？推荐下载{' '}
+                                <a
+                                    href="https://ollama.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="external-link"
+                                >
+                                    Ollama <ExternalLink size={12} />
+                                </a>
+                                {' '}并安装更大的本地模型（如 Qwen、Llama 等）
+                            </p>
                             <div className="settings-row">
                                 <label>API 地址</label>
                                 <div className="ollama-url-input">
@@ -276,6 +290,98 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         </div>
                     </div>
                 );
+
+            case 'guide':
+                return (
+                    <div className="settings-tab-content guide-content">
+                        {/* 软件介绍 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">关于禅意笔记本</h3>
+                            <div className="guide-intro">
+                                <p className="guide-tagline">本地优先的 AI 智能笔记本</p>
+                                <p className="guide-description">
+                                    禅意笔记本是一款注重隐私的本地笔记应用，内置 AI 助手帮助您整理思绪、
+                                    润色文章、回答问题。所有数据存储在本地，AI 模型也可完全离线运行。
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* 设计理念 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">设计理念</h3>
+                            <ul className="guide-list">
+                                <li><strong>本地优先</strong> — 数据存储在您选择的文件夹，随时可用其他编辑器打开</li>
+                                <li><strong>隐私至上</strong> — 支持完全离线的本地 AI 模型，无需联网</li>
+                                <li><strong>简约专注</strong> — 极简界面设计，让您专注于写作本身</li>
+                                <li><strong>双模 AI</strong> — WebLLM 轻量内置 + Ollama 强力扩展</li>
+                            </ul>
+                        </div>
+
+                        {/* 快速上手 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">快速上手</h3>
+                            <div className="guide-steps">
+                                <div className="guide-step">
+                                    <span className="step-number">1</span>
+                                    <div className="step-content">
+                                        <strong>连接笔记文件夹</strong>
+                                        <p>首次启动时选择一个文件夹作为笔记库，所有 .txt 和 .md 文件将自动显示</p>
+                                    </div>
+                                </div>
+                                <div className="guide-step">
+                                    <span className="step-number">2</span>
+                                    <div className="step-content">
+                                        <strong>开始写作</strong>
+                                        <p>点击卡片编辑文章，支持 Markdown 语法和实时预览</p>
+                                    </div>
+                                </div>
+                                <div className="guide-step">
+                                    <span className="step-number">3</span>
+                                    <div className="step-content">
+                                        <strong>与 AI 对话</strong>
+                                        <p>右侧 AI 助手可以读取当前文章，帮您润色、总结或回答问题</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* AI 引擎说明 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">AI 引擎说明</h3>
+                            <div className="guide-engines">
+                                <div className="engine-card">
+                                    <div className="engine-header">
+                                        <span className="engine-badge builtin">内置</span>
+                                        <strong>WebLLM</strong>
+                                    </div>
+                                    <p>浏览器内运行的轻量模型，开箱即用，适合简单对话</p>
+                                </div>
+                                <div className="engine-card">
+                                    <div className="engine-header">
+                                        <span className="engine-badge external">扩展</span>
+                                        <strong>Ollama</strong>
+                                    </div>
+                                    <p>
+                                        本地运行的强力模型，需
+                                        <a href="https://ollama.com" target="_blank" rel="noopener noreferrer"> 下载安装 </a>
+                                        后使用，支持 Qwen、Llama、Gemma 等
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 开发者信息 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">开发者</h3>
+                            <p className="guide-developer">
+                                由 <strong>Maohuhu</strong> 独立开发
+                            </p>
+                            <p className="guide-version">
+                                版本 0.4.0-beta · 2025
+                            </p>
+                        </div>
+                    </div>
+                );
         }
     };
 
@@ -314,6 +420,13 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         >
                             <MessageSquare size={18} />
                             <span>角色设定</span>
+                        </button>
+                        <button
+                            className={`settings-tab ${activeTab === 'guide' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('guide')}
+                        >
+                            <HelpCircle size={18} />
+                            <span>使用说明</span>
                         </button>
                     </div>
 

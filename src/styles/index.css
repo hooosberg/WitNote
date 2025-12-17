@@ -2757,6 +2757,186 @@ select:focus {
   transform: translateX(20px);
 }
 
+/* Ollama 下载提示 */
+.ollama-download-hint {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent-color);
+}
+
+.external-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.external-link:hover {
+  text-decoration: underline;
+}
+
+/* ============ 使用说明页面样式 ============ */
+.guide-content {
+  padding-right: 8px;
+}
+
+.guide-intro {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.guide-tagline {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.guide-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.guide-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.guide-list li {
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.guide-list li:last-child {
+  border-bottom: none;
+}
+
+.guide-list li strong {
+  color: var(--text-primary);
+}
+
+/* 快速上手步骤 */
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.step-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* AI 引擎卡片 */
+.guide-engines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.engine-card {
+  padding: 12px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+}
+
+.engine-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.engine-header strong {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.engine-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.engine-badge.builtin {
+  background: var(--accent-color);
+  color: white;
+}
+
+.engine-badge.external {
+  background: var(--bg-active);
+  color: var(--accent-color);
+}
+
+.engine-card p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.engine-card a {
+  color: var(--accent-color);
+}
+
+/* 开发者信息 */
+.guide-developer {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.guide-developer strong {
+  color: var(--text-primary);
+}
+
+.guide-version {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
 /* 模板列表 */
 .template-list {
   display: flex;
