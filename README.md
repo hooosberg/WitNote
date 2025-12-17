@@ -95,9 +95,11 @@ MIT License
 
 ## 👨‍💻 开发者
 
-**zikedece**
+**hooosberg**
 
 📧 [zikedece@proton.me](mailto:zikedece@proton.me)
+
+🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
 ---
 

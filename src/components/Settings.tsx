@@ -373,10 +373,13 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         <div className="settings-section">
                             <h3 className="settings-section-title">开发者</h3>
                             <p className="guide-developer">
-                                由 <strong>zikedece</strong> 独立开发
+                                由 <strong>hooosberg</strong> 独立开发
                             </p>
                             <p className="guide-contact">
                                 📧 <a href="mailto:zikedece@proton.me">zikedece@proton.me</a>
+                            </p>
+                            <p className="guide-contact">
+                                🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub 开源地址</a>
                             </p>
                             <p className="guide-version">
                                 版本 1.0.0 · 2025
