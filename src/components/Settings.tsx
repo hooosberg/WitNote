@@ -15,8 +15,6 @@ import {
     Check,
     AlertCircle,
     Loader2,
-    Plus,
-    Trash2,
     RotateCcw
 } from 'lucide-react';
 import { useSettings, AppSettings } from '../hooks/useSettings';
@@ -37,19 +35,12 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         setTheme,
         setOllamaUrl,
         testOllamaConnection,
-        addPromptTemplate,
-        removePromptTemplate,
-        updatePromptTemplate,
         resetSettings
     } = useSettings();
 
     // Ollama 连接测试状态
     const [isTestingConnection, setIsTestingConnection] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
-
-    // 新模板输入状态
-    const [newTemplateName, setNewTemplateName] = useState('');
-    const [newTemplateContent, setNewTemplateContent] = useState('');
 
     // 临时 URL 输入状态
     const [tempOllamaUrl, setTempOllamaUrl] = useState(settings.ollamaBaseUrl);
@@ -86,14 +77,6 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
 
         // 3 秒后重置状态
         setTimeout(() => setConnectionStatus('idle'), 3000);
-    };
-
-    // 添加模板
-    const handleAddTemplate = async () => {
-        if (!newTemplateName.trim() || !newTemplateContent.trim()) return;
-        await addPromptTemplate(newTemplateName.trim(), newTemplateContent.trim());
-        setNewTemplateName('');
-        setNewTemplateContent('');
     };
 
     // Tab 内容
@@ -248,83 +231,18 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         <div className="settings-section">
                             <h3 className="settings-section-title">自定义系统提示词</h3>
                             <p className="settings-hint">
-                                添加自定义前置提示词，AI 会在每次对话中优先遵循
+                                设置 AI 助手的角色和行为方式。这段提示词会添加到每次对话的开头，让 AI 按照你的期望来回答。
                             </p>
                             <textarea
                                 value={settings.customSystemPrompt}
                                 onChange={(e) => setSetting('customSystemPrompt', e.target.value)}
-                                placeholder="例如：你是一位专业的写作导师，擅长帮助用户提升写作技巧..."
+                                placeholder="例如：你是一位专业的写作导师，请用简洁友好的方式帮助用户改进文章..."
                                 className="settings-textarea"
-                                rows={4}
+                                rows={6}
                             />
-                        </div>
-
-                        {/* 提示词模板 */}
-                        <div className="settings-section">
-                            <h3 className="settings-section-title">
-                                提示词模板
-                                <span className="template-count">
-                                    {settings.promptTemplates.length}/5
-                                </span>
-                            </h3>
-
-                            {/* 已有模板列表 */}
-                            {settings.promptTemplates.length > 0 && (
-                                <div className="template-list">
-                                    {settings.promptTemplates.map((template) => (
-                                        <div key={template.id} className="template-item">
-                                            <div className="template-header">
-                                                <input
-                                                    type="text"
-                                                    value={template.name}
-                                                    onChange={(e) => updatePromptTemplate(template.id, { name: e.target.value })}
-                                                    className="template-name-input"
-                                                />
-                                                <button
-                                                    className="template-delete-btn"
-                                                    onClick={() => removePromptTemplate(template.id)}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                            <textarea
-                                                value={template.content}
-                                                onChange={(e) => updatePromptTemplate(template.id, { content: e.target.value })}
-                                                className="template-content-input"
-                                                rows={2}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* 新增模板 */}
-                            {settings.promptTemplates.length < 5 && (
-                                <div className="add-template">
-                                    <input
-                                        type="text"
-                                        value={newTemplateName}
-                                        onChange={(e) => setNewTemplateName(e.target.value)}
-                                        placeholder="模板名称"
-                                        className="settings-input"
-                                    />
-                                    <textarea
-                                        value={newTemplateContent}
-                                        onChange={(e) => setNewTemplateContent(e.target.value)}
-                                        placeholder="模板内容..."
-                                        className="settings-textarea"
-                                        rows={2}
-                                    />
-                                    <button
-                                        className="add-template-btn"
-                                        onClick={handleAddTemplate}
-                                        disabled={!newTemplateName.trim() || !newTemplateContent.trim()}
-                                    >
-                                        <Plus size={16} />
-                                        添加模板
-                                    </button>
-                                </div>
-                            )}
+                            <p className="settings-hint" style={{ marginTop: '8px' }}>
+                                💡 留空则使用默认的助手角色
+                            </p>
                         </div>
                     </div>
                 );

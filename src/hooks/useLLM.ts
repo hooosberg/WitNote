@@ -19,6 +19,7 @@ import {
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
 import { WebLLMService } from '../services/WebLLMService';
+import { useSettings } from './useSettings';
 
 // 心跳检测间隔 (毫秒)
 const HEARTBEAT_INTERVAL = 5000;
@@ -89,6 +90,10 @@ function generateId(): string {
 }
 
 export function useLLM(): UseLLMReturn {
+    // 获取用户设置中的自定义系统提示词
+    const { settings } = useSettings();
+    const customSystemPrompt = settings.customSystemPrompt;
+
     // 提供者状态
     const [providerType, setProviderType] = useState<LLMProviderType>('webllm');
     const [status, setStatus] = useState<LLMStatus>('detecting');
@@ -383,12 +388,19 @@ export function useLLM(): UseLLMReturn {
     }, [initializeOllama, initializeWebLLM, startHeartbeat, scanCachedModels]);
 
     /**
-     * 根据模型类型获取合适的系统提示词
+     * 根据模型类型和用户设置获取合适的系统提示词
      */
     const getSystemPrompt = useCallback(() => {
-        // Ollama 大模型用完整版，WebLLM 微型模型用精简版
-        return providerType === 'ollama' ? SYSTEM_PROMPT_FULL : SYSTEM_PROMPT_LITE;
-    }, [providerType]);
+        // 基础提示词：Ollama 大模型用完整版，WebLLM 微型模型用精简版
+        const basePrompt = providerType === 'ollama' ? SYSTEM_PROMPT_FULL : SYSTEM_PROMPT_LITE;
+
+        // 如果用户设置了自定义提示词，将其前置
+        if (customSystemPrompt && customSystemPrompt.trim()) {
+            return `${customSystemPrompt.trim()}\n\n${basePrompt}`;
+        }
+
+        return basePrompt;
+    }, [providerType, customSystemPrompt]);
 
     /**
      * 构建上下文信息（不包含系统提示词）
