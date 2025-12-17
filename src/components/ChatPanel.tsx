@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Send, Square, Sparkles, Brain, Check, Download, Trash2 } from 'lucide-react'
 import { ChatMessage } from '../services/types'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -198,8 +199,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                     >
                                         {formatModelName(selectedOllamaModel || modelName)}
                                     </button>
-                                    {showModelMenu && (
-                                        <div className="model-dropdown">
+                                    {showModelMenu && createPortal(
+                                        <div className="model-dropdown" ref={menuRef}>
                                             {/* Ollama 头部提示 */}
                                             <div className="model-dropdown-header">
                                                 <span className="header-icon">🔗</span>
@@ -229,7 +230,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                             setShowModelMenu(false)
                                                                         }}
                                                                     >
-                                                                        使用
+                                                                        <span className="btn-default">已下载</span>
+                                                                        <span className="btn-hover">使用</span>
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -237,7 +239,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                     </div>
                                                 )
                                             })}
-                                        </div>
+                                        </div>,
+                                        document.body
                                     )}
                                 </div>
                             ) : providerType === 'webllm' ? (
@@ -248,8 +251,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                     >
                                         {webllmModels.find(m => m.id === selectedWebLLMModel)?.name || formatModelName(modelName)}
                                     </button>
-                                    {showModelMenu && (
-                                        <div className="model-dropdown">
+                                    {showModelMenu && createPortal(
+                                        <div className="model-dropdown" ref={menuRef}>
                                             {webllmModels.map((model) => {
                                                 const isCurrentModel = model.id === selectedWebLLMModel
                                                 const isDownloading = downloadingModel === model.id
@@ -338,7 +341,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                     </div>
                                                 )
                                             })}
-                                        </div>
+                                        </div>,
+                                        document.body
                                     )}
                                 </div>
                             ) : (

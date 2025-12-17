@@ -223,6 +223,7 @@ select:focus {
 .panel-main {
   background: var(--bg-main);
   position: relative;
+  z-index: 1;
   overflow: hidden;
   width: 100%;
   height: 100%;
@@ -234,12 +235,16 @@ select:focus {
   background: var(--bg-chat);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  overflow: hidden;
+  overflow: visible;
   height: 100%;
   display: flex;
   flex-direction: column;
   /* 为 macOS 标题栏留出空间 */
   padding-top: var(--titlebar-height);
+  /* 确保在 panel-main 之上，让下拉框可以显示 */
+  /* z-index 必须足够高，因为 backdrop-filter 创建了新的层叠上下文 */
+  position: relative;
+  z-index: 100;
 }
 
 /* Panel 内部容器 */
@@ -1741,15 +1746,15 @@ select:focus {
   position: fixed;
   bottom: 120px;
   right: 16px;
-  min-width: 260px;
-  max-width: 280px;
+  min-width: 300px;
+  max-width: 340px;
   max-height: 400px;
   overflow-y: auto;
   background: var(--bg-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 99999;
 }
 
 /* 下拉菜单头部 */
@@ -1809,6 +1814,10 @@ select:focus {
   font-weight: 600;
   color: var(--text-primary);
   transition: color var(--transition-fast);
+  /* 确保名称显示完整 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .model-item-size {
@@ -1905,9 +1914,9 @@ select:focus {
   align-items: center;
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: var(--bg-hover);
-  border: none;
+  border: 1px solid var(--border-color);
   padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
