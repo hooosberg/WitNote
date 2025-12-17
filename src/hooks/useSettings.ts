@@ -1,0 +1,242 @@
+/**
+ * useSettings Hook
+ * 集中管理应用设置状态，支持持久化
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+
+// 提示词模板
+export interface PromptTemplate {
+    id: string;
+    name: string;
+    content: string;
+}
+
+// 应用设置
+export interface AppSettings {
+    // 外观
+    theme: 'light' | 'dark' | 'tea';
+    fontFamily: 'system' | 'serif';
+    fontSize: number; // 12-18
+
+    // Ollama 配置
+    ollamaBaseUrl: string;
+    ollamaEnabled: boolean;
+
+    // AI 策略
+    preferredEngine: 'ollama' | 'webllm';
+    autoFallback: boolean;
+
+    // 角色设定
+    customSystemPrompt: string;
+    promptTemplates: PromptTemplate[];
+}
+
+// 默认设置
+export const DEFAULT_SETTINGS: AppSettings = {
+    // 外观
+    theme: 'light',
+    fontFamily: 'system',
+    fontSize: 13,
+
+    // Ollama 配置
+    ollamaBaseUrl: 'http://localhost:11434',
+    ollamaEnabled: true,
+
+    // AI 策略
+    preferredEngine: 'ollama',
+    autoFallback: true,
+
+    // 角色设定
+    customSystemPrompt: '',
+    promptTemplates: []
+};
+
+export interface UseSettingsReturn {
+    settings: AppSettings;
+    isLoading: boolean;
+
+    // 设置方法
+    setSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => Promise<void>;
+    setSettings: (updates: Partial<AppSettings>) => Promise<void>;
+    resetSettings: () => Promise<void>;
+
+    // 主题快捷方法
+    setTheme: (theme: AppSettings['theme']) => Promise<void>;
+
+    // Ollama 快捷方法
+    setOllamaUrl: (url: string) => Promise<void>;
+    testOllamaConnection: () => Promise<boolean>;
+
+    // 提示词模板方法
+    addPromptTemplate: (name: string, content: string) => Promise<void>;
+    removePromptTemplate: (id: string) => Promise<void>;
+    updatePromptTemplate: (id: string, updates: Partial<PromptTemplate>) => Promise<void>;
+}
+
+// 生成唯一 ID
+function generateId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+export function useSettings(): UseSettingsReturn {
+    const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // 加载设置
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                if (window.settings) {
+                    const stored = await window.settings.get();
+                    if (stored) {
+                        setSettingsState({ ...DEFAULT_SETTINGS, ...stored });
+                    }
+                }
+            } catch (error) {
+                console.error('加载设置失败:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadSettings();
+    }, []);
+
+    // 应用主题到 DOM
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', settings.theme);
+    }, [settings.theme]);
+
+    // 应用字体设置到 DOM
+    useEffect(() => {
+        document.documentElement.style.setProperty(
+            '--font-family-main',
+            settings.fontFamily === 'serif'
+                ? "'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif"
+                : "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif"
+        );
+        document.documentElement.style.setProperty('--font-size-base', `${settings.fontSize}px`);
+    }, [settings.fontFamily, settings.fontSize]);
+
+    // 设置单个值
+    const setSetting = useCallback(async <K extends keyof AppSettings>(
+        key: K,
+        value: AppSettings[K]
+    ) => {
+        setSettingsState(prev => ({ ...prev, [key]: value }));
+        try {
+            if (window.settings) {
+                await window.settings.set(key, value);
+            }
+        } catch (error) {
+            console.error('保存设置失败:', error);
+        }
+    }, []);
+
+    // 批量设置
+    const setSettings = useCallback(async (updates: Partial<AppSettings>) => {
+        setSettingsState(prev => ({ ...prev, ...updates }));
+        try {
+            if (window.settings) {
+                for (const [key, value] of Object.entries(updates)) {
+                    await window.settings.set(key, value);
+                }
+            }
+        } catch (error) {
+            console.error('保存设置失败:', error);
+        }
+    }, []);
+
+    // 重置设置
+    const resetSettings = useCallback(async () => {
+        setSettingsState(DEFAULT_SETTINGS);
+        try {
+            if (window.settings) {
+                await window.settings.reset();
+            }
+        } catch (error) {
+            console.error('重置设置失败:', error);
+        }
+    }, []);
+
+    // 设置主题
+    const setTheme = useCallback(async (theme: AppSettings['theme']) => {
+        await setSetting('theme', theme);
+    }, [setSetting]);
+
+    // 设置 Ollama URL
+    const setOllamaUrl = useCallback(async (url: string) => {
+        await setSetting('ollamaBaseUrl', url);
+    }, [setSetting]);
+
+    // 测试 Ollama 连接
+    const testOllamaConnection = useCallback(async (): Promise<boolean> => {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(`${settings.ollamaBaseUrl}/api/tags`, {
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+            return response.ok;
+        } catch {
+            return false;
+        }
+    }, [settings.ollamaBaseUrl]);
+
+    // 添加提示词模板
+    const addPromptTemplate = useCallback(async (name: string, content: string) => {
+        if (settings.promptTemplates.length >= 5) {
+            console.warn('提示词模板数量已达上限 (5)');
+            return;
+        }
+
+        const newTemplate: PromptTemplate = {
+            id: generateId(),
+            name,
+            content
+        };
+
+        await setSetting('promptTemplates', [...settings.promptTemplates, newTemplate]);
+    }, [settings.promptTemplates, setSetting]);
+
+    // 删除提示词模板
+    const removePromptTemplate = useCallback(async (id: string) => {
+        await setSetting(
+            'promptTemplates',
+            settings.promptTemplates.filter(t => t.id !== id)
+        );
+    }, [settings.promptTemplates, setSetting]);
+
+    // 更新提示词模板
+    const updatePromptTemplate = useCallback(async (
+        id: string,
+        updates: Partial<PromptTemplate>
+    ) => {
+        await setSetting(
+            'promptTemplates',
+            settings.promptTemplates.map(t =>
+                t.id === id ? { ...t, ...updates } : t
+            )
+        );
+    }, [settings.promptTemplates, setSetting]);
+
+    return {
+        settings,
+        isLoading,
+        setSetting,
+        setSettings,
+        resetSettings,
+        setTheme,
+        setOllamaUrl,
+        testOllamaConnection,
+        addPromptTemplate,
+        removePromptTemplate,
+        updatePromptTemplate
+    };
+}
+
+export default useSettings;

@@ -45,12 +45,26 @@ interface PlatformAPI {
     isMac: boolean
 }
 
+// 窗口控制 API
+interface AppWindowAPI {
+    setWidth(width: number): Promise<boolean>
+}
+
+// 设置 API
+interface SettingsAPI {
+    get(): Promise<Record<string, unknown>>
+    set(key: string, value: unknown): Promise<boolean>
+    reset(): Promise<boolean>
+}
+
 // 全局 Window 接口扩展
 declare global {
     interface Window {
         fs: FileSystemAPI
         chat: ChatStorageAPI
         platform: PlatformAPI
+        appWindow: AppWindowAPI
+        settings: SettingsAPI
     }
 }
 

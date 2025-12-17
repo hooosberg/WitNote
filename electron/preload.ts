@@ -99,4 +99,16 @@ contextBridge.exposeInMainWorld('appWindow', {
         ipcRenderer.invoke('window:setWidth', width)
 })
 
+// 暴露设置 API
+contextBridge.exposeInMainWorld('settings', {
+    get: (): Promise<Record<string, unknown>> =>
+        ipcRenderer.invoke('settings:get'),
+
+    set: (key: string, value: unknown): Promise<boolean> =>
+        ipcRenderer.invoke('settings:set', key, value),
+
+    reset: (): Promise<boolean> =>
+        ipcRenderer.invoke('settings:reset')
+})
+
 console.log('🔗 Preload 脚本已加载')

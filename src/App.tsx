@@ -24,6 +24,7 @@ import Editor from './components/Editor'
 import ChatPanel from './components/ChatPanel'
 import InputDialog from './components/InputDialog'
 import { ToastProvider, useToast } from './components/Toast'
+import SettingsPanel from './components/Settings'
 import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import { useFolderOrder } from './hooks/useFolderOrder'
@@ -149,6 +150,9 @@ const AppContent: React.FC = () => {
     // 排序（默认最新优先 time-desc，点击切换为最早优先 time-asc）
     const [sortBy, setSortBy] = useState<SortOption>('time-desc')
     const [filterColor, setFilterColor] = useState<ColorKey | 'all'>('all')
+
+    // 设置面板状态
+    const [showSettings, setShowSettings] = useState(false)
 
     // 卡片拖拽排序状态
     const [cardDragSort, setCardDragSort] = useState<{
@@ -616,6 +620,12 @@ const AppContent: React.FC = () => {
                 onCancel={() => { setShowRenameDialog(false); setRenameTarget(null) }}
             />
 
+            {/* 设置面板 */}
+            <SettingsPanel
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+            />
+
             {/* 可调整三栏布局 */}
             <PanelGroup direction="horizontal" className="panel-group">
                 {/* 左侧边栏 */}
@@ -794,10 +804,7 @@ const AppContent: React.FC = () => {
                                             <div className="sidebar-footer-row">
                                                 <button
                                                     className="sidebar-footer-btn settings"
-                                                    onClick={() => {
-                                                        // TODO: 打开设置面板
-                                                        console.log('打开设置')
-                                                    }}
+                                                    onClick={() => setShowSettings(true)}
                                                     title="设置"
                                                 >
                                                     <Settings size={14} strokeWidth={1.5} />

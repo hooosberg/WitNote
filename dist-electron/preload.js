@@ -38,4 +38,9 @@ electron.contextBridge.exposeInMainWorld("platform", {
 electron.contextBridge.exposeInMainWorld("appWindow", {
   setWidth: (width) => electron.ipcRenderer.invoke("window:setWidth", width)
 });
+electron.contextBridge.exposeInMainWorld("settings", {
+  get: () => electron.ipcRenderer.invoke("settings:get"),
+  set: (key, value) => electron.ipcRenderer.invoke("settings:set", key, value),
+  reset: () => electron.ipcRenderer.invoke("settings:reset")
+});
 console.log("🔗 Preload 脚本已加载");

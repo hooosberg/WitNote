@@ -22,6 +22,34 @@ const store = new Store<{ vaultPath: string | null }>({
     defaults: { vaultPath: null }
 })
 
+// 设置存储
+interface AppSettings {
+    theme: 'light' | 'dark' | 'tea'
+    fontFamily: 'system' | 'serif'
+    fontSize: number
+    ollamaBaseUrl: string
+    ollamaEnabled: boolean
+    preferredEngine: 'ollama' | 'webllm'
+    autoFallback: boolean
+    customSystemPrompt: string
+    promptTemplates: Array<{ id: string; name: string; content: string }>
+}
+
+const settingsStore = new Store<AppSettings>({
+    name: 'settings',
+    defaults: {
+        theme: 'light',
+        fontFamily: 'system',
+        fontSize: 13,
+        ollamaBaseUrl: 'http://localhost:11434',
+        ollamaEnabled: true,
+        preferredEngine: 'ollama',
+        autoFallback: true,
+        customSystemPrompt: '',
+        promptTemplates: []
+    }
+})
+
 // 文件监听器
 let watcher: chokidar.FSWatcher | null = null
 
@@ -359,6 +387,25 @@ function setupIpcHandlers() {
             return true
         }
         return false
+    })
+
+    // ============ 设置 IPC 处理器 ============
+
+    // 获取所有设置
+    ipcMain.handle('settings:get', () => {
+        return settingsStore.store
+    })
+
+    // 设置单个配置项
+    ipcMain.handle('settings:set', (_event, key: string, value: unknown) => {
+        settingsStore.set(key as keyof AppSettings, value as AppSettings[keyof AppSettings])
+        return true
+    })
+
+    // 重置所有设置
+    ipcMain.handle('settings:reset', () => {
+        settingsStore.clear()
+        return true
     })
 }
 
