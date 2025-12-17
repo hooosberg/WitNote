@@ -1,104 +1,109 @@
 <p align="center">
-  <img src="src/icon/智简icon 拷贝.png" alt="智简笔记本" width="128" height="128">
+  <img src="src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
 </p>
 
-# 智简笔记本 (WitNote)
+# WitNote (智简笔记本)
 
-> **大智若简，落笔生花**
-> *Smart Core, Simple Form.*
+> **Smart Core, Simple Form**
+> *大智若简，落笔生花*
+
+[English](README.md) | [中文](README_zh.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)]()
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4-green.svg)]()
 
-**智简笔记本** 是一款本地优先的 macOS AI 写作伴侣。
-我们将强大的**双模 AI 引擎**封装在极致简约的**原生卡片界面**之下。无云端依赖，无隐私焦虑，让智能回归轻盈。
+**WitNote** is a local-first AI writing companion for macOS.
+We pack a powerful **dual AI engine** into an ultra-minimalist **native card interface**. No cloud dependency, no privacy concerns — intelligence made lightweight.
 
 ![App Screenshot](docs/screenshot.png)
 
 ---
 
-## 🌟 核心理念
+## 🌟 Core Philosophy
 
-- **智 (Smart)**: 双模引擎驱动。
-  - **主力**: 自动连接本地 Ollama，满血性能。
-  - **便携**: 内置 WebLLM 浏览器模型，开箱即用。
-- **简 (Simple)**: 拒绝繁杂。
-  - iOS 风格卡片管理，拖拽即整理。
-  - 智能专注模式，窗口变窄即刻变身纯文本编辑器。
-- **安 (Secure)**: 数据自治。
-  - 100% 本地存储，你的思想只属于你。
-
----
-
-## ✨ 功能亮点
-
-- 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
-- 🤖 **双模 AI 引擎** — WebLLM (轻量内置) + Ollama (强力扩展)
-- 🎨 **多主题切换** — 浅色 / 深色 / 禅意茶色
-- 🗂️ **卡片网格视图** — iOS 风格，拖拽排序
-- 🔍 **上下文感知** — AI 可直接读取当前文章
-- 🎯 **专注模式** — 窗口变窄自动切换
+- **Smart**: Dual-engine AI
+  - **Primary**: Auto-connects to local Ollama for full power
+  - **Portable**: Built-in WebLLM browser model, ready out of the box
+- **Simple**: No complexity
+  - iOS-style card management, drag to organize
+  - Smart focus mode — window narrows, editor simplifies
+- **Secure**: Data sovereignty
+  - 100% local storage. Your thoughts belong only to you.
 
 ---
 
-## 🚀 快速开始
+## ✨ Features
 
-### 安装
+- 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
+- 🤖 **Dual AI Engine** — WebLLM (lightweight built-in) + Ollama (powerful external)
+- 🎨 **Multiple Themes** — Light / Dark / Zen Tea
+- 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting
+- 🔍 **Context Aware** — AI can directly read your current article
+- 🎯 **Focus Mode** — Auto-switches when window narrows
+- 🌍 **Internationalization** — English and Chinese support
 
-从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新的 DMG 安装包。
+---
 
-### 开发
+## 🚀 Quick Start
+
+### Installation
+
+Download the latest DMG installer from [Releases](https://github.com/hooosberg/WitNote/releases).
+
+**Recommended Platform**: Apple Silicon (M1 / M2 / M3 / M4) Mac devices
+
+### Development
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/hooosberg/WitNote.git
 cd WitNote
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start development server
 npm run dev
 
-# 构建生产版本
+# Build production version
 npm run build
 ```
 
 ---
 
-## 🔧 AI 引擎配置
+## 🔧 AI Engine Configuration
 
-### WebLLM (内置)
-开箱即用，无需配置。首次使用会自动下载轻量模型。
+### WebLLM (Built-in)
+Ready to use out of the box. The lightweight model downloads automatically on first use.
 
-### Ollama (推荐)
-如需更强大的 AI 能力，推荐安装 [Ollama](https://ollama.com)：
+### Ollama (Recommended)
+For more powerful AI capabilities, install [Ollama](https://ollama.com):
 
 ```bash
-# 安装 Ollama 后，下载推荐模型
+# After installing Ollama, download recommended models
 ollama pull qwen2.5:0.5b
-# 或更大的模型
+# Or a larger model
 ollama pull qwen2.5:3b
 ```
 
-应用会自动检测本地 Ollama 服务并优先使用。
+The app automatically detects local Ollama service and prioritizes it.
 
 ---
 
-## 📸 截图
+## 📸 Screenshots
 
-*(待添加)*
+*(Coming soon)*
 
 ---
 
-## 📄 开源协议
+## 📄 License
 
 MIT License
 
 ---
 
-## 👨‍💻 开发者
+## 👨‍💻 Developer
 
 **hooosberg**
 
@@ -109,5 +114,5 @@ MIT License
 ---
 
 <p align="center">
-  <i>大智若简，落笔生花</i>
+  <i>Smart Core, Simple Form</i>
 </p>

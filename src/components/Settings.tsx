@@ -1,9 +1,11 @@
 /**
  * Settings 设置面板组件
- * macOS 风格的全屏设置面板，包含外观、AI 引擎、角色设定三个 Tab
+ * macOS 风格的全屏设置面板，包含外观、AI 引擎、角色设定、使用说明四个 Tab
+ * 支持国际化 (i18n)
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     X,
     Palette,
@@ -17,9 +19,11 @@ import {
     Check,
     AlertCircle,
     Loader2,
-    RotateCcw
+    RotateCcw,
+    Globe
 } from 'lucide-react';
 import { useSettings, AppSettings } from '../hooks/useSettings';
+import { changeLanguage, getCurrentLanguage } from '../i18n';
 
 type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
 
@@ -29,6 +33,7 @@ interface SettingsProps {
 }
 
 export function Settings({ isOpen, onClose }: SettingsProps) {
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>('appearance');
     const {
         settings,
@@ -39,6 +44,9 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         testOllamaConnection,
         resetSettings
     } = useSettings();
+
+    // 当前语言状态
+    const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
 
     // Ollama 连接测试状态
     const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -63,7 +71,24 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, onClose]);
 
+    // 监听语言变化
+    useEffect(() => {
+        const handleLanguageChange = () => {
+            setCurrentLang(getCurrentLanguage());
+        };
+        i18n.on('languageChanged', handleLanguageChange);
+        return () => {
+            i18n.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18n]);
+
     if (!isOpen) return null;
+
+    // 切换语言
+    const handleLanguageChange = (lang: 'en' | 'zh') => {
+        changeLanguage(lang);
+        setCurrentLang(lang);
+    };
 
     // 测试 Ollama 连接
     const handleTestConnection = async () => {
@@ -87,50 +112,71 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             case 'appearance':
                 return (
                     <div className="settings-tab-content">
+                        {/* 语言选择 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">{t('settings.language')}</h3>
+                            <div className="language-options">
+                                <button
+                                    className={`language-option ${currentLang === 'en' ? 'active' : ''}`}
+                                    onClick={() => handleLanguageChange('en')}
+                                >
+                                    <Globe size={18} />
+                                    <span>English</span>
+                                </button>
+                                <button
+                                    className={`language-option ${currentLang === 'zh' ? 'active' : ''}`}
+                                    onClick={() => handleLanguageChange('zh')}
+                                >
+                                    <Globe size={18} />
+                                    <span>中文</span>
+                                </button>
+                            </div>
+                        </div>
+
                         {/* 主题选择 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">主题</h3>
+                            <h3 className="settings-section-title">{t('settings.theme')}</h3>
                             <div className="theme-options">
                                 <button
                                     className={`theme-option ${settings.theme === 'light' ? 'active' : ''}`}
                                     onClick={() => setTheme('light')}
                                 >
                                     <Sun size={24} />
-                                    <span>浅色</span>
+                                    <span>{t('settings.themeLight')}</span>
                                 </button>
                                 <button
                                     className={`theme-option ${settings.theme === 'dark' ? 'active' : ''}`}
                                     onClick={() => setTheme('dark')}
                                 >
                                     <Moon size={24} />
-                                    <span>深色</span>
+                                    <span>{t('settings.themeDark')}</span>
                                 </button>
                                 <button
                                     className={`theme-option ${settings.theme === 'tea' ? 'active' : ''}`}
                                     onClick={() => setTheme('tea')}
                                 >
                                     <Coffee size={24} />
-                                    <span>茶色</span>
+                                    <span>{t('settings.themeTea')}</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* 字体选择 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">字体</h3>
+                            <h3 className="settings-section-title">{t('settings.font')}</h3>
                             <div className="settings-row">
-                                <label>字体风格</label>
+                                <label>{t('settings.fontFamily')}</label>
                                 <select
                                     value={settings.fontFamily}
                                     onChange={(e) => setSetting('fontFamily', e.target.value as AppSettings['fontFamily'])}
                                     className="settings-select"
                                 >
-                                    <option value="system">系统字体 (无衬线)</option>
-                                    <option value="serif">宋体 (衬线)</option>
+                                    <option value="system">{t('settings.fontSystem')}</option>
+                                    <option value="serif">{t('settings.fontSerif')}</option>
                                 </select>
                             </div>
                             <div className="settings-row">
-                                <label>文章字体大小</label>
+                                <label>{t('settings.fontSize')}</label>
                                 <div className="font-size-control">
                                     <input
                                         type="range"
@@ -147,20 +193,20 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
 
                         {/* 编辑器偏好 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">编辑器</h3>
+                            <h3 className="settings-section-title">{t('settings.editor')}</h3>
                             <div className="settings-row">
-                                <label>默认文件格式</label>
+                                <label>{t('settings.defaultFormat')}</label>
                                 <select
                                     value={settings.defaultFormat}
                                     onChange={(e) => setSetting('defaultFormat', e.target.value as 'txt' | 'md')}
                                     className="settings-select"
                                 >
                                     <option value="md">Markdown (.md)</option>
-                                    <option value="txt">纯文本 (.txt)</option>
+                                    <option value="txt">{t('editor.formatTxt')} (.txt)</option>
                                 </select>
                             </div>
                             <div className="settings-row">
-                                <label>智能格式转换</label>
+                                <label>{t('settings.smartConversion')}</label>
                                 <label className="toggle-switch">
                                     <input
                                         type="checkbox"
@@ -171,7 +217,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                                 </label>
                             </div>
                             <p className="settings-hint">
-                                开启时，MD 转 TXT 会移除 Markdown 标记符号；关闭则保持内容不变
+                                {t('settings.smartConversionHint')}
                             </p>
                         </div>
                     </div>
@@ -182,9 +228,9 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     <div className="settings-tab-content">
                         {/* Ollama 配置 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">Ollama 配置</h3>
+                            <h3 className="settings-section-title">{t('settings.ollamaConfig')}</h3>
                             <p className="settings-hint ollama-download-hint">
-                                想要更强大的 AI 体验？推荐下载{' '}
+                                {t('settings.ollamaHint')}{' '}
                                 <a
                                     href="https://ollama.com"
                                     target="_blank"
@@ -193,10 +239,10 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                                 >
                                     Ollama <ExternalLink size={12} />
                                 </a>
-                                {' '}并安装更大的本地模型（如 Qwen、Llama 等）
+                                {' '}{t('settings.ollamaHint2')}
                             </p>
                             <div className="settings-row">
-                                <label>API 地址</label>
+                                <label>{t('settings.apiUrl')}</label>
                                 <div className="ollama-url-input">
                                     <input
                                         type="text"
@@ -218,13 +264,13 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                                         ) : connectionStatus === 'error' ? (
                                             <AlertCircle size={16} />
                                         ) : (
-                                            '测试'
+                                            t('settings.testConnection')
                                         )}
                                     </button>
                                 </div>
                             </div>
                             <div className="settings-row">
-                                <label>启用 Ollama</label>
+                                <label>{t('settings.enableOllama')}</label>
                                 <label className="toggle-switch">
                                     <input
                                         type="checkbox"
@@ -238,20 +284,20 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
 
                         {/* 引擎策略 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">引擎策略</h3>
+                            <h3 className="settings-section-title">{t('settings.engineStrategy')}</h3>
                             <div className="settings-row">
-                                <label>优先引擎</label>
+                                <label>{t('settings.preferredEngine')}</label>
                                 <select
                                     value={settings.preferredEngine}
                                     onChange={(e) => setSetting('preferredEngine', e.target.value as AppSettings['preferredEngine'])}
                                     className="settings-select"
                                 >
-                                    <option value="ollama">Ollama (外部大模型)</option>
-                                    <option value="webllm">WebLLM (内置小模型)</option>
+                                    <option value="ollama">{t('settings.engineOllama')}</option>
+                                    <option value="webllm">{t('settings.engineWebLLM')}</option>
                                 </select>
                             </div>
                             <div className="settings-row">
-                                <label>自动降级</label>
+                                <label>{t('settings.autoFallback')}</label>
                                 <label className="toggle-switch">
                                     <input
                                         type="checkbox"
@@ -262,7 +308,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                                 </label>
                             </div>
                             <p className="settings-hint">
-                                启用后，当优先引擎不可用时自动切换到备用引擎
+                                {t('settings.autoFallbackHint')}
                             </p>
                         </div>
                     </div>
@@ -273,19 +319,19 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     <div className="settings-tab-content">
                         {/* 系统提示词 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">自定义系统提示词</h3>
+                            <h3 className="settings-section-title">{t('settings.customPrompt')}</h3>
                             <p className="settings-hint">
-                                设置 AI 助手的角色和行为方式。这段提示词会添加到每次对话的开头，让 AI 按照你的期望来回答。
+                                {t('settings.customPromptHint')}
                             </p>
                             <textarea
                                 value={settings.customSystemPrompt}
                                 onChange={(e) => setSetting('customSystemPrompt', e.target.value)}
-                                placeholder="例如：你是一位专业的写作导师，请用简洁友好的方式帮助用户改进文章..."
+                                placeholder={t('settings.customPromptPlaceholder')}
                                 className="settings-textarea"
                                 rows={6}
                             />
                             <p className="settings-hint" style={{ marginTop: '8px' }}>
-                                💡 留空则使用默认的助手角色
+                                {t('settings.customPromptEmpty')}
                             </p>
                         </div>
                     </div>
@@ -296,52 +342,51 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     <div className="settings-tab-content guide-content">
                         {/* 软件介绍 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">关于智简笔记本</h3>
+                            <h3 className="settings-section-title">{t('guide.aboutTitle')}</h3>
                             <div className="guide-intro">
-                                <p className="guide-tagline">大智若简，落笔生花</p>
+                                <p className="guide-tagline">{t('guide.tagline')}</p>
                                 <p className="guide-description">
-                                    智简笔记本 (WitNote) 是一款注重隐私的本地笔记应用，内置 AI 助手帮助您整理思绪、
-                                    润色文章、回答问题。所有数据存储在本地，AI 模型也可完全离线运行。
+                                    {t('guide.description')}
                                 </p>
                                 <p className="guide-platform">
-                                    💻 推荐平台：Apple Silicon (M1 / M2 / M3 / M4 系列芯片) 的 Mac 设备
+                                    {t('guide.platform')}
                                 </p>
                             </div>
                         </div>
 
                         {/* 设计理念 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">设计理念</h3>
+                            <h3 className="settings-section-title">{t('guide.philosophy')}</h3>
                             <ul className="guide-list">
-                                <li><strong>智 (Smart)</strong> — 双模 AI 引擎驱动，主力 Ollama + 便携 WebLLM</li>
-                                <li><strong>简 (Simple)</strong> — iOS 风格卡片管理，拖拽即整理</li>
-                                <li><strong>安 (Secure)</strong> — 100% 本地存储，你的思想只属于你</li>
+                                <li><strong>{t('guide.philosophySmart')}</strong> {t('guide.philosophySmartDesc')}</li>
+                                <li><strong>{t('guide.philosophySimple')}</strong> {t('guide.philosophySimpleDesc')}</li>
+                                <li><strong>{t('guide.philosophySecure')}</strong> {t('guide.philosophySecureDesc')}</li>
                             </ul>
                         </div>
 
                         {/* 快速上手 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">快速上手</h3>
+                            <h3 className="settings-section-title">{t('guide.quickStart')}</h3>
                             <div className="guide-steps">
                                 <div className="guide-step">
                                     <span className="step-number">1</span>
                                     <div className="step-content">
-                                        <strong>连接笔记文件夹</strong>
-                                        <p>首次启动时选择一个文件夹作为笔记库，所有 .txt 和 .md 文件将自动显示</p>
+                                        <strong>{t('guide.step1Title')}</strong>
+                                        <p>{t('guide.step1Desc')}</p>
                                     </div>
                                 </div>
                                 <div className="guide-step">
                                     <span className="step-number">2</span>
                                     <div className="step-content">
-                                        <strong>开始写作</strong>
-                                        <p>点击卡片编辑文章，支持 Markdown 语法和实时预览</p>
+                                        <strong>{t('guide.step2Title')}</strong>
+                                        <p>{t('guide.step2Desc')}</p>
                                     </div>
                                 </div>
                                 <div className="guide-step">
                                     <span className="step-number">3</span>
                                     <div className="step-content">
-                                        <strong>与 AI 对话</strong>
-                                        <p>右侧 AI 助手可以读取当前文章，帮您润色、总结或回答问题</p>
+                                        <strong>{t('guide.step3Title')}</strong>
+                                        <p>{t('guide.step3Desc')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -349,24 +394,24 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
 
                         {/* AI 引擎说明 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">AI 引擎说明</h3>
+                            <h3 className="settings-section-title">{t('guide.aiEngines')}</h3>
                             <div className="guide-engines">
                                 <div className="engine-card">
                                     <div className="engine-header">
-                                        <span className="engine-badge builtin">内置</span>
+                                        <span className="engine-badge builtin">{t('guide.builtIn')}</span>
                                         <strong>WebLLM</strong>
                                     </div>
-                                    <p>浏览器内运行的轻量模型，开箱即用，适合简单对话</p>
+                                    <p>{t('guide.webllmDesc')}</p>
                                 </div>
                                 <div className="engine-card">
                                     <div className="engine-header">
-                                        <span className="engine-badge external">扩展</span>
+                                        <span className="engine-badge external">{t('guide.external')}</span>
                                         <strong>Ollama</strong>
                                     </div>
                                     <p>
-                                        本地运行的强力模型，需
-                                        <a href="https://ollama.com" target="_blank" rel="noopener noreferrer"> 下载安装 </a>
-                                        后使用，支持 Qwen、Llama、Gemma 等
+                                        {t('guide.ollamaDesc')}
+                                        <a href="https://ollama.com" target="_blank" rel="noopener noreferrer"> {t('guide.ollamaDownload')} </a>
+                                        {t('guide.ollamaModels')}
                                     </p>
                                 </div>
                             </div>
@@ -374,21 +419,21 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
 
                         {/* 开发者信息 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title">开发者</h3>
+                            <h3 className="settings-section-title">{t('guide.developer')}</h3>
                             <p className="guide-developer">
-                                由 <strong>hooosberg</strong> 独立开发
+                                {t('guide.developedBy')} <strong>hooosberg</strong>
                             </p>
                             <p className="guide-contact">
                                 📧 <a href="mailto:zikedece@proton.me">zikedece@proton.me</a>
                             </p>
                             <p className="guide-contact">
-                                🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub 开源地址</a>
+                                🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub</a>
                             </p>
                             <p className="guide-version">
-                                版本 1.0.0 · 2025
+                                {t('guide.version')}
                             </p>
                             <p className="guide-license">
-                                📜 开源协议：<a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
+                                {t('guide.license')} <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
                             </p>
                         </div>
                     </div>
@@ -401,7 +446,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
                 {/* 头部 */}
                 <div className="settings-header">
-                    <h2>设置</h2>
+                    <h2>{t('settings.title')}</h2>
                     <button className="settings-close-btn" onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -416,28 +461,28 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                             onClick={() => setActiveTab('appearance')}
                         >
                             <Palette size={18} />
-                            <span>外观</span>
+                            <span>{t('settings.appearance')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`}
                             onClick={() => setActiveTab('ai')}
                         >
                             <Bot size={18} />
-                            <span>AI 引擎</span>
+                            <span>{t('settings.aiEngine')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'persona' ? 'active' : ''}`}
                             onClick={() => setActiveTab('persona')}
                         >
                             <MessageSquare size={18} />
-                            <span>角色设定</span>
+                            <span>{t('settings.persona')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'guide' ? 'active' : ''}`}
                             onClick={() => setActiveTab('guide')}
                         >
                             <HelpCircle size={18} />
-                            <span>使用说明</span>
+                            <span>{t('settings.guide')}</span>
                         </button>
                     </div>
 
@@ -446,7 +491,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         {isLoading ? (
                             <div className="settings-loading">
                                 <Loader2 size={24} className="spin" />
-                                <span>加载中...</span>
+                                <span>Loading...</span>
                             </div>
                         ) : (
                             renderTabContent()
@@ -458,7 +503,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                 <div className="settings-footer">
                     <button className="reset-btn" onClick={resetSettings}>
                         <RotateCcw size={16} />
-                        重置为默认
+                        {t('settings.resetToDefault')}
                     </button>
                 </div>
             </div>

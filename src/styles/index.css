@@ -2580,6 +2580,38 @@ select:focus {
   line-height: 1.5;
 }
 
+/* 语言选项 */
+.language-options {
+  display: flex;
+  gap: 12px;
+}
+
+.language-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-sidebar);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.language-option:hover {
+  background: var(--bg-hover);
+}
+
+.language-option.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
 /* 主题选项 */
 .theme-options {
   display: flex;

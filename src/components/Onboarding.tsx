@@ -4,12 +4,14 @@
  */
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface OnboardingProps {
     onSelectVault: () => Promise<boolean>
 }
 
 export const Onboarding: React.FC<OnboardingProps> = ({ onSelectVault }) => {
+    const { t } = useTranslation()
     const [isSelecting, setIsSelecting] = React.useState(false)
 
     const handleSelect = async () => {
@@ -25,12 +27,12 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onSelectVault }) => {
                 <div className="onboarding-logo">🧘</div>
 
                 {/* 标题 */}
-                <h1 className="onboarding-title">智简笔记本</h1>
+                <h1 className="onboarding-title">{t('app.name')}</h1>
 
                 {/* 描述 */}
                 <p className="onboarding-desc">
-                    大智若简，落笔生花<br />
-                    所有数据存储在您选择的文件夹中
+                    {t('app.tagline')}<br />
+                    {t('onboarding.selectFolderPrompt')}
                 </p>
 
                 {/* 选择按钮 */}
@@ -39,12 +41,12 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onSelectVault }) => {
                     onClick={handleSelect}
                     disabled={isSelecting}
                 >
-                    {isSelecting ? '选择中...' : '选择笔记文件夹'}
+                    {isSelecting ? '...' : t('onboarding.selectButton')}
                 </button>
 
                 {/* 提示 */}
                 <p className="onboarding-hint">
-                    支持 .txt 和 .md 格式，可随时切换
+                    {t('sidebar.connectFolder')}
                 </p>
             </div>
         </div>
