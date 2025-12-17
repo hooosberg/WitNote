@@ -1749,9 +1749,13 @@ select:focus {
 .model-dropdown {
   position: fixed;
   bottom: 120px;
-  right: 16px;
-  min-width: 300px;
-  max-width: 340px;
+  /* 右侧 chat panel 占 25% 宽度，其中心在 87.5% 位置 */
+  right: 12.5%;
+  transform: translateX(50%);
+  min-width: 180px;
+  /* 限制宽度不超过右侧栏 */
+  max-width: calc(25% - 32px);
+  width: max-content;
   max-height: 400px;
   overflow-y: auto;
   background: var(--bg-main);
@@ -1807,6 +1811,7 @@ select:focus {
   cursor: pointer;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .model-item-left:hover .model-item-name {
@@ -1831,6 +1836,7 @@ select:focus {
   padding: 1px 5px;
   border-radius: 3px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .model-item-right {
@@ -1851,6 +1857,7 @@ select:focus {
 .model-tag.builtin {
   color: white;
   background: var(--accent-color);
+  white-space: nowrap;
 }
 
 .model-tag.active {
@@ -2767,5 +2774,14 @@ select:focus {
 
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ============ 响应式：窄窗口时隐藏模型标签 ============ */
+@media (max-width: 1200px) {
+
+  .model-item-size,
+  .model-tag.builtin {
+    display: none !important;
   }
 }
