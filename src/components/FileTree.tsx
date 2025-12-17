@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import ReactDOM from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import {
     ChevronRight,
     ChevronDown,
@@ -75,6 +76,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
     orderedPaths,
     onReorder
 }) => {
+    const { t } = useTranslation()
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
         show: false,
         x: 0,
@@ -272,9 +274,9 @@ export const FileTree: React.FC<FileTreeProps> = ({
                         <button onClick={() => {
                             onCreateFolder(contextMenu.node?.path)
                             closeMenu()
-                        }}>新建文件夹</button>
+                        }}>{t('contextMenu.newFolder')}</button>
                     )}
-                    <button onClick={() => handleAction('rename')}>重命名</button>
+                    <button onClick={() => handleAction('rename')}>{t('contextMenu.rename')}</button>
 
                     {/* 红黄绿颜色圆圈 */}
                     <div className="color-circles">
@@ -297,7 +299,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     </div>
 
                     <div className="menu-divider" />
-                    <button onClick={() => handleAction('delete')} className="danger">删除</button>
+                    <button onClick={() => handleAction('delete')} className="danger">{t('contextMenu.delete')}</button>
                 </div>,
                 document.body
             )}
@@ -344,7 +346,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                         <button onClick={() => {
                             onCreateFolder(undefined)  // undefined 表示在根目录创建
                             setBlankMenu({ show: false, x: 0, y: 0 })
-                        }}>新建文件夹</button>
+                        }}>{t('contextMenu.newFolder')}</button>
                     )}
                 </div>,
                 document.body

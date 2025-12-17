@@ -12,7 +12,12 @@
         "selectFolder": "Select Folder",
         "changeFolder": "Change Folder",
         "noFolder": "No folder connected",
-        "connectFolder": "Connect a folder to start writing"
+        "connectFolder": "Connect a folder to start writing",
+        "linkedFolder": "Linked Folder",
+        "linkLocalFolder": "Link Local Folder",
+        "disconnectConfirm": "Are you sure you want to disconnect this folder?\n\n⚠️ This will disconnect the app from the local folder, but will not delete any files in the folder.\n\nAll your notes and files will remain intact.",
+        "emptyFolderHint": "Create a folder below",
+        "emptyGuide": "Please click below to create or link a local folder as your data storage location"
     },
     "editor": {
         "untitled": "Untitled",
@@ -20,9 +25,14 @@
         "saved": "Saved",
         "saving": "Saving...",
         "characters": "characters",
-        "formatTxt": "Convert to TXT",
+        "formatTxt": "Plain Text",
         "formatMd": "Convert to MD",
-        "focusMode": "Focus Mode"
+        "focusMode": "Focus Mode",
+        "wordCount": "words",
+        "created": "Created",
+        "modified": "Modified",
+        "titlePlaceholder": "Title",
+        "bodyPlaceholder": "Write your thoughts..."
     },
     "chat": {
         "title": "AI Assistant",
@@ -37,7 +47,27 @@
         "contextFolder": "In folder",
         "contextNone": "No context",
         "modelWebLLM": "WebLLM (Built-in)",
-        "modelOllama": "Ollama"
+        "modelOllama": "Ollama",
+        "ollamaConnected": "Connected to Ollama",
+        "inUse": "In Use",
+        "downloaded": "Downloaded",
+        "use": "Use",
+        "download": "Download",
+        "detecting": "Detecting...",
+        "waitingReady": "Waiting...",
+        "deleteModel": "Delete Model"
+    },
+    "model": {
+        "speedUltraFast": "🚀 Ultra Fast",
+        "speedVeryFast": "⚡ Very Fast",
+        "speedFast": "🚗 Fast",
+        "speedSlow": "🐢 Heavy",
+        "useCaseSimple": "Simple edits, testing",
+        "useCaseBestValue": "Best value, ideal for low-end devices",
+        "useCaseCreative": "Creative writing, essays, fiction",
+        "useCaseBusiness": "Business emails, bilingual, general assistant",
+        "useCaseMainChinese": "Main Chinese writing assistant (Recommended)",
+        "useCaseLogic": "Logical reasoning, outlines, academic"
     },
     "settings": {
         "title": "Settings",
@@ -117,6 +147,14 @@
         "rename": "Rename",
         "newFileName": "New file name",
         "newFolderName": "New folder name"
+    },
+    "contextMenu": {
+        "newFolder": "New Folder",
+        "rename": "Rename",
+        "delete": "Delete"
+    },
+    "gallery": {
+        "newArticle": "New Article"
     },
     "toast": {
         "fileSaved": "File saved",

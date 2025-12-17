@@ -12,7 +12,12 @@
         "selectFolder": "选择文件夹",
         "changeFolder": "更换文件夹",
         "noFolder": "未连接文件夹",
-        "connectFolder": "连接文件夹以开始写作"
+        "connectFolder": "连接文件夹以开始写作",
+        "linkedFolder": "已链接文件夹",
+        "linkLocalFolder": "链接本地文件夹",
+        "disconnectConfirm": "确定要断开此文件夹的链接吗？\n\n⚠️ 这将断开应用与本地文件夹的连接，但不会删除文件夹中的任何文件。\n\n您的所有笔记和文件都会保留完好。",
+        "emptyFolderHint": "在下方新建文件夹",
+        "emptyGuide": "请点击下方新建或者链接一个本地文件夹作为本地数据存储位置"
     },
     "editor": {
         "untitled": "无标题",
@@ -20,9 +25,14 @@
         "saved": "已保存",
         "saving": "保存中...",
         "characters": "字符",
-        "formatTxt": "转为 TXT",
+        "formatTxt": "纯文本",
         "formatMd": "转为 MD",
-        "focusMode": "专注模式"
+        "focusMode": "专注模式",
+        "wordCount": "字",
+        "created": "创建",
+        "modified": "修改",
+        "titlePlaceholder": "标题",
+        "bodyPlaceholder": "写下你的想法..."
     },
     "chat": {
         "title": "AI 助手",
@@ -37,7 +47,27 @@
         "contextFolder": "在文件夹",
         "contextNone": "无上下文",
         "modelWebLLM": "WebLLM (内置)",
-        "modelOllama": "Ollama"
+        "modelOllama": "Ollama",
+        "ollamaConnected": "已连接外部软件 Ollama",
+        "inUse": "使用中",
+        "downloaded": "已下载",
+        "use": "使用",
+        "download": "下载",
+        "detecting": "检测中...",
+        "waitingReady": "等待就绪...",
+        "deleteModel": "删除模型"
+    },
+    "model": {
+        "speedUltraFast": "🚀 极速",
+        "speedVeryFast": "⚡ 很快",
+        "speedFast": "🚗 流畅",
+        "speedSlow": "🐢 较重",
+        "useCaseSimple": "简单改写、测试环境",
+        "useCaseBestValue": "最具性价比，低配设备首选",
+        "useCaseCreative": "创意写作、散文、小说片段",
+        "useCaseBusiness": "商务邮件、双语写作、通用助手",
+        "useCaseMainChinese": "主力中文写作助手 (推荐)",
+        "useCaseLogic": "严谨逻辑、大纲生成、学术辅助"
     },
     "settings": {
         "title": "设置",
@@ -113,10 +143,18 @@
         "cancel": "取消",
         "confirm": "确认",
         "delete": "删除",
-        "deleteConfirm": "确定要删除吗",
+        "deleteConfirm": "确定要删除",
         "rename": "重命名",
         "newFileName": "新文件名",
         "newFolderName": "新文件夹名"
+    },
+    "contextMenu": {
+        "newFolder": "新建文件夹",
+        "rename": "重命名",
+        "delete": "删除"
+    },
+    "gallery": {
+        "newArticle": "新建文章"
     },
     "toast": {
         "fileSaved": "文件已保存",

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Send, Square, Sparkles, Check, Download, Trash2 } from 'lucide-react'
 import { ChatMessage } from '../services/types'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -55,7 +56,32 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
-    // ... 组件逻辑 ... (不再重复)
+    const { t } = useTranslation()
+
+    // 模型信息翻译映射
+    const getModelSpeed = (modelId: string): string => {
+        const speedMap: Record<string, string> = {
+            'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': t('model.speedUltraFast'),
+            'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': t('model.speedUltraFast'),
+            'gemma-2-2b-it-q4f16_1-MLC': t('model.speedVeryFast'),
+            'Llama-3.2-3B-Instruct-q4f16_1-MLC': t('model.speedVeryFast'),
+            'Qwen2.5-3B-Instruct-q4f16_1-MLC': t('model.speedFast'),
+            'Phi-3.5-mini-instruct-q4f16_1-MLC': t('model.speedSlow'),
+        }
+        return speedMap[modelId] || t('model.speedFast')
+    }
+
+    const getModelUseCase = (modelId: string): string => {
+        const useCaseMap: Record<string, string> = {
+            'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': t('model.useCaseSimple'),
+            'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': t('model.useCaseBestValue'),
+            'gemma-2-2b-it-q4f16_1-MLC': t('model.useCaseCreative'),
+            'Llama-3.2-3B-Instruct-q4f16_1-MLC': t('model.useCaseBusiness'),
+            'Qwen2.5-3B-Instruct-q4f16_1-MLC': t('model.useCaseMainChinese'),
+            'Phi-3.5-mini-instruct-q4f16_1-MLC': t('model.useCaseLogic'),
+        }
+        return useCaseMap[modelId] || ''
+    }
 
     const [inputValue, setInputValue] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -154,7 +180,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                 {messages.length === 0 ? (
                     <div className="chat-empty">
                         <Sparkles size={32} strokeWidth={1.2} />
-                        <p>AI 助手</p>
+                        <p>{t('chat.title')}</p>
                     </div>
                 ) : (
                     <>
@@ -189,7 +215,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                         </div>
                         {status === 'ready' ? (
                             isGenerating ? (
-                                <span className="model-label thinking">正在思考中...</span>
+                                <span className="model-label thinking">{t('chat.thinking')}</span>
                             ) : providerType === 'ollama' && ollamaModels.length >= 1 ? (
                                 <div className="webllm-model-selector" ref={menuRef}>
                                     <button
@@ -203,7 +229,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                             {/* Ollama 头部提示 */}
                                             <div className="model-dropdown-header">
                                                 <span className="header-icon">🔗</span>
-                                                <span>已连接外部软件 Ollama</span>
+                                                <span>{t('chat.ollamaConnected')}</span>
                                             </div>
                                             {ollamaModels.map((model) => {
                                                 const isCurrentModel = model.name === selectedOllamaModel
@@ -219,7 +245,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                             <div className="model-item-right">
                                                                 {isCurrentModel ? (
                                                                     <span className="model-tag active">
-                                                                        <Check size={10} /> 使用中
+                                                                        <Check size={10} /> {t('chat.inUse')}
                                                                     </span>
                                                                 ) : (
                                                                     <button
@@ -229,8 +255,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                             setShowModelMenu(false)
                                                                         }}
                                                                     >
-                                                                        <span className="btn-default">已下载</span>
-                                                                        <span className="btn-hover">使用</span>
+                                                                        <span className="btn-default">{t('chat.downloaded')}</span>
+                                                                        <span className="btn-hover">{t('chat.use')}</span>
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -271,7 +297,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                             >
                                                                 <span className="model-item-name">{model.name}</span>
                                                                 <span className="model-item-size">{model.size}</span>
-                                                                {model.isBuiltin && <span className="model-tag builtin">内置</span>}
+                                                                {model.isBuiltin && <span className="model-tag builtin">{t('guide.builtIn')}</span>}
                                                             </div>
 
                                                             <div className="model-item-right">
@@ -287,7 +313,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                     </div>
                                                                 ) : isCurrentModel ? (
                                                                     <span className="model-tag active">
-                                                                        <Check size={10} /> 使用中
+                                                                        <Check size={10} /> {t('chat.inUse')}
                                                                     </span>
                                                                 ) : downloadedModels.has(model.id) ? (
                                                                     <button
@@ -297,8 +323,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                             await setSelectedWebLLMModel(model.id)
                                                                         }}
                                                                     >
-                                                                        <span className="btn-default">已下载</span>
-                                                                        <span className="btn-hover">使用</span>
+                                                                        <span className="btn-default">{t('chat.downloaded')}</span>
+                                                                        <span className="btn-hover">{t('chat.use')}</span>
                                                                     </button>
                                                                 ) : (
                                                                     <button
@@ -310,7 +336,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                             setDownloadingModel(null)
                                                                         }}
                                                                     >
-                                                                        <Download size={12} /> 下载
+                                                                        <Download size={12} /> {t('chat.download')}
                                                                     </button>
                                                                 )}
 
@@ -322,7 +348,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                                             e.stopPropagation()
                                                                             await deleteModel(model.id)
                                                                         }}
-                                                                        title="删除模型"
+                                                                        title={t('chat.deleteModel')}
                                                                     >
                                                                         <Trash2 size={12} />
                                                                     </button>
@@ -333,8 +359,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                                                         {/* 展开详情 */}
                                                         {isExpanded && (
                                                             <div className="model-item-details">
-                                                                <span className="detail-speed">{model.speed}</span>
-                                                                <span className="detail-use">{model.useCase}</span>
+                                                                <span className="detail-speed">{getModelSpeed(model.id)}</span>
+                                                                <span className="detail-use">{getModelUseCase(model.id)}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -349,7 +375,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                             )
                         ) : status === 'loading' ? (
                             <div className="model-loading-status">
-                                <span className="loading-text">加载模型中</span>
+                                <span className="loading-text">{t('chat.loading')}</span>
                                 {loadProgress && (
                                     <div className="loading-progress-bar">
                                         <div
@@ -361,10 +387,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                             </div>
                         ) : status === 'error' ? (
                             <button className="retry-btn" onClick={retryDetection}>
-                                重试
+                                {t('chat.retry')}
                             </button>
                         ) : (
-                            <span className="model-label">检测中...</span>
+                            <span className="model-label">{t('chat.detecting')}</span>
                         )}
                     </div>
                 </div>
@@ -377,7 +403,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm }) => {
                         value={inputValue}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder={status === 'ready' ? '有什么想法...' : '等待就绪...'}
+                        placeholder={status === 'ready' ? t('chat.placeholder') : t('chat.waitingReady')}
                         disabled={status !== 'ready'}
                         rows={1}
                     />

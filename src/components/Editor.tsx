@@ -5,6 +5,7 @@
  */
 
 import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { marked } from 'marked'
 import katex from 'katex'
@@ -100,6 +101,7 @@ export const Editor: React.FC<EditorProps> = ({
     createdAt,
     modifiedAt
 }) => {
+    const { t, i18n } = useTranslation()
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const titleRef = useRef<HTMLTextAreaElement>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -308,7 +310,7 @@ export const Editor: React.FC<EditorProps> = ({
                         onChange={handleTitleChange}
                         onBlur={handleTitleBlur}
                         onKeyDown={handleTitleKeyDown}
-                        placeholder="标题"
+                        placeholder={t('editor.titlePlaceholder')}
                         rows={1}
                         spellCheck={false}
                         readOnly={showPreview}
@@ -374,7 +376,7 @@ export const Editor: React.FC<EditorProps> = ({
                                 }
                             }
                         }}
-                        placeholder="写下你的想法..."
+                        placeholder={t('editor.bodyPlaceholder')}
                         spellCheck={false}
                         style={{ display: showPreview ? 'none' : 'block' }}
                     />
@@ -395,15 +397,15 @@ export const Editor: React.FC<EditorProps> = ({
 
                     {/* 文章统计信息 */}
                     <div className="editor-stats">
-                        <span className="stat-item">{wordCount} 字</span>
+                        <span className="stat-item">{wordCount} {t('editor.wordCount')}</span>
                         {createdAt && (
                             <span className="stat-item">
-                                创建: {new Date(createdAt).toLocaleDateString('zh-CN')}
+                                {t('editor.created')}: {new Date(createdAt).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
                             </span>
                         )}
                         {modifiedAt && (
                             <span className="stat-item">
-                                修改: {new Date(modifiedAt).toLocaleString('zh-CN', {
+                                {t('editor.modified')}: {new Date(modifiedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
                                     month: 'numeric',
                                     day: 'numeric',
                                     hour: '2-digit',

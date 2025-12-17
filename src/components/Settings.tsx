@@ -286,17 +286,6 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                         <div className="settings-section">
                             <h3 className="settings-section-title">{t('settings.engineStrategy')}</h3>
                             <div className="settings-row">
-                                <label>{t('settings.preferredEngine')}</label>
-                                <select
-                                    value={settings.preferredEngine}
-                                    onChange={(e) => setSetting('preferredEngine', e.target.value as AppSettings['preferredEngine'])}
-                                    className="settings-select"
-                                >
-                                    <option value="ollama">{t('settings.engineOllama')}</option>
-                                    <option value="webllm">{t('settings.engineWebLLM')}</option>
-                                </select>
-                            </div>
-                            <div className="settings-row">
                                 <label>{t('settings.autoFallback')}</label>
                                 <label className="toggle-switch">
                                     <input

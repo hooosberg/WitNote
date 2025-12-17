@@ -128,12 +128,29 @@ export function useSettings(): UseSettingsReturn {
         document.documentElement.style.setProperty('--article-font-size', `${settings.fontSize}px`);
     }, [settings.fontFamily, settings.fontSize]);
 
+    // 监听其他组件的设置变化（通过自定义事件同步）
+    useEffect(() => {
+        const handleSettingsChange = (e: CustomEvent<Partial<AppSettings>>) => {
+            setSettingsState(prev => ({ ...prev, ...e.detail }));
+        };
+        window.addEventListener('settings-changed', handleSettingsChange as EventListener);
+        return () => {
+            window.removeEventListener('settings-changed', handleSettingsChange as EventListener);
+        };
+    }, []);
+
     // 设置单个值
     const setSetting = useCallback(async <K extends keyof AppSettings>(
         key: K,
         value: AppSettings[K]
     ) => {
         setSettingsState(prev => ({ ...prev, [key]: value }));
+
+        // 派发自定义事件通知其他组件
+        window.dispatchEvent(new CustomEvent('settings-changed', {
+            detail: { [key]: value }
+        }));
+
         try {
             if (window.settings) {
                 await window.settings.set(key, value);

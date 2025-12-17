@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import ReactDOM from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import {
     Panel,
     PanelGroup
@@ -28,6 +29,7 @@ import SettingsPanel from './components/Settings'
 import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import { useFolderOrder } from './hooks/useFolderOrder'
+import { useSettings } from './hooks/useSettings'
 import './styles/index.css'
 
 // 颜色配置 - 红黄绿蓝
@@ -43,17 +45,19 @@ const COLORS: { key: ColorKey; hex: string; name: string }[] = [
 type SortOption = 'name-asc' | 'name-desc' | 'time-asc' | 'time-desc'
 
 // 生成文件名
-const generateFileName = (): string => {
+const generateFileName = (format: 'txt' | 'md' = 'md'): string => {
     const now = new Date()
     const timestamp = `${now.getMonth() + 1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`
-    return `Untitled_${timestamp}.txt`
+    return `Untitled_${timestamp}.${format}`
 }
 
 const AppContent: React.FC = () => {
+    const { t } = useTranslation()
     const fileSystem = useFileSystem()
     const llm = useLLM()
     const { showToast } = useToast()
     const folderOrder = useFolderOrder()
+    const { settings } = useSettings()
 
     // 专注模式和响应式布局状态
     const [manualFocusMode, setManualFocusMode] = useState(false) // 用户手动开启的专注模式
@@ -505,7 +509,7 @@ const AppContent: React.FC = () => {
     }
 
     const handleQuickCreate = async () => {
-        const fileName = generateFileName()
+        const fileName = generateFileName(settings.defaultFormat)
         await createNewFile(fileName)
     }
 
@@ -764,7 +768,7 @@ const AppContent: React.FC = () => {
                                                 />
                                             ) : (
                                                 <div className="sidebar-empty-hint">
-                                                    在下方新建文件夹
+                                                    {t('sidebar.emptyFolderHint')}
                                                 </div>
                                             )}
                                         </>
@@ -772,7 +776,7 @@ const AppContent: React.FC = () => {
                                         <div className="sidebar-empty-guide">
                                             <div className="empty-icon">🧘</div>
                                             <span className="sidebar-hint">
-                                                请点击下方新建或者链接一个本地文件夹作为本地数据存储位置
+                                                {t('sidebar.emptyGuide')}
                                             </span>
                                         </div>
                                     )}
@@ -792,7 +796,7 @@ const AppContent: React.FC = () => {
                                                 setEditingFolderPath(actualPath)
                                             }
                                             setSidebarMenu({ show: false, x: 0, y: 0 })
-                                        }}>新建文件夹</button>
+                                        }}>{t('contextMenu.newFolder')}</button>
                                     </div>,
                                     document.body
                                 )}
@@ -814,11 +818,7 @@ const AppContent: React.FC = () => {
                                                     className="sidebar-footer-btn connected flex-1"
                                                     onClick={async () => {
                                                         // 确认对话框
-                                                        const confirmed = window.confirm(
-                                                            '确定要断开此文件夹的链接吗？\n\n' +
-                                                            '⚠️ 这将断开应用与本地文件夹的连接，但不会删除文件夹中的任何文件。\n\n' +
-                                                            '您的所有笔记和文件都会保留完好。'
-                                                        )
+                                                        const confirmed = window.confirm(t('sidebar.disconnectConfirm'))
 
                                                         if (confirmed) {
                                                             // 断开连接：清除存储的路径并重新加载
@@ -829,7 +829,7 @@ const AppContent: React.FC = () => {
                                                     title="断开连接"
                                                 >
                                                     <Link size={14} strokeWidth={1.5} />
-                                                    <span>已链接文件夹</span>
+                                                    <span>{t('sidebar.linkedFolder')}</span>
                                                 </button>
                                             </div>
                                         </>
@@ -840,7 +840,7 @@ const AppContent: React.FC = () => {
                                             title="连接本地文件夹"
                                         >
                                             <Unlink size={14} strokeWidth={1.5} />
-                                            <span>链接本地文件夹</span>
+                                            <span>{t('sidebar.linkLocalFolder')}</span>
                                         </button>
                                     )}
                                 </div>
@@ -860,7 +860,7 @@ const AppContent: React.FC = () => {
                                 fileName={activeFile.name}
                                 fileExtension={activeFile.extension || 'txt'}
                                 onTitleChange={handleTitleChange}
-                                onFormatToggle={convertFileFormat}
+                                onFormatToggle={() => convertFileFormat(settings.smartFormatConversion)}
                                 focusMode={focusMode}
                                 createdAt={activeFile.createdAt}
                                 modifiedAt={activeFile.modifiedAt}
@@ -902,7 +902,7 @@ const AppContent: React.FC = () => {
                                                 onClick={handleQuickCreate}
                                             >
                                                 <Plus size={32} strokeWidth={1.2} className="create-card-icon" />
-                                                <div className="create-card-text">新建文章</div>
+                                                <div className="create-card-text">{t('gallery.newArticle')}</div>
                                             </div>
 
                                             {/* 文件卡片列表 - 使用虚拟排序 */}
@@ -1011,7 +1011,7 @@ const AppContent: React.FC = () => {
                         style={{ left: galleryMenu.x, top: galleryMenu.y }}
                         onMouseDown={e => e.stopPropagation()}
                     >
-                        <button onClick={() => handleGalleryAction('rename')}>重命名</button>
+                        <button onClick={() => handleGalleryAction('rename')}>{t('contextMenu.rename')}</button>
 
                         {/* 红黄绿颜色圆圈 */}
                         <div className="color-circles">
@@ -1034,7 +1034,7 @@ const AppContent: React.FC = () => {
                         </div>
 
                         <div className="menu-divider" />
-                        <button className="danger" onClick={() => handleGalleryAction('delete')}>删除</button>
+                        <button className="danger" onClick={() => handleGalleryAction('delete')}>{t('contextMenu.delete')}</button>
                     </div>,
                     document.body
                 )

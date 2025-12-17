@@ -46,7 +46,7 @@ export interface UseFileSystemReturn {
     createNewFolder: (name: string, inDirectory?: string) => Promise<string | null>
     deleteFile: (path: string) => Promise<void>
     renameItem: (oldPath: string, newName: string) => Promise<void>
-    convertFileFormat: () => Promise<void>
+    convertFileFormat: (smartConversion?: boolean) => Promise<void>
     moveItem: (sourcePath: string, targetDir: string) => Promise<boolean>  // 移动文件/文件夹
 }
 
@@ -505,7 +505,8 @@ export function useFileSystem(): UseFileSystemReturn {
      * - MD → TXT：去除 MD 格式符号，保存为 TXT（覆盖或创建）
      * - TXT → MD：如果同名 MD 存在则打开，否则重命名当前文件
      */
-    const convertFileFormat = useCallback(async () => {
+    const convertFileFormat = useCallback(async (smartConversion: boolean = true) => {
+        console.log('🔄 格式转换 - smartConversion:', smartConversion)
         if (!activeFile) return
 
         const currentExt = activeFile.extension?.toLowerCase()?.replace('.', '')
@@ -574,77 +575,81 @@ export function useFileSystem(): UseFileSystemReturn {
         }
 
         // ========== MD → TXT ==========
-        // 完整去除 MD 格式符号，产出干净的纯文本
+        // 根据 smartConversion 参数决定是否去除 MD 格式符号
         let convertedContent = fileContent
 
-        // 1. 处理代码块（支持 ```, ````, 等多个反引号）
-        // 先移除四反引号代码块
-        convertedContent = convertedContent.replace(/````\w*\n([\s\S]*?)````/g, '$1')
-        // 再移除三反引号代码块
-        convertedContent = convertedContent.replace(/```\w*\n([\s\S]*?)```/g, '$1')
+        // 智能转换：去除 MD 格式符号
+        if (smartConversion) {
+            // 1. 处理代码块（支持 ```, ````, 等多个反引号）
+            // 先移除四反引号代码块
+            convertedContent = convertedContent.replace(/````\w*\n([\s\S]*?)````/g, '$1')
+            // 再移除三反引号代码块
+            convertedContent = convertedContent.replace(/```\w*\n([\s\S]*?)```/g, '$1')
 
-        // 2. 处理表格 - 转换为制表符分隔的格式
-        convertedContent = convertedContent.replace(/^\|(.+)\|$/gm, (line) => {
-            // 跳过分隔行（只包含 -, :, |, 空格）
-            if (/^[\s|:\-]+$/.test(line)) return ''
-            // 提取单元格内容
-            return line
-                .split('|')
-                .filter(cell => cell.trim())
-                .map(cell => cell.trim())
-                .join('\t')
-        })
+            // 2. 处理表格 - 转换为制表符分隔的格式
+            convertedContent = convertedContent.replace(/^\|(.+)\|$/gm, (line) => {
+                // 跳过分隔行（只包含 -, :, |, 空格）
+                if (/^[\s|:\-]+$/.test(line)) return ''
+                // 提取单元格内容
+                return line
+                    .split('|')
+                    .filter(cell => cell.trim())
+                    .map(cell => cell.trim())
+                    .join('\t')
+            })
 
-        // 3. 处理各种格式标记（按顺序处理，避免冲突）
-        convertedContent = convertedContent
-            // 处理水平分隔线（单独一行的 --- 或 *** 或 ___）
-            .replace(/^\s*[-*_]{3,}\s*$/gm, '')
-            // 移除标题标记（保留内容）
-            .replace(/^#{1,6}\s+/gm, '')
-            // 处理图片 ![alt](url) 或 ![alt](url "title") → 移除
-            .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-            // 处理链接 [文字](链接) → 文字
-            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-            // 处理粗体斜体组合 ***text*** 或 ___text___
-            .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
-            .replace(/___([^_]+)___/g, '$1')
-            // 处理粗体 **text** 或 __text__
-            .replace(/\*\*([^*]+)\*\*/g, '$1')
-            .replace(/__([^_]+)__/g, '$1')
-            // 处理斜体 *text* 或 _text_ (需要小心不匹配 ** 或 __)
-            .replace(/(?<![*])\*([^*\n]+)\*(?![*])/g, '$1')
-            .replace(/(?<![_])_([^_\n]+)_(?![_])/g, '$1')
-            // 处理删除线 ~~text~~
-            .replace(/~~([^~]+)~~/g, '$1')
-            // 处理行内代码 `code` (包括空的反引号)
-            .replace(/`+([^`]*)`+/g, '$1')
-            // 处理引用标记 > text（每行开头）
-            .replace(/^>\s?/gm, '')
-            // 处理无序列表标记（保留缩进）- 修复：匹配行首空格后的 */-/+
-            .replace(/^(\s*)[\-\*\+]\s+/gm, '$1')
-            // 处理有序列表标记（保留缩进）
-            .replace(/^(\s*)\d+\.\s+/gm, '$1')
-            // 处理任务列表 - [ ] 或 - [x]
-            .replace(/^(\s*)[\-\*]\s*\[[ xX]\]\s*/gm, '$1')
-            // 处理转义字符 \* \_ \` \\ 等（还原为原始字符）
-            .replace(/\\([\\`*_{}[\]()#+\-.!|>~])/g, '$1')
-            // 清理 LaTeX 公式块 (保留公式内容但移除 $$)
-            .replace(/\$\$([^$]+)\$\$/g, '$1')
-            // 保留行内公式的 $ 作为数学符号
-            // 清理 HTML 注释
-            .replace(/<!--[\s\S]*?-->/g, '')
-            // 清理可能残留的 HTML 标签
-            .replace(/<[^>]+>/g, '')
+            // 3. 处理各种格式标记（按顺序处理，避免冲突）
+            convertedContent = convertedContent
+                // 处理水平分隔线（单独一行的 --- 或 *** 或 ___）
+                .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+                // 移除标题标记（保留内容）
+                .replace(/^#{1,6}\s+/gm, '')
+                // 处理图片 ![alt](url) 或 ![alt](url "title") → 移除
+                .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+                // 处理链接 [文字](链接) → 文字
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                // 处理粗体斜体组合 ***text*** 或 ___text___
+                .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+                .replace(/___([^_]+)___/g, '$1')
+                // 处理粗体 **text** 或 __text__
+                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                .replace(/__([^_]+)__/g, '$1')
+                // 处理斜体 *text* 或 _text_ (需要小心不匹配 ** 或 __)
+                .replace(/(?<![*])\*([^*\n]+)\*(?![*])/g, '$1')
+                .replace(/(?<![_])_([^_\n]+)_(?![_])/g, '$1')
+                // 处理删除线 ~~text~~
+                .replace(/~~([^~]+)~~/g, '$1')
+                // 处理行内代码 `code` (包括空的反引号)
+                .replace(/`+([^`]*)`+/g, '$1')
+                // 处理引用标记 > text（每行开头）
+                .replace(/^>\s?/gm, '')
+                // 处理无序列表标记（保留缩进）- 修复：匹配行首空格后的 */-/+
+                .replace(/^(\s*)[\-\*\+]\s+/gm, '$1')
+                // 处理有序列表标记（保留缩进）
+                .replace(/^(\s*)\d+\.\s+/gm, '$1')
+                // 处理任务列表 - [ ] 或 - [x]
+                .replace(/^(\s*)[\-\*]\s*\[[ xX]\]\s*/gm, '$1')
+                // 处理转义字符 \* \_ \` \\ 等（还原为原始字符）
+                .replace(/\\([\\`*_{}[\]()#+\-.!|>~])/g, '$1')
+                // 清理 LaTeX 公式块 (保留公式内容但移除 $$)
+                .replace(/\$\$([^$]+)\$\$/g, '$1')
+                // 保留行内公式的 $ 作为数学符号
+                // 清理 HTML 注释
+                .replace(/<!--[\s\S]*?-->/g, '')
+                // 清理可能残留的 HTML 标签
+                .replace(/<[^>]+>/g, '')
 
-        // 4. 最后清理
-        convertedContent = convertedContent
-            // 清理行首的全角空格（首行缩进）后面紧跟的多余空格
-            .replace(/^(　+)\s+/gm, '$1')
-            // 清理每行末尾的空格
-            .replace(/[ \t]+$/gm, '')
-            // 合并多个连续空行为最多两个
-            .replace(/\n{3,}/g, '\n\n')
-            .trim()
+            // 4. 最后清理
+            convertedContent = convertedContent
+                // 清理行首的全角空格（首行缩进）后面紧跟的多余空格
+                .replace(/^(　+)\s+/gm, '$1')
+                // 清理每行末尾的空格
+                .replace(/[ \t]+$/gm, '')
+                // 合并多个连续空行为最多两个
+                .replace(/\n{3,}/g, '\n\n')
+                .trim()
+        }
+        // 如果 smartConversion 为 false，convertedContent 保持为 fileContent 不变
 
         try {
             if (existingFile) {
