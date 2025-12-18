@@ -1,7 +1,7 @@
 {
   "name": "witnote",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "智简笔记本 - 大智若简的本地化 AI 写作伴侣 (WitNote)",
   "main": "dist-electron/main.js",
   "author": "hooosberg <zikedece@proton.me>",
@@ -50,17 +50,12 @@
     },
     "files": [
       "dist/**/*",
+      "!dist/ollama",
+      "!dist/models",
       "dist-electron/**/*",
       "package.json"
     ],
     "extraResources": [
-      {
-        "from": "public/ollama",
-        "to": "ollama",
-        "filter": [
-          "**/*"
-        ]
-      },
       {
         "from": "public/models/ollama-models",
         "to": "models/ollama-models",
@@ -70,6 +65,12 @@
       }
     ],
     "mac": {
+      "extraResources": [
+        {
+          "from": "public/ollama/mac",
+          "to": "ollama/mac"
+        }
+      ],
       "target": {
         "target": "dmg",
         "arch": [
@@ -110,6 +111,12 @@
       ]
     },
     "win": {
+      "extraResources": [
+        {
+          "from": "public/ollama/win",
+          "to": "ollama/win"
+        }
+      ],
       "target": [
         {
           "target": "nsis",
