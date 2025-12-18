@@ -31,6 +31,10 @@ Thumbs.db
 # 缓存
 .cache/
 
+# 大文件（超过 GitHub 100MB 限制）
+public/ollama/
+public/models/
+
 # Apple 证书和签名相关（绝对不要上传！）
 *.p12
 *.cer
