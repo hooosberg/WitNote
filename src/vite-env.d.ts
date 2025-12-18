@@ -43,6 +43,7 @@ interface ChatStorageAPI {
 interface PlatformAPI {
     os: string
     isMac: boolean
+    isWindows: boolean
 }
 
 // 窗口控制 API

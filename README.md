@@ -10,11 +10,11 @@
 [English](README.md) | [中文](README_zh.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)]()
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4-green.svg)]()
 
-**WitNote** is a local-first AI writing companion for macOS.
-We pack a powerful **dual AI engine** into an ultra-minimalist **native card interface**. No cloud dependency, no privacy concerns — intelligence made lightweight.
+**WitNote** is a local-first AI writing companion for macOS and Windows.
+With a built-in **Ollama AI engine** and an ultra-minimalist **native card interface**, it works right out of the box. No cloud dependency, no privacy concerns — intelligence made lightweight.
 
 ![Local AI](src/pic/本地ai.png)
 
@@ -22,9 +22,9 @@ We pack a powerful **dual AI engine** into an ultra-minimalist **native card int
 
 ## 🌟 Core Philosophy
 
-- **Smart**: Dual-engine AI
-  - **Primary**: Auto-connects to local Ollama for full power
-  - **Portable**: Built-in WebLLM browser model, ready out of the box
+- **Smart**: Local AI, ready out of the box
+  - Built-in Ollama engine, auto-starts, ready to use
+  - Pre-installed lightweight model, no extra configuration needed
 - **Simple**: No complexity
   - iOS-style card management, drag to organize
   - Smart focus mode — window narrows, editor simplifies
@@ -36,7 +36,7 @@ We pack a powerful **dual AI engine** into an ultra-minimalist **native card int
 ## ✨ Features
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
-- 🤖 **Dual AI Engine** — WebLLM (lightweight built-in) + Ollama (powerful external)
+- 🤖 **Local AI Engine** — Built-in Ollama, ready out of the box, supports more models
 - 🎨 **Multiple Themes** — Light / Dark / Zen Tea
 - 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting
 - 🔍 **Context Aware** — AI can directly read your current article
@@ -47,13 +47,99 @@ We pack a powerful **dual AI engine** into an ultra-minimalist **native card int
 
 ## 🚀 Quick Start
 
-### Installation
+### Download
 
-Download the latest DMG installer from [Releases](https://github.com/hooosberg/WitNote/releases).
+Get the latest installer from [Releases](https://github.com/hooosberg/WitNote/releases):
 
-**Recommended Platform**: Apple Silicon (M1 / M2 / M3 / M4) Mac devices
+| Platform | File | Notes |
+|----------|------|-------|
+| 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon optimized |
+| 🪟 Windows | `WitNote-x.x.x-setup.exe` | 64-bit Windows 10/11 |
 
-### Development
+---
+
+## 💻 System Requirements
+
+### 🍎 macOS
+
+| Item | Minimum | Recommended |
+|------|---------|-------------|
+| OS Version | macOS 10.15+ | macOS 12.0+ |
+| Chip | Intel Core i5 | Apple Silicon (M1/M2/M3/M4) |
+| RAM | 8GB | 16GB+ |
+| Storage | 2GB free space | SSD, 4GB+ free space |
+
+> 💡 **Tip**: Apple Silicon devices offer significantly better performance for local AI models!
+
+### 🪟 Windows
+
+| Item | Minimum | Recommended |
+|------|---------|-------------|
+| OS Version | Windows 10 (64-bit) | Windows 11 |
+| Processor | Intel Core i5 / AMD Ryzen 5 | Intel Core i7 / AMD Ryzen 7 |
+| RAM | 8GB | 16GB+ |
+| Storage | 2GB free space | SSD, 4GB+ free space |
+| GPU | Integrated graphics | Discrete GPU with Vulkan support |
+
+> ⚠️ **Note**: Windows version is newly released. Feedback welcome!
+
+---
+
+## 📦 Installation
+
+### 🍎 macOS Installation
+
+1. Download the `.dmg` file
+2. Double-click to open the DMG
+3. Drag the app to Applications folder
+4. Launch from Applications
+
+> 🎉 **Great News!**
+>
+> This app is now **Apple Notarized**! No more "unverified developer" warnings!
+>
+> 😅 *~~The developer bravely took out a loan to afford the $99 Apple Developer account...~~*
+> *(Yes, this actually happened. Thanks to all users for your support!)*
+
+### 🪟 Windows Installation
+
+1. Download the `.exe` installer
+2. Run the setup wizard
+3. Choose installation path (customizable)
+4. Complete installation, launch from Desktop or Start Menu
+
+> 📝 **Notes**:
+> - Windows version is brand new — please [report issues](https://github.com/hooosberg/WitNote/issues) if you encounter any problems
+> - First launch may require trust from Windows Defender or antivirus software
+> - Built-in AI model needs some time to load on first use
+
+---
+
+## 🔧 AI Engine Info
+
+### Ready Out of the Box
+The app includes a built-in Ollama engine and the `qwen2.5:0.5b` lightweight model. Works right from the first launch, no configuration needed.
+
+### Expand with More Models
+For more powerful AI capabilities, download additional models from Settings:
+
+| Model | Size | Use Case |
+|-------|------|----------|
+| qwen2.5:0.5b | ~400MB | Quick Q&A (built-in) |
+| qwen2.5:1.5b | ~1GB | Daily writing assistance |
+| qwen2.5:3b | ~2GB | Deep writing, long-form content |
+
+---
+
+## 📸 Screenshots
+
+![Multilingual Support](src/pic/多语言.png)
+![Dark Mode](src/pic/深色模式.png)
+![Smart Engine Switching](src/pic/智能引擎切换.png)
+
+---
+
+## 🛠️ Development
 
 ```bash
 # Clone the repository
@@ -66,36 +152,12 @@ npm install
 # Start development server
 npm run dev
 
-# Build production version
+# Build macOS version
 npm run build
+
+# Build Windows version
+npm run build -- --win
 ```
-
----
-
-## 🔧 AI Engine Configuration
-
-### WebLLM (Built-in)
-Ready to use out of the box. The lightweight model downloads automatically on first use.
-
-### Ollama (Recommended)
-For more powerful AI capabilities, install [Ollama](https://ollama.com):
-
-```bash
-# After installing Ollama, download recommended models
-ollama pull qwen2.5:0.5b
-# Or a larger model
-ollama pull qwen2.5:3b
-```
-
-The app automatically detects local Ollama service and prioritizes it.
-
----
-
-## 📸 Screenshots
-
-![Multilingual Support](src/pic/多语言.png)
-![Dark Mode](src/pic/深色模式.png)
-![Smart Engine Switching](src/pic/智能引擎切换.png)
 
 ---
 

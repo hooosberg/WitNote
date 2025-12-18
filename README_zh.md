@@ -10,11 +10,11 @@
 [English](README.md) | [中文](README_zh.md)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)]()
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4-green.svg)]()
 
-**智简笔记本** 是一款本地优先的 macOS AI 写作伴侣。
-我们将强大的**双模 AI 引擎**封装在极致简约的**原生卡片界面**之下。无云端依赖，无隐私焦虑，让智能回归轻盈。
+**智简笔记本** 是一款本地优先的 AI 写作伴侣，支持 macOS 和 Windows 平台。
+内置 **Ollama AI 引擎**，搭配极简**原生卡片界面**，开箱即用。无云端依赖，无隐私焦虑，让智能回归轻盈。
 
 ![本地 AI](src/pic/本地ai.png)
 
@@ -22,9 +22,9 @@
 
 ## 🌟 核心理念
 
-- **智 (Smart)**: 双模引擎驱动。
-  - **主力**: 自动连接本地 Ollama，满血性能。
-  - **便携**: 内置 WebLLM 浏览器模型，开箱即用。
+- **智 (Smart)**: 本地 AI，开箱即用。
+  - 内置 Ollama 引擎，自动启动，即刻可用。
+  - 预装轻量模型，无需额外配置。
 - **简 (Simple)**: 拒绝繁杂。
   - iOS 风格卡片管理，拖拽即整理。
   - 智能专注模式，窗口变窄即刻变身纯文本编辑器。
@@ -36,7 +36,7 @@
 ## ✨ 功能亮点
 
 - 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
-- 🤖 **双模 AI 引擎** — WebLLM (轻量内置) + Ollama (强力扩展)
+- 🤖 **本地 AI 引擎** — 内置 Ollama，开箱即用，支持扩展更多模型
 - 🎨 **多主题切换** — 浅色 / 深色 / 禅意茶色
 - 🗂️ **卡片网格视图** — iOS 风格，拖拽排序
 - 🔍 **上下文感知** — AI 可直接读取当前文章
@@ -47,25 +47,99 @@
 
 ## 🚀 快速开始
 
-### 安装
+### 下载
 
-从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新的 DMG 安装包。
+从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-**推荐平台**: Apple Silicon (M1 / M2 / M3 / M4 系列芯片) 的 Mac 设备
+| 平台 | 文件 | 说明 |
+|------|------|------|
+| 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon 优化 |
+| 🪟 Windows | `WitNote-x.x.x-setup.exe` | 64 位 Windows 10/11 |
 
-> ⚠️ **macOS 安装提示**
+---
+
+## 💻 设备要求
+
+### 🍎 macOS
+
+| 项目 | 最低配置 | 推荐配置 |
+|------|----------|----------|
+| 系统版本 | macOS 10.15+ | macOS 12.0+ |
+| 芯片 | Intel Core i5 | Apple Silicon (M1/M2/M3/M4) |
+| 内存 | 8GB | 16GB+ |
+| 硬盘 | 2GB 可用空间 | SSD, 4GB+ 可用空间 |
+
+> 💡 **提示**: Apple Silicon 设备运行本地 AI 模型性能更佳，强烈推荐！
+
+### 🪟 Windows
+
+| 项目 | 最低配置 | 推荐配置 |
+|------|----------|----------|
+| 系统版本 | Windows 10 (64-bit) | Windows 11 |
+| 处理器 | Intel Core i5 / AMD Ryzen 5 | Intel Core i7 / AMD Ryzen 7 |
+| 内存 | 8GB | 16GB+ |
+| 硬盘 | 2GB 可用空间 | SSD, 4GB+ 可用空间 |
+| 显卡 | 集成显卡 | 支持 Vulkan 的独立显卡 |
+
+> ⚠️ **注意**: Windows 版本为首次发布，欢迎反馈问题！
+
+---
+
+## 📦 安装说明
+
+### 🍎 macOS 安装
+
+1. 下载 `.dmg` 文件
+2. 双击打开 DMG
+3. 将应用拖入 Applications 文件夹
+4. 首次运行可能需要信任开发者（见下方说明）
+
+> 🎉 **好消息！**
 >
-> 由于本应用目前处于内测阶段，尚未购买 Apple 开发者账号（$99/年）进行代码签名和公证。
-> macOS 可能会提示应用"已损坏"或"无法验证开发者"。
+> 本应用已通过 **Apple 官方公证 (Notarization)**！不会再出现"无法验证开发者"的提示了！
 >
-> **解决方法**：打开终端，执行以下命令移除隔离属性：
-> ```bash
-> sudo xattr -cr /Applications/智简笔记本.app
-> ```
->
-> 感谢理解！用户量增加后我会尽快完成签名和公证。
+> 😅 *~~开发者为此斥巨资借了花呗 $99 购买 Apple Developer 账号...~~*
+> *（没错，这是一个真实故事，感谢用户们的支持让我有底气还花呗）*
 
-### 开发
+### 🪟 Windows 安装
+
+1. 下载 `.exe` 安装程序
+2. 双击运行安装向导
+3. 选择安装路径（可自定义）
+4. 完成安装，从桌面或开始菜单启动
+
+> 📝 **注意事项**:
+> - Windows 版本为全新发布，如遇问题欢迎 [提交 Issue](https://github.com/hooosberg/WitNote/issues)
+> - 首次启动可能需要 Windows Defender 或杀毒软件的信任
+> - 内置 AI 模型需要一点时间加载，请耐心等待
+
+---
+
+## 🔧 AI 引擎说明
+
+### 开箱即用
+应用内置了 Ollama 引擎和 `qwen2.5:0.5b` 轻量模型，首次启动即可使用，无需任何配置。
+
+### 扩展更多模型
+如需更强大的 AI 能力，可在设置中下载更多模型：
+
+| 模型 | 大小 | 适用场景 |
+|------|------|----------|
+| qwen2.5:0.5b | ~400MB | 快速问答（已内置）|
+| qwen2.5:1.5b | ~1GB | 日常写作辅助 |
+| qwen2.5:3b | ~2GB | 深度写作、长文创作 |
+
+---
+
+## 📸 截图
+
+![多语言支持](src/pic/多语言.png)
+![深色模式](src/pic/深色模式.png)
+![智能引擎切换](src/pic/智能引擎切换.png)
+
+---
+
+## 🛠️ 开发
 
 ```bash
 # 克隆仓库
@@ -78,36 +152,12 @@ npm install
 # 启动开发服务器
 npm run dev
 
-# 构建生产版本
+# 构建 macOS 版本
 npm run build
+
+# 构建 Windows 版本
+npm run build -- --win
 ```
-
----
-
-## 🔧 AI 引擎配置
-
-### WebLLM (内置)
-开箱即用，无需配置。首次使用会自动下载轻量模型。
-
-### Ollama (推荐)
-如需更强大的 AI 能力，推荐安装 [Ollama](https://ollama.com)：
-
-```bash
-# 安装 Ollama 后，下载推荐模型
-ollama pull qwen2.5:0.5b
-# 或更大的模型
-ollama pull qwen2.5:3b
-```
-
-应用会自动检测本地 Ollama 服务并优先使用。
-
----
-
-## 📸 截图
-
-![多语言支持](src/pic/多语言.png)
-![深色模式](src/pic/深色模式.png)
-![智能引擎切换](src/pic/智能引擎切换.png)
 
 ---
 

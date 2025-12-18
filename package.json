@@ -28,6 +28,7 @@
     "react-resizable-panels": "^3.0.6"
   },
   "devDependencies": {
+    "@electron/notarize": "^3.1.1",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -42,7 +43,7 @@
   },
   "build": {
     "appId": "com.zikedece.witnote",
-    "productName": "智简笔记本",
+    "productName": "WitNote",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -77,7 +78,15 @@
       },
       "category": "public.app-category.productivity",
       "icon": "build/icon.icns",
-      "darkModeSupport": true
+      "darkModeSupport": true,
+      "identity": "***REMOVED*** (***REMOVED***)",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": {
+        "teamId": "***REMOVED***"
+      }
     },
     "dmg": {
       "title": "${productName}",
@@ -99,6 +108,26 @@
           "path": "/Applications"
         }
       ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WitNote",
+      "artifactName": "${productName}-${version}-setup.${ext}"
     },
     "asar": true
   }

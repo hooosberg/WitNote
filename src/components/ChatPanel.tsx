@@ -126,8 +126,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
     }
 
     const formatModelName = (name: string) => {
-        const base = name.split(':')[0]
-        return base.charAt(0).toUpperCase() + base.slice(1)
+        const parts = name.split(':')
+        const base = parts[0].charAt(0).toUpperCase() + parts[0].slice(1)
+        const size = parts[1] || ''
+        return size ? `${base} ${size.toUpperCase()}` : base
     }
 
     return (

@@ -55,9 +55,21 @@ const AppContent: React.FC = () => {
     const { t } = useTranslation()
     const fileSystem = useFileSystem()
     const llm = useLLM()
-    const { showToast } = useToast()
+    const { } = useToast()
     const folderOrder = useFolderOrder()
     const { settings } = useSettings()
+
+    // 平台检测：为 Windows 添加特殊 class 以调整布局
+    useEffect(() => {
+        if (window.platform?.isWindows) {
+            document.body.classList.add('platform-windows')
+        } else if (window.platform?.isMac) {
+            document.body.classList.add('platform-mac')
+        }
+        return () => {
+            document.body.classList.remove('platform-windows', 'platform-mac')
+        }
+    }, [])
 
     // 专注模式和响应式布局状态
     const [manualFocusMode, setManualFocusMode] = useState(false) // 用户手动开启的专注模式
@@ -157,6 +169,13 @@ const AppContent: React.FC = () => {
 
     // 设置面板状态
     const [showSettings, setShowSettings] = useState(false)
+    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'guide'>('appearance')
+
+    // 打开设置面板的函数
+    const openSettingsPanel = (tab: 'appearance' | 'ai' | 'persona' | 'guide' = 'appearance') => {
+        setSettingsDefaultTab(tab)
+        setShowSettings(true)
+    }
 
     // 卡片拖拽排序状态
     const [cardDragSort, setCardDragSort] = useState<{
@@ -616,6 +635,8 @@ const AppContent: React.FC = () => {
             <SettingsPanel
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
+                llm={llm}
+                defaultTab={settingsDefaultTab}
             />
 
             {/* 可调整三栏布局 */}
@@ -984,7 +1005,7 @@ const AppContent: React.FC = () => {
                     !rightCollapsed && (
                         <>
                             <Panel defaultSize={25} minSize={25} maxSize={25} className="panel-chat">
-                                <ChatPanel llm={llm} openSettings={() => setShowSettings(true)} />
+                                <ChatPanel llm={llm} openSettings={() => openSettingsPanel('ai')} />
                             </Panel>
                         </>
                     )

@@ -121,80 +121,92 @@ export interface RecommendedModel {
     description: string;
     taglineKey: string;  // 翻译键，用于多语言
     size: string;
+    sizeBytes: number;   // 用于排序
     builtIn?: boolean;
 }
 
-// 聊天面板显示的精选模型（5个）
-export const RECOMMENDED_MODELS: RecommendedModel[] = [
+// 所有可下载模型（按体积从小到大排序）
+export const ALL_MODELS: RecommendedModel[] = [
     {
         name: 'qwen2.5:0.5b',
         description: 'Qwen2.5 0.5B',
         taglineKey: 'models.qwen05b',
         size: '397MB',
+        sizeBytes: 397,
         builtIn: true
     },
     {
         name: 'gemma3:1b',
         description: 'Gemma3 1B',
         taglineKey: 'models.gemma1b',
-        size: '815MB'
+        size: '815MB',
+        sizeBytes: 815
     },
     {
         name: 'qwen2.5:1.5b',
         description: 'Qwen2.5 1.5B',
         taglineKey: 'models.qwen15b',
-        size: '986MB'
+        size: '986MB',
+        sizeBytes: 986
     },
     {
         name: 'llama3.2:1b',
         description: 'Llama 3.2 1B',
         taglineKey: 'models.llama1b',
-        size: '1.3GB'
-    },
-    {
-        name: 'gemma3:4b',
-        description: 'Gemma3 4B',
-        taglineKey: 'models.gemma4b',
-        size: '3.3GB'
-    },
-];
-
-// 设置页面显示的高级模型（更大更强）
-export const ADVANCED_MODELS: RecommendedModel[] = [
-    {
-        name: 'qwen2.5:7b',
-        description: 'Qwen2.5 7B',
-        taglineKey: 'models.qwen7b',
-        size: '4.7GB'
+        size: '1.3GB',
+        sizeBytes: 1300
     },
     {
         name: 'llama3.2:3b',
         description: 'Llama 3.2 3B',
         taglineKey: 'models.llama3b',
-        size: '2.0GB'
-    },
-    {
-        name: 'mistral:7b',
-        description: 'Mistral 7B',
-        taglineKey: 'models.mistral7b',
-        size: '4.1GB'
+        size: '2.0GB',
+        sizeBytes: 2000
     },
     {
         name: 'phi3:mini',
         description: 'Phi-3 Mini',
         taglineKey: 'models.phi3mini',
-        size: '2.3GB'
+        size: '2.3GB',
+        sizeBytes: 2300
+    },
+    {
+        name: 'gemma3:4b',
+        description: 'Gemma3 4B',
+        taglineKey: 'models.gemma4b',
+        size: '3.3GB',
+        sizeBytes: 3300
+    },
+    {
+        name: 'mistral:7b',
+        description: 'Mistral 7B',
+        taglineKey: 'models.mistral7b',
+        size: '4.1GB',
+        sizeBytes: 4100
+    },
+    {
+        name: 'qwen2.5:7b',
+        description: 'Qwen2.5 7B',
+        taglineKey: 'models.qwen7b',
+        size: '4.7GB',
+        sizeBytes: 4700
     },
     {
         name: 'gemma3:12b',
         description: 'Gemma3 12B',
         taglineKey: 'models.gemma12b',
-        size: '8.1GB'
+        size: '8.1GB',
+        sizeBytes: 8100
     },
     {
         name: 'qwen2.5:14b',
         description: 'Qwen2.5 14B',
         taglineKey: 'models.qwen14b',
-        size: '9.0GB'
+        size: '9.0GB',
+        sizeBytes: 9000
     },
 ];
+
+// 兼容旧代码的导出
+export const RECOMMENDED_MODELS = ALL_MODELS.slice(0, 5);
+export const ADVANCED_MODELS = ALL_MODELS.slice(5);

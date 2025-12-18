@@ -244,15 +244,22 @@ export function useLLM(): UseLLMReturn {
     const initializeOllama = useCallback(async (models: OllamaModel[]) => {
         console.log('🟢 初始化 Ollama...');
         setOllamaModels(models);
-        setSelectedOllamaModel(models[0].name);
-        setModelName(models[0].name);
 
-        const ollamaService = new OllamaService(models[0].name);
+        // 从 localStorage 恢复已保存的模型选择，如果不存在或无效则使用第一个模型
+        const savedModel = localStorage.getItem('zen-selected-ollama-model');
+        const modelToUse = savedModel && models.some(m => m.name === savedModel)
+            ? savedModel
+            : models[0].name;
+
+        setSelectedOllamaModel(modelToUse);
+        setModelName(modelToUse);
+
+        const ollamaService = new OllamaService(modelToUse);
         try {
             await ollamaService.initialize();
             ollamaServiceRef.current = ollamaService;
             setStatus('ready');
-            console.log('✅ Ollama 初始化成功');
+            console.log('✅ Ollama 初始化成功，使用模型:', modelToUse);
         } catch (error) {
             console.error('❌ Ollama 初始化失败:', error);
             setErrorMessage('Ollama 初始化失败');
@@ -554,6 +561,8 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
     const handleSetSelectedOllamaModel = useCallback((model: string) => {
         setSelectedOllamaModel(model);
         setModelName(model);
+        // 保存到 localStorage
+        localStorage.setItem('zen-selected-ollama-model', model);
         if (ollamaServiceRef.current) {
             ollamaServiceRef.current.setModel(model);
         }

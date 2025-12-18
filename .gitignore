@@ -30,3 +30,14 @@ Thumbs.db
 
 # 缓存
 .cache/
+
+# Apple 证书和签名相关（绝对不要上传！）
+*.p12
+*.cer
+*.certSigningRequest
+*.developerprofile
+*.provisionprofile
+*.mobileprovision
+apple-credentials.json
+notarization-password.txt
+release/apple*

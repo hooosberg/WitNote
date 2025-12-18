@@ -19,12 +19,13 @@ import {
     Globe,
     Trash2,
     Check,
-    Download
+    Download,
+    FolderOpen
 } from 'lucide-react';
 import { useSettings, AppSettings } from '../hooks/useSettings';
 import { changeLanguage, getCurrentLanguage } from '../i18n';
-import { UseLLMReturn, RECOMMENDED_MODELS } from '../hooks/useLLM';
-import { ADVANCED_MODELS } from '../services/types';
+import { UseLLMReturn } from '../hooks/useLLM';
+import { ALL_MODELS } from '../services/types';
 
 type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
 
@@ -32,11 +33,19 @@ interface SettingsProps {
     isOpen: boolean;
     onClose: () => void;
     llm?: UseLLMReturn;
+    defaultTab?: TabType;
 }
 
-export function Settings({ isOpen, onClose, llm }: SettingsProps) {
+export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
     const { t, i18n } = useTranslation();
-    const [activeTab, setActiveTab] = useState<TabType>('appearance');
+    const [activeTab, setActiveTab] = useState<TabType>(defaultTab || 'appearance');
+
+    // 当设置面板打开时，使用defaultTab
+    useEffect(() => {
+        if (isOpen && defaultTab) {
+            setActiveTab(defaultTab);
+        }
+    }, [isOpen, defaultTab]);
     const {
         settings,
         isLoading,
@@ -204,117 +213,84 @@ export function Settings({ isOpen, onClose, llm }: SettingsProps) {
                         {/* 本地模型列表 */}
                         {llm && (
                             <>
-                                <div className="settings-section-subtitle" style={{ marginTop: 20 }}>
-                                    <h4>{t('settings.installedModels')}</h4>
-                                    <button className="icon-btn tiny" onClick={llm.refreshModels} title="刷新列表">
-                                        <RotateCcw size={14} />
+                                {/* 模型存储路径 */}
+                                <div className="model-storage-path">
+                                    <span className="path-label">{t('settings.modelStoragePath')}:</span>
+                                    <button
+                                        className="path-btn"
+                                        onClick={() => window.ollama?.openModelsFolder()}
+                                        title={t('settings.openFolder')}
+                                    >
+                                        <FolderOpen size={14} />
+                                        <span>{t('settings.openFolder')}</span>
                                     </button>
+                                </div>
+
+                                <div className="settings-section-subtitle" style={{ marginTop: 16 }}>
+                                    <h4>{t('settings.installedModels')}</h4>
                                 </div>
                                 <div className="models-list">
                                     {llm.ollamaModels.length === 0 ? (
                                         <div className="empty-state">{t('settings.noModelsInstalled')}</div>
                                     ) : (
-                                        llm.ollamaModels.map(model => (
-                                            <div key={model.name} className="model-item">
-                                                <div className="model-info">
-                                                    <div className="model-name">
-                                                        {model.name}
-                                                        {model.name === llm.selectedOllamaModel && (
-                                                            <span className="current-badge">{t('settings.currentUsing')}</span>
+                                        llm.ollamaModels.map(model => {
+                                            const isBuiltIn = ALL_MODELS.find(m => m.name === model.name)?.builtIn;
+                                            return (
+                                                <div key={model.name} className="model-item">
+                                                    <div className="model-info">
+                                                        <div className="model-name">
+                                                            {model.name}
+                                                            {isBuiltIn && <span className="builtin-tag">{t('chat.builtIn')}</span>}
+                                                            {model.name === llm.selectedOllamaModel && (
+                                                                <span className="current-badge">{t('settings.currentUsing')}</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="model-meta">
+                                                            {model.formattedSize || ''} • {model.modified_at?.split('T')[0]}
+                                                        </div>
+                                                    </div>
+                                                    <div className="model-actions">
+                                                        {model.name !== llm.selectedOllamaModel && (
+                                                            <button
+                                                                className="text-btn"
+                                                                onClick={() => llm.setSelectedOllamaModel(model.name)}
+                                                            >
+                                                                {t('settings.useThis')}
+                                                            </button>
+                                                        )}
+                                                        {!isBuiltIn && model.name !== llm.selectedOllamaModel && (
+                                                            <button
+                                                                className="icon-btn danger"
+                                                                onClick={() => llm.deleteModel(model.name)}
+                                                                title={t('settings.deleteModel')}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
                                                         )}
                                                     </div>
-                                                    <div className="model-meta">
-                                                        {model.formattedSize || ''} • {model.modified_at?.split('T')[0]}
-                                                    </div>
                                                 </div>
-                                                <div className="model-actions">
-                                                    {model.name !== llm.selectedOllamaModel && (
-                                                        <button
-                                                            className="text-btn"
-                                                            onClick={() => llm.setSelectedOllamaModel(model.name)}
-                                                        >
-                                                            {t('settings.useThis')}
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        className="icon-btn danger"
-                                                        onClick={() => llm.deleteModel(model.name)}
-                                                        title={t('settings.deleteModel')}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </div>
 
-                                {/* 推荐模型 */}
+                                {/* 可下载模型列表 */}
                                 <h4 className="settings-section-subtitle" style={{ marginTop: 20 }}>
-                                    {t('settings.recommendedModels')}
+                                    {t('settings.availableModels') || '可下载模型'}
                                 </h4>
                                 <div className="recommended-models">
-                                    {RECOMMENDED_MODELS.map(rec => {
-                                        const isInstalled = llm.ollamaModels.some(m =>
-                                            m.name.startsWith(rec.name.split(':')[0])
-                                        );
+                                    {ALL_MODELS.map(rec => {
+                                        // 精确匹配模型名称
+                                        const isInstalled = llm.ollamaModels.some(m => m.name === rec.name);
                                         const isDownloading = llm.downloadProgress?.model === rec.name;
 
                                         return (
                                             <div key={rec.name} className="model-card">
                                                 <div className="model-header">
-                                                    <div className="model-title">{rec.name}</div>
-                                                    <div className="model-size">{rec.size}</div>
-                                                </div>
-                                                <div className="model-desc">{rec.description}</div>
-                                                <div className="model-footer">
-                                                    {isInstalled ? (
-                                                        <div className="status-installed">
-                                                            <Check size={14} />
-                                                            <span>{t('settings.installed')}</span>
-                                                        </div>
-                                                    ) : isDownloading ? (
-                                                        <div className="download-progress">
-                                                            <Loader2 size={14} className="spin" />
-                                                            <span className="progress-text">
-                                                                {llm.downloadProgress?.output.includes('%')
-                                                                    ? llm.downloadProgress.output.match(/(\d+)%/)?.[0]
-                                                                    : t('settings.downloading')}
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <button
-                                                            className="download-btn"
-                                                            onClick={() => llm.pullModel(rec.name)}
-                                                        >
-                                                            <Download size={14} />
-                                                            {t('settings.download')}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* 高级模型 */}
-                                <h4 className="settings-section-subtitle" style={{ marginTop: 20 }}>
-                                    {t('settings.advancedModels') || '高级模型'}
-                                </h4>
-                                <p className="settings-hint">
-                                    {t('settings.advancedModelsHint') || '这些模型体积较大，需要更多存储空间和内存，但能力更强。'}
-                                </p>
-                                <div className="recommended-models">
-                                    {ADVANCED_MODELS.map(rec => {
-                                        const isInstalled = llm.ollamaModels.some(m =>
-                                            m.name.startsWith(rec.name.split(':')[0])
-                                        );
-                                        const isDownloading = llm.downloadProgress?.model === rec.name;
-
-                                        return (
-                                            <div key={rec.name} className="model-card">
-                                                <div className="model-header">
-                                                    <div className="model-title">{rec.name}</div>
+                                                    <div className="model-title">
+                                                        {rec.name}
+                                                        {rec.builtIn && <span className="builtin-tag">{t('chat.builtIn')}</span>}
+                                                    </div>
                                                     <div className="model-size">{rec.size}</div>
                                                 </div>
                                                 <div className="model-desc">{rec.description}</div>
@@ -331,6 +307,13 @@ export function Settings({ isOpen, onClose, llm }: SettingsProps) {
                                                             <span className="progress-text">
                                                                 {llm.downloadProgress?.progress || 0}%
                                                             </span>
+                                                            <button
+                                                                className="cancel-btn"
+                                                                onClick={() => llm.cancelPull()}
+                                                                title={t('models.cancelDownload')}
+                                                            >
+                                                                ✕
+                                                            </button>
                                                         </div>
                                                     ) : (
                                                         <button
@@ -352,7 +335,14 @@ export function Settings({ isOpen, onClose, llm }: SettingsProps) {
                                     <div className="global-download-status">
                                         <div className="status-header">
                                             <Loader2 size={14} className="spin" />
-                                            <span>正在下载 {llm.downloadProgress.model}...</span>
+                                            <span>{t('settings.downloading') || '正在下载'} {llm.downloadProgress.model}...</span>
+                                            <button
+                                                className="cancel-btn"
+                                                onClick={() => llm.cancelPull()}
+                                                title={t('models.cancelDownload')}
+                                            >
+                                                {t('models.cancelDownload') || '取消'}
+                                            </button>
                                         </div>
                                         <div className="download-progress-bar">
                                             <div
@@ -400,7 +390,6 @@ export function Settings({ isOpen, onClose, llm }: SettingsProps) {
                             <div className="guide-intro">
                                 <p className="guide-tagline">{t('guide.tagline')}</p>
                                 <p className="guide-description">{t('guide.description')}</p>
-                                <p className="guide-platform">{t('guide.platform')}</p>
                             </div>
                         </div>
 

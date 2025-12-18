@@ -90,7 +90,8 @@ contextBridge.exposeInMainWorld('chat', {
 // 暴露平台信息
 contextBridge.exposeInMainWorld('platform', {
     os: process.platform,
-    isMac: process.platform === 'darwin'
+    isMac: process.platform === 'darwin',
+    isWindows: process.platform === 'win32'
 })
 
 // 暴露窗口控制 API

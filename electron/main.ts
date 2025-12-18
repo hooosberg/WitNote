@@ -3,7 +3,7 @@
  * 包含 IPC 通信、文件系统操作、chokidar 监听
  */
 
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from 'electron'
 import { join, basename, extname, relative } from 'path'
 import { promises as fs, existsSync, mkdirSync } from 'fs'
 import Store from 'electron-store'
@@ -656,23 +656,15 @@ function setupIpcHandlers() {
 // ============ 窗口创建 ============
 
 function createWindow() {
-    mainWindow = new BrowserWindow({
+    // 根据平台设置窗口选项
+    const isMac = process.platform === 'darwin'
+
+    const windowOptions: Electron.BrowserWindowConstructorOptions = {
         width: 1400,
         height: 900,
         minWidth: 400,  // 允许更小的窗口（触发专注模式）
         minHeight: 300,
-
-        // macOS 原生视觉效果
-        vibrancy: 'sidebar',
-        visualEffectState: 'active',
-        transparent: true,
-        titleBarStyle: 'hiddenInset',
-        trafficLightPosition: { x: 20, y: 18 },
-
-        // 窗口圆角
-        frame: false,
         hasShadow: true,
-
         webPreferences: {
             preload: join(__dirname, 'preload.js'),
             nodeIntegration: false,
@@ -680,7 +672,32 @@ function createWindow() {
             webSecurity: true,
             experimentalFeatures: true
         }
-    })
+    }
+
+    // macOS 专用原生视觉效果
+    if (isMac) {
+        Object.assign(windowOptions, {
+            vibrancy: 'sidebar',
+            visualEffectState: 'active',
+            transparent: true,
+            titleBarStyle: 'hiddenInset',
+            trafficLightPosition: { x: 20, y: 18 },
+            frame: false
+        })
+    } else {
+        // Windows / Linux 使用默认窗口框架
+        Object.assign(windowOptions, {
+            frame: true,
+            transparent: false
+        })
+    }
+
+    mainWindow = new BrowserWindow(windowOptions)
+
+    // Windows 上移除菜单栏，只保留标题栏
+    if (!isMac) {
+        Menu.setApplicationMenu(null)
+    }
 
     // 开发模式连接 Vite 开发服务器
     if (VITE_DEV_SERVER_URL) {
