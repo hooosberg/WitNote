@@ -25,7 +25,7 @@ import {
 import { useSettings, AppSettings } from '../hooks/useSettings';
 import { changeLanguage, getCurrentLanguage } from '../i18n';
 import { UseLLMReturn } from '../hooks/useLLM';
-import { ALL_MODELS } from '../services/types';
+import { ALL_MODELS, getDefaultSystemPrompt } from '../services/types';
 
 type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
 
@@ -282,7 +282,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
                                     {ALL_MODELS.map(rec => {
                                         // 精确匹配模型名称
                                         const isInstalled = llm.ollamaModels.some(m => m.name === rec.name);
-                                        const isDownloading = llm.downloadProgress?.model === rec.name;
+                                        const isDownloading = llm.downloadProgressMap.has(rec.name);
+                                        const progress = llm.downloadProgressMap.get(rec.name);
 
                                         return (
                                             <div key={rec.name} className="model-card">
@@ -305,11 +306,11 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
                                                         <div className="download-progress">
                                                             <Loader2 size={14} className="spin" />
                                                             <span className="progress-text">
-                                                                {llm.downloadProgress?.progress || 0}%
+                                                                {progress?.progress || 0}%
                                                             </span>
                                                             <button
                                                                 className="cancel-btn"
-                                                                onClick={() => llm.cancelPull()}
+                                                                onClick={() => llm.cancelPull(rec.name)}
                                                                 title={t('models.cancelDownload')}
                                                             >
                                                                 ✕
@@ -330,29 +331,33 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
                                     })}
                                 </div>
 
-                                {/* 下载进度条 */}
-                                {llm.downloadProgress && (
+                                {/* 下载进度条 - 显示所有正在下载的模型 */}
+                                {llm.downloadProgressMap.size > 0 && (
                                     <div className="global-download-status">
-                                        <div className="status-header">
-                                            <Loader2 size={14} className="spin" />
-                                            <span>{t('settings.downloading') || '正在下载'} {llm.downloadProgress.model}...</span>
-                                            <button
-                                                className="cancel-btn"
-                                                onClick={() => llm.cancelPull()}
-                                                title={t('models.cancelDownload')}
-                                            >
-                                                {t('models.cancelDownload') || '取消'}
-                                            </button>
-                                        </div>
-                                        <div className="download-progress-bar">
-                                            <div
-                                                className="download-progress-fill"
-                                                style={{ width: `${llm.downloadProgress.progress}%` }}
-                                            />
-                                        </div>
-                                        <div className="status-output">
-                                            {llm.downloadProgress.progress}% - {llm.downloadProgress.output}
-                                        </div>
+                                        {Array.from(llm.downloadProgressMap.entries()).map(([modelName, progressInfo]) => (
+                                            <div key={modelName} className="download-item">
+                                                <div className="status-header">
+                                                    <Loader2 size={14} className="spin" />
+                                                    <span>{t('settings.downloading') || '正在下载'} {modelName}...</span>
+                                                    <button
+                                                        className="cancel-btn"
+                                                        onClick={() => llm.cancelPull(modelName)}
+                                                        title={t('models.cancelDownload')}
+                                                    >
+                                                        {t('models.cancelDownload') || '取消'}
+                                                    </button>
+                                                </div>
+                                                <div className="download-progress-bar">
+                                                    <div
+                                                        className="download-progress-fill"
+                                                        style={{ width: `${progressInfo.progress}%` }}
+                                                    />
+                                                </div>
+                                                <div className="status-output">
+                                                    {progressInfo.progress}% - {progressInfo.output}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </>
@@ -361,23 +366,41 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
                 );
 
             case 'persona':
+                // 根据当前语言获取默认提示词
+                const defaultPromptForLang = getDefaultSystemPrompt(currentLang);
+                // 获取当前显示的提示词：如果用户设置了则显示用户的，否则显示内置默认
+                const displayPrompt = settings.systemPrompt || defaultPromptForLang;
+                const isCustomized = settings.systemPrompt && settings.systemPrompt.trim() !== '';
+
                 return (
                     <div className="settings-tab-content">
                         <div className="settings-section">
-                            <h3 className="settings-section-title">{t('settings.customPrompt')}</h3>
+                            <div className="settings-section-header">
+                                <h3 className="settings-section-title">{t('settings.defaultPrompt')}</h3>
+                                {isCustomized && (
+                                    <button
+                                        className="restore-default-btn"
+                                        onClick={() => setSetting('systemPrompt', '')}
+                                    >
+                                        <RotateCcw size={14} />
+                                        {t('settings.restoreDefault')}
+                                    </button>
+                                )}
+                            </div>
                             <p className="settings-hint">
-                                {t('settings.customPromptHint')}
+                                {t('settings.defaultPromptHint')}
                             </p>
                             <textarea
-                                value={settings.customSystemPrompt}
-                                onChange={(e) => setSetting('customSystemPrompt', e.target.value)}
-                                placeholder={t('settings.customPromptPlaceholder')}
+                                value={displayPrompt}
+                                onChange={(e) => setSetting('systemPrompt', e.target.value)}
                                 className="settings-textarea"
-                                rows={6}
+                                rows={10}
                             />
-                            <p className="settings-hint" style={{ marginTop: '8px' }}>
-                                {t('settings.customPromptEmpty')}
-                            </p>
+                            {!isCustomized && (
+                                <p className="settings-hint" style={{ marginTop: '8px' }}>
+                                    {t('settings.customPromptEmpty')}
+                                </p>
+                            )}
                         </div>
                     </div>
                 );

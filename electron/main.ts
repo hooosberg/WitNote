@@ -571,68 +571,89 @@ function setupIpcHandlers() {
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
         }
     })
-    // 存储当前下载进程引用
-    let currentPullProcess: ReturnType<typeof spawn> | null = null
-    let currentPullModelName: string | null = null
+    // 存储当前下载进程引用 - 使用 Map 支持多模型并行下载
+    const pullProcesses = new Map<string, ReturnType<typeof spawn>>();
 
     // 下载模型
     ipcMain.handle('ollama:pullModel', async (_event, modelName: string) => {
         return new Promise((resolve, reject) => {
             const ollamaPath = getOllamaPath()
-            currentPullModelName = modelName
-            currentPullProcess = spawn(ollamaPath, ['pull', modelName], { env: ollamaEnv })
+            const pullProcess = spawn(ollamaPath, ['pull', modelName], { env: ollamaEnv })
+
+            // 存储进程引用
+            pullProcesses.set(modelName, pullProcess)
+
             let output = ''
-            currentPullProcess.stdout?.on('data', (data: Buffer) => {
+            pullProcess.stdout?.on('data', (data: Buffer) => {
                 const text = data.toString()
                 output += text
                 mainWindow?.webContents.send('ollama:pullProgress', { model: modelName, output: text })
             })
-            currentPullProcess.stderr?.on('data', (data: Buffer) => {
+            pullProcess.stderr?.on('data', (data: Buffer) => {
                 const text = data.toString()
                 output += text
                 mainWindow?.webContents.send('ollama:pullProgress', { model: modelName, output: text })
             })
-            currentPullProcess.on('close', (code: number) => {
-                currentPullProcess = null
-                currentPullModelName = null
+            pullProcess.on('close', (code: number) => {
+                // 清理进程引用
+                pullProcesses.delete(modelName)
                 if (code === 0) {
                     resolve({ success: true, output })
                 } else {
                     reject(new Error(`下载失败，退出码: ${code}`))
                 }
             })
-            currentPullProcess.on('error', (error: Error) => {
-                currentPullProcess = null
-                currentPullModelName = null
+            pullProcess.on('error', (error: Error) => {
+                pullProcesses.delete(modelName)
                 reject(error)
             })
         })
     })
 
-    // 取消下载
-    ipcMain.handle('ollama:cancelPull', async () => {
-        if (currentPullProcess) {
-            const modelName = currentPullModelName
+    // 取消下载 - 支持指定模型名
+    ipcMain.handle('ollama:cancelPull', async (_event, modelName?: string) => {
+        // 如果指定了模型名，取消特定模型的下载
+        if (modelName && pullProcesses.has(modelName)) {
             console.log(`🛑 取消下载: ${modelName}`)
-
-            // 终止进程
-            currentPullProcess.kill('SIGTERM')
-            currentPullProcess = null
-            currentPullModelName = null
+            const process = pullProcesses.get(modelName)!
+            process.kill('SIGTERM')
+            pullProcesses.delete(modelName)
 
             // 删除未完成的模型文件
-            if (modelName) {
-                try {
-                    const ollamaPath = getOllamaPath()
-                    spawn(ollamaPath, ['rm', modelName], { env: ollamaEnv })
-                    console.log(`🗑️ 已清理未完成的模型: ${modelName}`)
-                } catch (e) {
-                    console.log('清理未完成模型失败:', e)
-                }
+            try {
+                const ollamaPath = getOllamaPath()
+                spawn(ollamaPath, ['rm', modelName], { env: ollamaEnv })
+                console.log(`🗑️ 已清理未完成的模型: ${modelName}`)
+            } catch (e) {
+                console.log('清理未完成模型失败:', e)
             }
 
             return { success: true, cancelled: modelName }
         }
+
+        // 如果没有指定模型名，取消所有下载（向后兼容）
+        if (pullProcesses.size > 0) {
+            const cancelledModels: string[] = []
+            const ollamaPath = getOllamaPath()
+
+            Array.from(pullProcesses.entries()).forEach(([name, proc]) => {
+                console.log(`🛑 取消下载: ${name}`)
+                proc.kill('SIGTERM')
+                cancelledModels.push(name)
+
+                // 删除未完成的模型文件
+                try {
+                    spawn(ollamaPath, ['rm', name], { env: ollamaEnv })
+                    console.log(`🗑️ 已清理未完成的模型: ${name}`)
+                } catch (e) {
+                    console.log('清理未完成模型失败:', e)
+                }
+            })
+
+            pullProcesses.clear()
+            return { success: true, cancelled: cancelledModels.join(', ') }
+        }
+
         return { success: false, error: '没有正在进行的下载' }
     })
 

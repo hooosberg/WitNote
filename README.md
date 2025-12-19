@@ -36,12 +36,14 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 ## ✨ Features
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
-- 🤖 **Local AI Engine** — Built-in Ollama, ready out of the box, supports more models
-- 🎨 **Multiple Themes** — Light / Dark / Zen Tea
-- 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting
-- 🔍 **Context Aware** — AI can directly read your current article
-- 🎯 **Focus Mode** — Auto-switches when window narrows
-- 🌍 **Internationalization** — English and Chinese support
+- 🤖 **Local AI Engine** — Built-in Ollama, ready out of the box, supports 10+ downloadable models
+- 💬 **Customizable AI Persona** — Editable system prompt with one-click restore to default
+- 🌏 **Smart Multilingual Response** — AI responds in Chinese for Chinese UI, English for English UI
+- 🎨 **Multiple Themes** — Light / Dark / Zen Tea, fully optimized dark mode
+- 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting, polished context menus
+- 🔍 **Context Aware** — AI can directly read your current article or folder contents
+- 🎯 **Focus Mode** — Auto-switches to distraction-free editing when window narrows
+- 🌍 **Internationalization** — Full English and Chinese support, UI and AI in sync
 
 ---
 

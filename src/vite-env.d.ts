@@ -63,7 +63,7 @@ interface OllamaAPI {
     openModelsFolder(): Promise<string>
     pullModel(modelName: string): Promise<{ success: boolean; output: string }>
     deleteModel(modelName: string): Promise<{ success: boolean }>
-    cancelPull(): Promise<{ success: boolean; cancelled?: string }>
+    cancelPull(modelName?: string): Promise<{ success: boolean; cancelled?: string }>
     listModels(): Promise<{ success: boolean; models: Array<{ name: string; id: string; size: string; modified: string }> }>
     onPullProgress(callback: (data: { model: string; output: string }) => void): () => void
 }
