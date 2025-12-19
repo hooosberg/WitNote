@@ -45,3 +45,6 @@ public/models/
 apple-credentials.json
 notarization-password.txt
 release/apple*
+
+# Agent 配置（包含敏感凭据）
+.agent/
