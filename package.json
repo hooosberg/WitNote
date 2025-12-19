@@ -80,7 +80,6 @@
       "category": "public.app-category.productivity",
       "icon": "build/icon.icns",
       "darkModeSupport": true,
-      "identity": "***REMOVED*** (***REMOVED***)",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
