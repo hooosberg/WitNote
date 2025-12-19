@@ -10,11 +10,12 @@ import {
     LLMStatus,
     LoadProgress,
     OllamaModel,
-    SYSTEM_PROMPT,
+    getDefaultSystemPrompt,
     RECOMMENDED_MODELS
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
 import { useSettings } from './useSettings';
+import { getCurrentLanguage } from '../i18n';
 
 // 上下文最大长度
 const MAX_CONTEXT_LENGTH = 4000;
@@ -59,8 +60,8 @@ export interface UseLLMReturn {
     refreshModels: () => Promise<void>;
     pullModel: (modelName: string) => Promise<void>;
     deleteModel: (modelName: string) => Promise<void>;
-    cancelPull: () => Promise<void>;
-    downloadProgress: { model: string; output: string; progress: number } | null;
+    cancelPull: (modelName?: string) => Promise<void>;
+    downloadProgressMap: Map<string, { output: string; progress: number }>;
 }
 
 // 导出推荐模型供UI使用
@@ -73,7 +74,8 @@ function generateId(): string {
 
 export function useLLM(): UseLLMReturn {
     const { settings } = useSettings();
-    const customSystemPrompt = settings.customSystemPrompt;
+    // 如果用户设置了自定义提示词则使用，否则使用内置默认提示词
+    const userSystemPrompt = settings.systemPrompt;
 
     // 状态
     const [status, setStatus] = useState<LLMStatus>('detecting');
@@ -85,8 +87,8 @@ export function useLLM(): UseLLMReturn {
     const [ollamaModels, setOllamaModels] = useState<OllamaModel[]>([]);
     const [selectedOllamaModel, setSelectedOllamaModel] = useState<string>('');
 
-    // 模型管理状态
-    const [downloadProgress, setDownloadProgress] = useState<{ model: string; output: string; progress: number } | null>(null);
+    // 模型管理状态 - 使用 Map 支持多模型并行下载
+    const [downloadProgressMap, setDownloadProgressMap] = useState<Map<string, { output: string; progress: number }>>(new Map());
 
     // 聊天状态
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -106,14 +108,18 @@ export function useLLM(): UseLLMReturn {
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
 
-    // 监听下载进度
+    // 监听下载进度 - 按模型名分别追踪进度
     useEffect(() => {
         if (!window.ollama) return;
         return window.ollama.onPullProgress((data) => {
             // 从 output 中解析进度百分比，例如 "pulling manifest" 或 "pulling sha256:xxx 50%"
             const percentMatch = data.output.match(/(\d+)%/);
             const progress = percentMatch ? parseInt(percentMatch[1], 10) : 0;
-            setDownloadProgress({ ...data, progress });
+            setDownloadProgressMap(prev => {
+                const next = new Map(prev);
+                next.set(data.model, { output: data.output, progress });
+                return next;
+            });
         });
     }, []);
 
@@ -179,22 +185,32 @@ export function useLLM(): UseLLMReturn {
     const pullModel = useCallback(async (modelName: string) => {
         if (!window.ollama) return;
 
-        setDownloadProgress({ model: modelName, output: '开始下载...', progress: 0 });
+        // 设置初始下载状态
+        setDownloadProgressMap(prev => {
+            const next = new Map(prev);
+            next.set(modelName, { output: '开始下载...', progress: 0 });
+            return next;
+        });
 
         try {
             const result = await window.ollama.pullModel(modelName);
             if (result.success) {
                 console.log(`✅ 模型 ${modelName} 下载成功`);
                 await refreshModels();
-                setDownloadProgress(null);
             } else {
                 throw new Error(result.output || '下载失败');
             }
         } catch (error) {
             console.error(`❌ 模型 ${modelName} 下载失败:`, error);
-            setDownloadProgress(null);
             setErrorMessage(`下载失败: ${error instanceof Error ? error.message : String(error)}`);
             setTimeout(() => setErrorMessage(null), 3000);
+        } finally {
+            // 清除该模型的下载进度
+            setDownloadProgressMap(prev => {
+                const next = new Map(prev);
+                next.delete(modelName);
+                return next;
+            });
         }
     }, [refreshModels]);
 
@@ -220,21 +236,42 @@ export function useLLM(): UseLLMReturn {
     }, [refreshModels, selectedOllamaModel, ollamaModels]);
 
     /**
-     * 取消下载
+     * 取消下载 - 支持取消特定模型
      */
-    const cancelPull = useCallback(async () => {
+    const cancelPull = useCallback(async (modelName?: string) => {
         if (!window.ollama) return;
 
         try {
-            const result = await window.ollama.cancelPull();
+            const result = await window.ollama.cancelPull(modelName);
             if (result.success) {
                 console.log(`🛑 已取消下载: ${result.cancelled}`);
-                setDownloadProgress(null);
+                // 清除被取消模型的下载进度
+                if (result.cancelled) {
+                    // 可能是多个模型名（逗号分隔）
+                    const cancelledNames = result.cancelled.split(', ');
+                    setDownloadProgressMap(prev => {
+                        const next = new Map(prev);
+                        cancelledNames.forEach(name => next.delete(name));
+                        return next;
+                    });
+                } else {
+                    // 如果没有返回具体模型名，清除所有
+                    setDownloadProgressMap(new Map());
+                }
                 await refreshModels();
             }
         } catch (error) {
             console.error('取消下载失败:', error);
-            setDownloadProgress(null);
+            // 如果指定了模型名，只清除该模型
+            if (modelName) {
+                setDownloadProgressMap(prev => {
+                    const next = new Map(prev);
+                    next.delete(modelName);
+                    return next;
+                });
+            } else {
+                setDownloadProgressMap(new Map());
+            }
         }
     }, [refreshModels]);
 
@@ -315,13 +352,15 @@ export function useLLM(): UseLLMReturn {
 
     /**
      * 获取系统提示词
+     * 如果用户设置了自定义提示词则使用，否则根据当前语言使用内置默认提示词
      */
     const getSystemPrompt = useCallback(() => {
-        if (customSystemPrompt && customSystemPrompt.trim()) {
-            return `${customSystemPrompt.trim()}\n\n${SYSTEM_PROMPT}`;
+        if (userSystemPrompt && userSystemPrompt.trim()) {
+            return userSystemPrompt.trim();
         }
-        return SYSTEM_PROMPT;
-    }, [customSystemPrompt]);
+        // 根据当前语言获取默认提示词
+        return getDefaultSystemPrompt(getCurrentLanguage());
+    }, [userSystemPrompt]);
 
     /**
      * 构建上下文信息
@@ -626,7 +665,7 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         pullModel,
         deleteModel,
         cancelPull,
-        downloadProgress
+        downloadProgressMap
     };
 }
 

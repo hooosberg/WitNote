@@ -74,7 +74,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
         pullModel,
         deleteModel,
         cancelPull,
-        downloadProgress
+        downloadProgressMap
     } = llm
 
     const [showModelMenu, setShowModelMenu] = useState(false)
@@ -251,7 +251,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
                                             <div className="model-section">
                                                 <div className="model-section-title">{t('settings.recommendedModels')}</div>
                                                 {RECOMMENDED_MODELS.filter(rm => !ollamaModels.find(m => m.name === rm.name)).map((model) => {
-                                                    const isDownloading = downloadProgress?.model === model.name
+                                                    const isDownloading = downloadProgressMap.has(model.name)
+                                                    const progress = downloadProgressMap.get(model.name)
                                                     const isExpanded = expandedModel === model.name
                                                     return (
                                                         <div key={model.name} className={`model-item recommended ${isExpanded ? 'expanded' : ''}`}>
@@ -269,13 +270,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
                                                                             <div className="progress-bar">
                                                                                 <div
                                                                                     className="progress-fill"
-                                                                                    style={{ width: `${downloadProgress?.progress || 0}%` }}
+                                                                                    style={{ width: `${progress?.progress || 0}%` }}
                                                                                 />
                                                                             </div>
-                                                                            <span className="progress-text">{downloadProgress?.progress || 0}%</span>
+                                                                            <span className="progress-text">{progress?.progress || 0}%</span>
                                                                             <button
                                                                                 className="model-cancel-btn"
-                                                                                onClick={() => cancelPull()}
+                                                                                onClick={() => cancelPull(model.name)}
                                                                                 title={t('models.cancelDownload')}
                                                                             >
                                                                                 <Square size={10} />

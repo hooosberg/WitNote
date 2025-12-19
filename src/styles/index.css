@@ -95,6 +95,33 @@ body.platform-windows .layout-toggle-btn {
   top: 8px;
 }
 
+/* Windows 平台聊天区顶部渐变遮挡 - 防止内容与右上角按钮重叠 */
+/* Windows 标题栏高度约 32px，聊天面板需要在这之下显示遮罩 */
+body.platform-windows .chat-panel-v2 {
+  position: relative;
+}
+
+/* 在聊天面板顶部添加固定的渐变遮罩 */
+body.platform-windows .chat-panel-v2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom,
+      var(--bg-chat) 0%,
+      var(--bg-chat) 50%,
+      transparent 100%);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* 聊天消息区域增加顶部内边距 */
+body.platform-windows .chat-messages {
+  padding-top: 40px;
+}
+
 /* ============ 深色主题 ============ */
 [data-theme="dark"] {
   --bg-sidebar: #1c1c1e;
@@ -727,7 +754,8 @@ select:focus {
   padding: 6px 10px;
   font-size: 12px;
   text-align: left;
-  color: var(--text-primary);
+  /* 固定深色文字，确保在白色背景上可见（深色模式下也保持） */
+  color: #1d1d1f;
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
@@ -736,11 +764,13 @@ select:focus {
 }
 
 .context-menu button:hover {
-  background: var(--bg-hover);
+  /* 固定浅灰色悬停背景，确保在白色菜单上可见 */
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .context-menu button.danger {
-  color: var(--error-color);
+  /* danger 样式使用固定红色 */
+  color: #ff453a;
 }
 
 .menu-divider {
@@ -2763,6 +2793,34 @@ select:focus {
   gap: 8px;
 }
 
+/* 设置区域标题头部 - 标题 + 操作按钮 */
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+/* 恢复默认按钮 */
+.restore-default-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--accent-color);
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.restore-default-btn:hover {
+  color: white;
+  background: var(--accent-color);
+}
+
 .template-count {
   font-size: 11px;
   font-weight: 400;
@@ -2898,6 +2956,18 @@ select:focus {
 
 .settings-textarea:focus {
   border-color: var(--accent-color);
+}
+
+/* 只读提示词区域 */
+.settings-textarea.readonly {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-secondary);
+  cursor: default;
+  resize: none;
+}
+
+[data-theme="dark"] .settings-textarea.readonly {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* 字体大小控制 */

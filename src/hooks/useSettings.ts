@@ -27,8 +27,8 @@ export interface AppSettings {
     preferredEngine: 'ollama' | 'webllm';
     autoFallback: boolean;
 
-    // 角色设定
-    customSystemPrompt: string;
+    // 角色设定 - 可编辑的系统提示词（默认使用内置提示词）
+    systemPrompt: string;
     promptTemplates: PromptTemplate[];
 
     // 编辑器偏好
@@ -51,8 +51,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     preferredEngine: 'ollama',
     autoFallback: true,
 
-    // 角色设定
-    customSystemPrompt: '',
+    // 角色设定 - 空字符串表示使用内置默认提示词
+    systemPrompt: '',
     promptTemplates: [],
 
     // 编辑器偏好
