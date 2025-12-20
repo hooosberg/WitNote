@@ -84,9 +84,7 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": {
-        "teamId": "***REMOVED***"
-      }
+      "afterSign": "scripts/notarize.js"
     },
     "dmg": {
       "title": "${productName}",

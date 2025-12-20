@@ -24,6 +24,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.notarize
 
 # TypeScript
 *.tsbuildinfo
