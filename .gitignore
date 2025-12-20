@@ -49,3 +49,7 @@ release/apple*
 
 # Agent 配置（包含敏感凭据）
 .agent/
+
+# 本地设计原文件（体积大，不上传）
+src/pic/智简icon 拷贝.png
+src/pic/智简icon.psd
