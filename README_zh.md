@@ -2,21 +2,32 @@
   <img src="src/icon/智简icon 拷贝.png" alt="智简笔记本" width="128" height="128">
 </p>
 
-# 智简笔记本 (WitNote)
+<h1 align="center">智简笔记本 (WitNote)</h1>
 
-> **大智若简，落笔生花**
-> *Smart Core, Simple Form*
+<p align="center">
+  <strong>大智若简，落笔生花</strong><br>
+  <i>Smart Core, Simple Form</i>
+</p>
 
-[English](README.md) | [中文](README_zh.md)
+<p align="center">
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
+</p>
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)]()
-[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4-green.svg)]()
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3-green.svg" alt="Apple Silicon">
+</p>
+
+> [!TIP]
+> **🎉 即将登陆 Mac App Store！**
+> 
+> 本应用完全符合 Apple 安全与隐私标准，目前正在审核中。请大家多多支持，您的 Star ⭐️ 是我们最大的动力！
 
 **智简笔记本** 是一款本地优先的 AI 写作伴侣，支持 macOS 和 Windows 平台。
 内置 **Ollama AI 引擎**，搭配极简**原生卡片界面**，开箱即用。无云端依赖，无隐私焦虑，让智能回归轻盈。
 
-![本地 AI](src/pic/本地ai.png)
+![本地 AI](src/pic/witnote%20宣传截图/中文版设计/本地离线ai.jpg)
 
 ---
 
@@ -29,21 +40,21 @@
   - iOS 风格卡片管理，拖拽即整理。
   - 智能专注模式，窗口变窄即刻变身纯文本编辑器。
 - **安 (Secure)**: 数据自治。
-  - 100% 本地存储，你的思想只属于你。
+  - [**隐私政策**](PRIVACY.md)：100% 本地存储，你的思想只属于你。
 
 ---
 
-## ✨ 功能亮点
+## ✨ 功能亮点 (v1.2.1)
 
 - 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
-- 🤖 **本地 AI 引擎** — 内置 Ollama，开箱即用，支持下载 10+ 种主流模型
+- 🤖 **本地 AI 引擎** — 内置 Ollama，支持下载 10+ 种主流模型 (Qwen, Llama, Gemma 等)
+- 🔒 **隐私优先** — 所有 AI 推理在本地完成，无数据上传，通过 Apple 官方公证
 - 💬 **可定制 AI 角色** — 可编辑系统提示词，一键恢复默认
 - 🌏 **智能多语言响应** — 中文界面用中文回答，英文界面用英文回答
 - 🎨 **多主题切换** — 浅色 / 深色 / 禅意茶色，深色模式全面优化
 - 🗂️ **卡片网格视图** — iOS 风格，拖拽排序，上下文菜单完善
 - 🔍 **上下文感知** — AI 可直接读取当前文章或文件夹内容
 - 🎯 **专注模式** — 窗口变窄自动切换纯文本编辑体验
-- 🌍 **国际化支持** — 中英文双语，界面与 AI 同步切换
 
 ---
 
@@ -54,7 +65,7 @@
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
 | 平台 | 文件 | 说明 |
-|------|------|------|
+|------|------|----------|
 | 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon 优化 |
 | 🪟 Windows | `WitNote-x.x.x-setup.exe` | 64 位 Windows 10/11 |
 
@@ -135,9 +146,26 @@
 
 ## 📸 截图
 
-![多语言支持](src/pic/多语言.png)
-![深色模式](src/pic/深色模式.png)
-![智能引擎切换](src/pic/智能引擎切换.png)
+### 🎯 专注模式
+![专注模式](src/pic/witnote%20宣传截图/中文版设计/专注模式.jpg)
+
+### 🎨 多种主题
+![多种主题](src/pic/witnote%20宣传截图/中文版设计/多种主题.jpg)
+
+### 🤖 本地离线 AI
+![本地离线AI](src/pic/witnote%20宣传截图/中文版设计/本地离线ai.jpg)
+
+### 💾 本地离线存储
+![本地存储](src/pic/witnote%20宣传截图/中文版设计/本地离线存储.jpg)
+
+### 🔄 格式转换
+![格式转换](src/pic/witnote%20宣传截图/中文版设计/格式转换.jpg)
+
+### 📥 模型下载
+![模型下载](src/pic/witnote%20宣传截图/中文版设计/模型下载.jpg)
+
+### 👤 角色自定义
+![角色自定义](src/pic/witnote%20宣传截图/中文版设计/角色自定义.jpg)
 
 ---
 

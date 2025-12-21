@@ -2,21 +2,32 @@
   <img src="src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
 </p>
 
-# WitNote (智简笔记本)
+<h1 align="center">WitNote (智简笔记本)</h1>
 
-> **Smart Core, Simple Form**
-> *大智若简，落笔生花*
+<p align="center">
+  <strong>Smart Core, Simple Form</strong><br>
+  <i>大智若简，落笔生花</i>
+</p>
 
-[English](README.md) | [中文](README_zh.md)
+<p align="center">
+  <a href="README.md">English</a> | <a href="README_zh.md">中文</a>
+</p>
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)]()
-[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4-green.svg)]()
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3-green.svg" alt="Apple Silicon">
+</p>
+
+> [!TIP]
+> **🎉 Coming Soon to Mac App Store!**
+> 
+> Fully compliant with Apple's security & privacy standards. Currently under review. Your support and stars ⭐️ keep us going!
 
 **WitNote** is a local-first AI writing companion for macOS and Windows.
 With a built-in **Ollama AI engine** and an ultra-minimalist **native card interface**, it works right out of the box. No cloud dependency, no privacy concerns — intelligence made lightweight.
 
-![Local AI](src/pic/本地ai.png)
+![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
 
 ---
 
@@ -29,34 +40,43 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
   - iOS-style card management, drag to organize
   - Smart focus mode — window narrows, editor simplifies
 - **Secure**: Data sovereignty
-  - 100% local storage. Your thoughts belong only to you.
+  - [**Privacy Policy**](PRIVACY.md): 100% local storage. Your thoughts belong only to you.
 
 ---
 
-## ✨ Features
+## ✨ Features (v1.2.1)
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
-- 🤖 **Local AI Engine** — Built-in Ollama, ready out of the box, supports 10+ downloadable models
+- 🤖 **Local AI Engine** — Built-in Ollama, supports downloading 10+ models (Qwen, Llama, Gemma, etc.)
+- 🔒 **Privacy First** — All AI inference is local, no data upload, Apple Notarized
 - 💬 **Customizable AI Persona** — Editable system prompt with one-click restore to default
 - 🌏 **Smart Multilingual Response** — AI responds in Chinese for Chinese UI, English for English UI
 - 🎨 **Multiple Themes** — Light / Dark / Zen Tea, fully optimized dark mode
 - 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting, polished context menus
 - 🔍 **Context Aware** — AI can directly read your current article or folder contents
 - 🎯 **Focus Mode** — Auto-switches to distraction-free editing when window narrows
-- 🌍 **Internationalization** — Full English and Chinese support, UI and AI in sync
 
 ---
 
-## 🚀 Quick Start
+## 📸 Screenshots
 
-### Download
+### 🎯 Focus Mode
+![Focus Mode](src/pic/witnote%20宣传截图/英文版设计/专注模式.jpg)
 
-Get the latest installer from [Releases](https://github.com/hooosberg/WitNote/releases):
+### 🎨 Multiple Themes
+![Themes](src/pic/witnote%20宣传截图/英文版设计/多种主题.jpg)
 
-| Platform | File | Notes |
-|----------|------|-------|
-| 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon optimized |
-| 🪟 Windows | `WitNote-x.x.x-setup.exe` | 64-bit Windows 10/11 |
+### 💾 Offline Storage
+![Storage](src/pic/witnote%20宣传截图/英文版设计/离线存储.jpg)
+
+### 🔄 Format Conversion
+![Format](src/pic/witnote%20宣传截图/英文版设计/格式转换.jpg)
+
+### 📥 Model Download
+![Models](src/pic/witnote%20宣传截图/英文版设计/模型下载.jpg)
+
+### 👤 Character Customization
+![Persona](src/pic/witnote%20宣传截图/英文版设计/角色定制.jpg)
 
 ---
 
@@ -135,9 +155,26 @@ For more powerful AI capabilities, download additional models from Settings:
 
 ## 📸 Screenshots
 
-![Multilingual Support](src/pic/多语言.png)
-![Dark Mode](src/pic/深色模式.png)
-![Smart Engine Switching](src/pic/智能引擎切换.png)
+### 🎯 Focus Mode
+![Focus Mode](src/pic/witnote%20宣传截图/英文版设计/专注模式.jpg)
+
+### 🎨 Multiple Themes
+![Themes](src/pic/witnote%20宣传截图/英文版设计/多种主题.jpg)
+
+### 🤖 Local Offline AI
+![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
+
+### 💾 Offline Storage
+![Storage](src/pic/witnote%20宣传截图/英文版设计/离线存储.jpg)
+
+### 🔄 Format Conversion
+![Format](src/pic/witnote%20宣传截图/英文版设计/格式转换.jpg)
+
+### 📥 Model Download
+![Models](src/pic/witnote%20宣传截图/英文版设计/模型下载.jpg)
+
+### 👤 Character Customization
+![Persona](src/pic/witnote%20宣传截图/英文版设计/角色定制.jpg)
 
 ---
 
