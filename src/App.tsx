@@ -52,7 +52,7 @@ const generateFileName = (format: 'txt' | 'md' = 'md'): string => {
 }
 
 const AppContent: React.FC = () => {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const fileSystem = useFileSystem()
     const llm = useLLM()
     const { } = useToast()
@@ -261,6 +261,11 @@ const AppContent: React.FC = () => {
                     // 新文件：清空聊天记录，不加载历史
                     llm.clearMessages()
                     console.log('📝 新文件，清空聊天记录')
+
+                    // 如果是 Markdown 文件，发送语法提示
+                    if (activeFile.extension === 'md' || activeFile.extension === '.md') {
+                        llm.injectMessage("assistant", t("editor.mdCheatSheet"));
+                    }
                 } else {
                     // 已有内容的文件：加载聊天记录
                     llm.loadChatHistory(activeFile.path).then((history) => {
@@ -269,46 +274,7 @@ const AppContent: React.FC = () => {
                             (activeFile.extension === 'md' || activeFile.extension === '.md') &&
                             (!history || history.length === 0)
                         ) {
-                            const mdCheatSheet = `👋 欢迎使用 Markdown 编辑模式！
-
-💡 **小贴士**：
-点击顶部工具栏的 **[ MD | TXT ]** 按钮，可以将当前文件转换为纯文本（.txt），并自动去除所有 Markdown 符号，还原纯净内容。
-
----
-
-📝 **常用语法速查**：
-
-1. **标题**
-   \`# 一级标题\`
-   \`## 二级标题\`
-
-2. **强调**
-   \`**加粗**\` → **加粗**
-   \`*斜体*\` → *斜体*
-   \`~~删除线~~\` → ~~删除线~~
-
-3. **列表**
-   \`- 项目符号\`
-   \`1. 编号列表\`
-   \`- [ ] 待办事项\`
-
-4. **引用与代码**
-   \`> 引用内容\`
-   \`\` \`行内代码\` \`\`
-
-   \`\`\`\`
-   \`\`\`
-   多行代码块
-   \`\`\`
-   \`\`\`\`
-
-5. **其他**
-   \`[链接文字](网址)\`
-   \`---\` (水平分割线)
-   \`$E=mc^2$\` → $E=mc^2$ (数学公式)
-
-希望这能辅助您的写作！`;
-                            llm.injectMessage('assistant', mdCheatSheet);
+                            llm.injectMessage("assistant", t("editor.mdCheatSheet"));
                         }
                     })
                 }
@@ -878,22 +844,19 @@ const AppContent: React.FC = () => {
                             /* 画廊视图 */
                             <div className="gallery-view">
                                 {!vaultPath ? (
-                                    /* 未连接状态：显示莎士比亚节选 */
-                                    <div className="unconnected-poetry">
+                                    /* CJK 语言环境（中日韩）下使用竖排显示 */
+                                    <div className={`unconnected-poetry ${['zh', 'ja', 'ko'].some(lang => i18n.language.startsWith(lang)) ? 'vertical-mode' : ''}`}>
                                         <div className="poetry-content">
-                                            <p className="poetry-en">
-                                                Shall I compare thee to a summer's day?<br />
-                                                Thou art more lovely and more temperate:<br />
-                                                Rough winds do shake the darling buds of May,<br />
-                                                And summer's lease hath all too short a date.
-                                            </p>
-                                            <p className="poetry-zh">
-                                                我是否应该将你比作夏日？<br />
-                                                你比夏日更可爱，更温和：<br />
-                                                狂风会摧残五月的娇蕾，<br />
-                                                夏日的芳华转瞬即逝。
-                                            </p>
-                                            <p className="poetry-author">— William Shakespeare, Sonnet 18</p>
+                                            <div className="poetry-lines">
+                                                <h2 className="poetry-title">{t('emptyState.poem.title')}</h2>
+                                                <p className="poetry-line">{t('emptyState.poem.line1')}</p>
+                                                <p className="poetry-line">{t('emptyState.poem.line2')}</p>
+                                                <p className="poetry-line">{t('emptyState.poem.line3')}</p>
+                                                <p className="poetry-line">{t('emptyState.poem.line4')}</p>
+                                            </div>
+                                            <div className="poetry-meta">
+                                                <span>{t('emptyState.poem.meta')}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (

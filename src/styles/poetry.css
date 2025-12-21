@@ -1,0 +1,109 @@
+/* ============ 未连接状态诗歌样式 ============ */
+.unconnected-poetry {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px;
+    overflow: hidden;
+    /* 防止溢出 */
+}
+
+/* 默认水平排版 (English & Others) */
+.poetry-content {
+    max-width: 480px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.poetry-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* 行间距 */
+}
+
+.poetry-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.poetry-line {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-family: var(--font-family-serif, 'Georgia', serif);
+    /* 西文诗歌用衬线体更优雅 */
+}
+
+.poetry-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-family: var(--font-family-main);
+    letter-spacing: 0.5px;
+}
+
+/* ============ 中文竖排风格 ============ */
+.unconnected-poetry.vertical-mode .poetry-content {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    max-width: none;
+    max-height: 60vh;
+    gap: 40px;
+    /* 标题/正文/落款 之间的列间距 */
+    align-items: center;
+    /* 垂直居中 */
+}
+
+.unconnected-poetry.vertical-mode .poetry-lines {
+    gap: 16px;
+    /* 正文列间距 */
+    margin-right: 0;
+}
+
+.unconnected-poetry.vertical-mode .poetry-title {
+    font-size: 24px;
+    /* 标题更大 */
+    font-weight: 600;
+    margin-bottom: 0;
+    margin-left: 16px;
+    /* 标题与正文的距离 */
+    font-family: "Songti SC", "Noto Serif SC", serif;
+    /* 宋体/衬线体 */
+    letter-spacing: 4px;
+}
+
+.unconnected-poetry.vertical-mode .poetry-line {
+    font-size: 18px;
+    font-family: "Songti SC", "Noto Serif SC", serif;
+    letter-spacing: 2px;
+    color: var(--text-primary);
+    /* 中文颜色更深一点 */
+}
+
+.unconnected-poetry.vertical-mode .poetry-meta {
+    font-style: normal;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 32px;
+    /* 落款距离正文的距离 (因为是 vertical-rl, margin-top 其实是向左的距离? No, margin-top is physical top. In vertical-rl: block flow is right-to-left. inline is top-to-bottom. margin-top pushes it down along inline axis) */
+    /* wait, margin-top in vertical-rl pushes it DOWN. */
+    /* We want visual separation. Meta is a block flex item. */
+    /* writing-mode container: flex direction default is row (which means vertical columns). */
+    /* gap handles separation between lines, content, meta. */
+
+    /* Meta text needs to be smaller and perhaps bottom aligned? */
+    /* align-self check. */
+
+    writing-mode: vertical-rl;
+    /* Ensure it stays vertical */
+    letter-spacing: 1px;
+    border-top: 1px solid var(--border-color);
+    /* Visual separator line above meta? maybe no */
+    padding-top: 16px;
+}

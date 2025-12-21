@@ -19,7 +19,6 @@
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3-green.svg" alt="Apple Silicon">
 </p>
 
-> [!TIP]
 > **🎉 Coming Soon to Mac App Store!**
 > 
 > Fully compliant with Apple's security & privacy standards. Currently under review. Your support and stars ⭐️ keep us going!
@@ -47,10 +46,12 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 ## ✨ Features (v1.2.1)
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
-- 🤖 **Local AI Engine** — Built-in Ollama, supports downloading 10+ models (Qwen, Llama, Gemma, etc.)
+- 🤖 **Local AI Engine** — Built-in Ollama, support downloading models like Qwen, Llama 3, Gemma, etc.
+- 🌍 **Global Communication** — **Supports 8 Languages**: 
+  - English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch, Español
+  - Interface and AI responses automatically adapt to your language
 - 🔒 **Privacy First** — All AI inference is local, no data upload, Apple Notarized
 - 💬 **Customizable AI Persona** — Editable system prompt with one-click restore to default
-- 🌏 **Smart Multilingual Response** — AI responds in Chinese for Chinese UI, English for English UI
 - 🎨 **Multiple Themes** — Light / Dark / Zen Tea, fully optimized dark mode
 - 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting, polished context menus
 - 🔍 **Context Aware** — AI can directly read your current article or folder contents

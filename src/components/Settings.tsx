@@ -16,18 +16,28 @@ import {
     Coffee,
     Loader2,
     RotateCcw,
-    Globe,
     Trash2,
     Check,
     Download,
     FolderOpen
 } from 'lucide-react';
 import { useSettings, AppSettings } from '../hooks/useSettings';
-import { changeLanguage, getCurrentLanguage } from '../i18n';
+import { changeLanguage, getCurrentLanguage, LanguageCode } from '../i18n';
 import { UseLLMReturn } from '../hooks/useLLM';
 import { ALL_MODELS, getDefaultSystemPrompt } from '../services/types';
 
 type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
+
+const LANGUAGES: { code: LanguageCode; label: string }[] = [
+    { code: 'en', label: 'English' },
+    { code: 'zh', label: '简体中文 (Simplified Chinese)' },
+    { code: 'ja', label: '日本語 (Japanese)' },
+    { code: 'ko', label: '한국어 (Korean)' },
+    { code: 'fr', label: 'Français (French)' },
+    { code: 'de', label: 'Deutsch (German)' },
+    { code: 'es', label: 'Español (Spanish)' },
+    { code: 'zh-TW', label: '繁體中文 (Traditional Chinese)' },
+];
 
 interface SettingsProps {
     isOpen: boolean;
@@ -55,6 +65,22 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
     } = useSettings();
 
     const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
+    const [appVersion, setAppVersion] = useState('1.2.1'); // 默认版本号
+
+    // 获取应用版本号
+    useEffect(() => {
+        const fetchVersion = async () => {
+            try {
+                const version = await window.app?.getVersion();
+                if (version) {
+                    setAppVersion(version);
+                }
+            } catch (error) {
+                console.error('Failed to get app version:', error);
+            }
+        };
+        fetchVersion();
+    }, []);
 
     // ESC 关闭
     useEffect(() => {
@@ -80,7 +106,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
 
     if (!isOpen) return null;
 
-    const handleLanguageChange = (lang: 'en' | 'zh') => {
+    const handleLanguageChange = (lang: LanguageCode) => {
         changeLanguage(lang);
         setCurrentLang(lang);
     };
@@ -91,24 +117,23 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
             case 'appearance':
                 return (
                     <div className="settings-tab-content">
-                        {/* 语言选择 */}
+                        {/* 语言选择 - 下拉菜单 */}
                         <div className="settings-section">
                             <h3 className="settings-section-title">{t('settings.language')}</h3>
-                            <div className="language-options">
-                                <button
-                                    className={`language-option ${currentLang === 'en' ? 'active' : ''}`}
-                                    onClick={() => handleLanguageChange('en')}
+                            <div className="settings-row">
+                                <label>{t('settings.languageAuto')}</label>
+                                <select
+                                    value={currentLang}
+                                    onChange={(e) => handleLanguageChange(e.target.value as LanguageCode)}
+                                    className="settings-select"
+                                    style={{ minWidth: '200px' }}
                                 >
-                                    <Globe size={18} />
-                                    <span>English</span>
-                                </button>
-                                <button
-                                    className={`language-option ${currentLang === 'zh' ? 'active' : ''}`}
-                                    onClick={() => handleLanguageChange('zh')}
-                                >
-                                    <Globe size={18} />
-                                    <span>中文</span>
-                                </button>
+                                    {LANGUAGES.map((lang) => (
+                                        <option key={lang.code} value={lang.code}>
+                                            {lang.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
@@ -294,7 +319,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
                                                     </div>
                                                     <div className="model-size">{rec.size}</div>
                                                 </div>
-                                                <div className="model-desc">{rec.description}</div>
+
                                                 <div className="model-tagline-text">{t(rec.taglineKey)}</div>
                                                 <div className="model-footer">
                                                     {isInstalled ? (
@@ -463,10 +488,29 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
                             <p className="guide-contact">
                                 🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub</a>
                             </p>
-                            <p className="guide-version">{t('guide.version')}</p>
+                            <p className="guide-version">版本 {appVersion} · 2025</p>
                             <p className="guide-license">
                                 {t('guide.license')} <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
                             </p>
+                        </div>
+
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">{t('settings.credits.title')}</h3>
+                            <div className="guide-credits">
+                                <p className="credit-item">
+                                    <strong>Ollama</strong> - {t('settings.credits.ollamaDesc')}<br />
+                                    <a href="https://github.com/ollama/ollama" target="_blank" rel="noopener noreferrer">github.com/ollama/ollama</a><br />
+                                    <span className="license-tag">MIT License</span>
+                                </p>
+                                <p className="credit-item">
+                                    <strong>Qwen2.5</strong> - {t('settings.credits.qwenDesc')}<br />
+                                    <a href="https://github.com/QwenLM/Qwen2.5" target="_blank" rel="noopener noreferrer">github.com/QwenLM/Qwen2.5</a><br />
+                                    <span className="license-tag">Apache License 2.0</span>
+                                </p>
+                                <p className="credit-note">
+                                    {t('settings.credits.note')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 );

@@ -19,6 +19,16 @@
         "emptyFolderHint": "Create a folder below",
         "emptyGuide": "Please click below to create or link a local folder as your data storage location"
     },
+    "emptyState": {
+        "poem": {
+            "title": "Song of the Auspicious Clouds",
+            "line1": "How brilliant are the auspicious clouds",
+            "line2": "Winding and unfurling, vast and slow",
+            "line3": "The sun and moon, in glorious light",
+            "line4": "Day after day, renew their glow",
+            "meta": "— Shangshu Dazhuan | c. 23rd Century BCE | Ancient China"
+        }
+    },
     "editor": {
         "untitled": "Untitled",
         "placeholder": "Start writing...",
@@ -32,7 +42,8 @@
         "created": "Created",
         "modified": "Modified",
         "titlePlaceholder": "Title",
-        "bodyPlaceholder": "Write your thoughts..."
+        "bodyPlaceholder": "Write your thoughts...",
+        "mdCheatSheet": "👋 **Welcome to Markdown Edit Mode!**\n\n💡 Click **[ MD | TXT ]** to switch formats\n\n---\n\n## 📝 Quick Reference\n\n### Headers\n`# Header` → \n# Header\n\n### Text Styles\n`**bold**` → **bold**\n\n`*italic*` → *italic*\n\n`~~strikethrough~~` → ~~strikethrough~~\n\n### Lists\n`- item` →\n- Item 1\n- Item 2\n\n`1. numbered` →\n1. First\n2. Second\n\n`- [x] done` →\n- [x] Done\n- [ ] Todo\n\n### Quote\n`> quote` →\n> This is a quote\n\n### Code\n`` `code` `` → `console.log('Hi')`\n\n### Link\n`[text](url)` → [Click here](https://example.com)\n\n### Divider\n`---` →\n\n---\n\n✨ Happy writing!"
     },
     "chat": {
         "title": "AI Assistant",
@@ -144,26 +155,32 @@
         "refreshList": "Refresh List",
         "installed": "Installed",
         "downloading": "Downloading...",
-        "download": "Download"
+        "download": "Download",
+        "credits": {
+            "title": "Open Source Credits",
+            "ollamaDesc": "Local AI Inference Engine",
+            "qwenDesc": "Alibaba Cloud Qwen Open Source Model",
+            "note": "This application uses the above open source components. Special thanks to the open source community for their contributions. All components follow their respective open source licenses."
+        }
     },
     "guide": {
         "aboutTitle": "About WitNote",
         "tagline": "Smart Core, Simple Form",
-        "description": "WitNote is a privacy-focused local note-taking app with built-in AI assistant to help you organize thoughts, polish articles, and answer questions. All data is stored locally, and AI models can run completely offline.",
-        "philosophy": "Design Philosophy",
+        "description": "WitNote is a local-first AI writing companion. With a built-in Ollama engine and minimalist card interface, it works right out of the box. No cloud dependency, no privacy concerns — intelligence made lightweight.",
+        "philosophy": "Core Philosophy",
         "philosophySmart": "Smart",
-        "philosophySmartDesc": "— Dual AI engine: Main Ollama + Portable WebLLM",
+        "philosophySmartDesc": "— Built-in Ollama engine, smart models ready out of the box, no configuration needed",
         "philosophySimple": "Simple",
-        "philosophySimpleDesc": "— iOS-style card management, drag to organize",
+        "philosophySimpleDesc": "— iOS-style card management; Focus Mode activates automatically when window narrows",
         "philosophySecure": "Secure",
-        "philosophySecureDesc": "— 100% local storage, your thoughts belong only to you",
-        "quickStart": "Quick Start",
-        "step1Title": "Connect Note Folder",
-        "step1Desc": "Choose a folder as your note library on first launch, all .txt and .md files will be shown automatically",
-        "step2Title": "Start Writing",
-        "step2Desc": "Click a card to edit, supports Markdown syntax and live preview",
-        "step3Title": "Chat with AI",
-        "step3Desc": "The AI assistant on the right can read your current article and help you polish, summarize, or answer questions",
+        "philosophySecureDesc": "— 100% local storage. Your thoughts belong only to you.",
+        "quickStart": "Features & Usage",
+        "step1Title": "Connect Any Folder",
+        "step1Desc": "Choose any local folder as your note library, supports .txt and .md, your data is completely free",
+        "step2Title": "Context Aware Writing",
+        "step2Desc": "The AI assistant on the right directly reads your current content to help polish, complete, or summarize",
+        "step3Title": "Immersive Focus Mode",
+        "step3Desc": "Try narrowing the window — the editor automatically switches to a distraction-free minimal mode for pure writing",
         "aiEngines": "AI Engine Info",
         "builtIn": "Built-in",
         "external": "Extended",

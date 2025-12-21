@@ -317,6 +317,7 @@ select:focus {
   /* z-index 必须足够高，因为 backdrop-filter 创建了新的层叠上下文 */
   position: relative;
   z-index: 100;
+  border-left: 1px solid var(--border-color);
 }
 
 /* Panel 内部容器 */
@@ -3282,8 +3283,8 @@ select:focus {
 }
 
 .model-card .model-tagline-text {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: var(--text-secondary);
   margin-bottom: 10px;
   line-height: 1.4;
 }
@@ -3576,6 +3577,89 @@ select:focus {
   color: var(--text-tertiary);
 }
 
+.guide-contact {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 4px 0;
+}
+
+.guide-contact a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.guide-contact a:hover {
+  text-decoration: underline;
+}
+
+.guide-license {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+}
+
+.guide-license a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+/* 开源组件声明 */
+.guide-credits {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.credit-item {
+  padding: 12px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent-color);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.credit-item strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.credit-item a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 11px;
+}
+
+.credit-item a:hover {
+  text-decoration: underline;
+}
+
+.license-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border-radius: 4px;
+}
+
+.credit-note {
+  padding: 10px 12px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+
 /* 模板列表 */
 .template-list {
   display: flex;
@@ -3729,4 +3813,163 @@ select:focus {
   .model-tag.builtin {
     display: none !important;
   }
+}
+
+@import './poetry.css';
+
+/* ============ 诗歌排版 (V2) ============ */
+.unconnected-poetry {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 60px;
+  /* 增加整体留白 */
+  overflow: hidden;
+}
+
+/* 默认水平排版 */
+.poetry-content {
+  max-width: 600px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  /* 增加标题与正文间距 */
+  animation: fadeIn 0.8s ease-out;
+}
+
+.poetry-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* 增加行间距 */
+}
+
+/* 统一字号 */
+.poetry-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.poetry-line {
+  font-size: 22px;
+  /* 与标题一致 */
+  color: var(--text-secondary);
+  font-family: var(--font-family-serif, 'Georgia', serif);
+  margin: 0;
+  line-height: 1.8;
+  letter-spacing: 1px;
+}
+
+.poetry-meta {
+  font-size: 13px;
+  color: #999;
+  font-style: normal;
+  font-family: var(--font-family-main);
+  letter-spacing: 1px;
+  margin-top: 24px;
+  opacity: 0.8;
+  text-align: right;
+  /* 向右靠齐 */
+  width: 100%;
+}
+
+/* ============ 中文竖排风格 (Vertical Mode) ============ */
+.unconnected-poetry.vertical-mode .poetry-content {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  max-width: none;
+  max-height: 70vh;
+  gap: 60px;
+  /* 增加栏间距 */
+  align-items: center;
+}
+
+.unconnected-poetry.vertical-mode .poetry-lines {
+  gap: 24px;
+  /* 增加行间距 */
+}
+
+/* 竖排标题 */
+.unconnected-poetry.vertical-mode .poetry-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-left: 32px;
+  font-family: "Songti SC", "Noto Serif SC", STSong, serif;
+  letter-spacing: 8px;
+  /* 增加字间距 */
+}
+
+/* 竖排正文 */
+.unconnected-poetry.vertical-mode .poetry-line {
+  font-size: 24px;
+  /* 保持一致大小 */
+  font-family: "Songti SC", "Noto Serif SC", STSong, serif;
+  letter-spacing: 6px;
+  color: var(--text-primary);
+  line-height: 2;
+}
+
+/* 竖排落款 */
+.unconnected-poetry.vertical-mode .poetry-meta {
+  font-size: 12px;
+  color: #adadad;
+  margin-top: 0;
+  padding-top: 40px;
+  /* 顶部留白 (视觉上的右侧? No, vertical inline start) */
+  /* text-align: right 在竖排中意味着底部对齐 */
+  text-align: right;
+  writing-mode: vertical-rl;
+  /* 移除之前的边框 */
+  border: none;
+  letter-spacing: 2px;
+}
+
+/* ============ 诗歌排版 (V3 - Western Polish) ============ */
+/* Default (Western) Overrides */
+.unconnected-poetry:not(.vertical-mode) .poetry-content {
+  gap: 48px;
+  /* 进一步增加标题与正文间距 */
+}
+
+.unconnected-poetry:not(.vertical-mode) .poetry-title {
+  font-family: "Baskerville", "Garamond", "Times New Roman", serif;
+  /* 经典书卷衬线体 */
+  font-size: 24px;
+  /* 统一字号 */
+  font-weight: 500;
+  text-transform: uppercase;
+  /* 标题大写，经典诗集风格 */
+  letter-spacing: 4px;
+  /* 宽字间距 */
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+.unconnected-poetry:not(.vertical-mode) .poetry-line {
+  font-family: "Baskerville", "Garamond", "Times New Roman", serif;
+  /* 统一字体 */
+  font-size: 21px;
+  /* 视觉上与标题协调 */
+  font-style: italic;
+  /* 意大利体，增加诗意 */
+  line-height: 2.2;
+  color: var(--text-primary);
+  opacity: 0.85;
+  /* 正文稍淡 */
+  letter-spacing: 0.8px;
+}
+
+.unconnected-poetry:not(.vertical-mode) .poetry-meta {
+  font-family: "Baskerville", "Garamond", "Times New Roman", serif;
+  font-style: italic;
+  margin-top: 56px;
+  /* 落款距离更远 */
+  color: var(--text-tertiary);
+  font-size: 14px;
+  letter-spacing: 1px;
 }

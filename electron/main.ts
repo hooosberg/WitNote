@@ -95,13 +95,82 @@ function getOllamaPath(): string {
     return 'ollama' // fallback to system ollama
 }
 
+// 检测是否为 MAS 版本
+function isMASBuild(): boolean {
+    // MAS 版本会设置 process.mas = true (由 electron-builder 注入)
+    // 也可以通过检查 entitlements 或环境变量判断
+    return (process as NodeJS.Process & { mas?: boolean }).mas === true
+}
+
 // 获取模型目录
 function getModelsPath(): string {
+    // MAS 沙盒兼容：使用用户数据目录 (可写)
+    if (isMASBuild()) {
+        return join(app.getPath('userData'), 'ollama-models')
+    }
+
+    // DMG 版本：使用资源目录 (只读，模型已预装)
     if (app.isPackaged) {
         return join(process.resourcesPath, 'models', 'ollama-models')
     }
+
+    // 开发环境
     const { resolve } = require('path')
     return resolve(__dirname, '../public/models/ollama-models')
+}
+
+// 获取内置模型路径 (从 app bundle 中)
+function getBundledModelsPath(): string {
+    return join(process.resourcesPath, 'models', 'ollama-models')
+}
+
+// MAS 首次启动：将内置模型复制到用户目录
+async function ensureModelsForMAS(): Promise<void> {
+    if (!isMASBuild()) return
+
+    const targetPath = getModelsPath()
+    const bundledPath = getBundledModelsPath()
+
+    // 如果用户目录已有模型，跳过
+    if (existsSync(targetPath)) {
+        console.log('✅ MAS 模型目录已存在:', targetPath)
+        return
+    }
+
+    // 检查内置模型是否存在
+    if (!existsSync(bundledPath)) {
+        console.log('⚠️ 未找到内置模型:', bundledPath)
+        return
+    }
+
+    console.log('📦 MAS 首次运行：复制内置模型到用户目录...')
+    console.log('   源:', bundledPath)
+    console.log('   目标:', targetPath)
+
+    try {
+        // 递归复制目录
+        await copyDirectory(bundledPath, targetPath)
+        console.log('✅ 模型复制完成')
+    } catch (error) {
+        console.error('❌ 模型复制失败:', error)
+    }
+}
+
+// 递归复制目录
+async function copyDirectory(src: string, dest: string): Promise<void> {
+    await fs.mkdir(dest, { recursive: true })
+    const entries = await fs.readdir(src, { withFileTypes: true })
+
+    for (const entry of entries) {
+        const srcPath = join(src, entry.name)
+        const destPath = join(dest, entry.name)
+
+        if (entry.isDirectory()) {
+            await copyDirectory(srcPath, destPath)
+        } else {
+            await fs.copyFile(srcPath, destPath)
+        }
+    }
 }
 
 // 启动内置 Ollama 服务
@@ -494,6 +563,13 @@ function setupIpcHandlers() {
         return false
     })
 
+    // ============ 应用信息 IPC 处理器 ============
+
+    // 获取应用版本号
+    ipcMain.handle('app:getVersion', () => {
+        return app.getVersion()
+    })
+
     // ============ 设置 IPC 处理器 ============
 
     // 获取所有设置
@@ -744,7 +820,10 @@ function createWindow() {
 // ============ 应用启动 ============
 
 app.whenReady().then(async () => {
-    // 先启动 Ollama
+    // MAS 版本：首次启动时复制内置模型到用户目录
+    await ensureModelsForMAS()
+
+    // 启动 Ollama 服务
     await startOllama()
 
     setupIpcHandlers()

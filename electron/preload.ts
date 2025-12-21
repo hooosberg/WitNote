@@ -100,6 +100,12 @@ contextBridge.exposeInMainWorld('appWindow', {
         ipcRenderer.invoke('window:setWidth', width)
 })
 
+// 暴露应用信息 API
+contextBridge.exposeInMainWorld('app', {
+    getVersion: (): Promise<string> =>
+        ipcRenderer.invoke('app:getVersion')
+})
+
 // 暴露设置 API
 contextBridge.exposeInMainWorld('settings', {
     get: (): Promise<Record<string, unknown>> =>

@@ -19,6 +19,16 @@
         "emptyFolderHint": "在下方新建文件夹",
         "emptyGuide": "请点击下方新建或者链接一个本地文件夹作为本地数据存储位置"
     },
+    "emptyState": {
+        "poem": {
+            "title": "卿云歌",
+            "line1": "卿云烂兮",
+            "line2": "纠缦缦兮",
+            "line3": "日月光华",
+            "line4": "旦复旦兮",
+            "meta": "— 尚书 · 大传  |  公元前二十三世纪  |  古代中国"
+        }
+    },
     "editor": {
         "untitled": "无标题",
         "placeholder": "开始写作...",
@@ -32,7 +42,8 @@
         "created": "创建",
         "modified": "修改",
         "titlePlaceholder": "标题",
-        "bodyPlaceholder": "写下你的想法..."
+        "bodyPlaceholder": "写下你的想法...",
+        "mdCheatSheet": "👋 **欢迎使用 Markdown 编辑模式！**\n\n💡 点击 **[ MD | TXT ]** 可切换格式\n\n---\n\n## 📝 语法速查\n\n### 标题\n`# 标题` → \n# 标题\n\n### 文本样式\n`**粗体**` → **粗体**\n\n`*斜体*` → *斜体*\n\n`~~删除线~~` → ~~删除线~~\n\n### 列表\n`- 项目` →\n- 项目 1\n- 项目 2\n\n`1. 编号` →\n1. 第一\n2. 第二\n\n`- [x] 已完成` →\n- [x] 已完成\n- [ ] 待办\n\n### 引用\n`> 引用文字` →\n> 这是引用文字\n\n### 代码\n`` `代码` `` → `console.log('Hi')`\n\n### 链接\n`[文字](网址)` → [点击这里](https://example.com)\n\n### 分割线\n`---` →\n\n---\n\n✨ 祝您写作愉快！"
     },
     "chat": {
         "title": "AI 助手",
@@ -144,26 +155,32 @@
         "refreshList": "刷新列表",
         "installed": "已安装",
         "downloading": "下载中...",
-        "download": "下载"
+        "download": "下载",
+        "credits": {
+            "title": "开源组件声明",
+            "ollamaDesc": "本地 AI 推理引擎",
+            "qwenDesc": "阿里云通义千问开源模型",
+            "note": "本应用使用上述开源组件，特此感谢开源社区的贡献。所有组件均遵循其各自的开源许可协议。"
+        }
     },
     "guide": {
         "aboutTitle": "关于智简笔记本",
         "tagline": "大智若简，落笔生花",
-        "description": "智简笔记本 (WitNote) 是一款注重隐私的本地笔记应用，内置 AI 助手帮助您整理思绪、润色文章、回答问题。所有数据存储在本地，AI 模型也可完全离线运行。",
-        "philosophy": "设计理念",
+        "description": "智简笔记本 (WitNote) 是一款本地优先的 AI 写作伴侣。内置 Ollama 引擎和原生极简卡片界面，开箱即用。无云端依赖，无隐私担忧——让智慧更轻盈。",
+        "philosophy": "核心理念",
         "philosophySmart": "智 (Smart)",
-        "philosophySmartDesc": "— 双模 AI 引擎驱动，主力 Ollama + 便携 WebLLM",
+        "philosophySmartDesc": "— 内置 Ollama 本地引擎，智能模型开箱即用，无需繁琐配置",
         "philosophySimple": "简 (Simple)",
-        "philosophySimpleDesc": "— iOS 风格卡片管理，拖拽即整理",
+        "philosophySimpleDesc": "— iOS 风格卡片管理，拖拽即整理；窗口变窄即进入专注模式",
         "philosophySecure": "安 (Secure)",
-        "philosophySecureDesc": "— 100% 本地存储，你的思想只属于你",
-        "quickStart": "快速上手",
-        "step1Title": "连接笔记文件夹",
-        "step1Desc": "首次启动时选择一个文件夹作为笔记库，所有 .txt 和 .md 文件将自动显示",
-        "step2Title": "开始写作",
-        "step2Desc": "点击卡片编辑文章，支持 Markdown 语法和实时预览",
-        "step3Title": "与 AI 对话",
-        "step3Desc": "右侧 AI 助手可以读取当前文章，帮您润色、总结或回答问题",
+        "philosophySecureDesc": "— 100% 本地存储，您的思想只属于您自己",
+        "quickStart": "特色功能与用法",
+        "step1Title": "连接任意文件夹",
+        "step1Desc": "选择任意本地文件夹作为笔记库，支持 .txt 和 .md，您的数据完全自由",
+        "step2Title": "上下文感知写作",
+        "step2Desc": "右侧 AI 助手能直接读取当前文章内容，帮您润色、续写或总结，所见即所问",
+        "step3Title": "沉浸式专注模式",
+        "step3Desc": "尝试将窗口拖窄，编辑器会自动切换到极简模式，隐藏干扰元素，让您专注于写作",
         "aiEngines": "AI 引擎说明",
         "builtIn": "内置",
         "external": "扩展",

@@ -1,0 +1,110 @@
+/* ============ 未连接状态诗歌样式 (Consolidated) ============ */
+.unconnected-poetry {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px;
+    overflow: hidden;
+}
+
+/* 默认水平排版 Container */
+.poetry-content {
+    max-width: 520px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    /* 标题与正文间距 */
+    animation: fadeIn 0.8s ease-out;
+}
+
+.poetry-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* 行间距 */
+}
+
+.poetry-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.poetry-line {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-family: var(--font-family-serif, 'Georgia', serif);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.poetry-meta {
+    font-size: 11px;
+    color: #999;
+    /* 更灰一些 */
+    font-style: normal;
+    font-family: var(--font-family-main);
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+    opacity: 0.8;
+}
+
+/* ============ 中文竖排风格 (Vertical Mode) ============ */
+.unconnected-poetry.vertical-mode .poetry-content {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    max-width: none;
+    max-height: 70vh;
+    gap: 48px;
+    /* 栏间距 */
+    align-items: center;
+}
+
+.unconnected-poetry.vertical-mode .poetry-lines {
+    gap: 16px;
+    /* 每一行诗句之间的距离 */
+    align-items: flex-start;
+    /* 顶部对齐(在竖排看来是右对齐) -> 其实 flex-direction: column (R-to-L) */
+    /* 修正: 在垂直排版中，Block Axis 是 R-L。Flex Column 指着 Block Axis。即便我们想要 R-L 排列，使用 flex-direction: column 即可。 */
+}
+
+/* 中文标题 */
+.unconnected-poetry.vertical-mode .poetry-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-left: 24px;
+    /* 标题与正文更宽的间隔 */
+    font-family: "Songti SC", "Noto Serif SC", STSong, serif;
+    letter-spacing: 6px;
+    /* 字间距拉大 */
+}
+
+/* 中文正文 */
+.unconnected-poetry.vertical-mode .poetry-line {
+    font-size: 18px;
+    font-family: "Songti SC", "Noto Serif SC", STSong, serif;
+    letter-spacing: 4px;
+    color: var(--text-primary);
+    line-height: 1.8;
+}
+
+/* 中文落款 */
+.unconnected-poetry.vertical-mode .poetry-meta {
+    font-size: 10px;
+    color: #aaa;
+    margin-top: 0;
+    padding-top: 24px;
+    /* 落款与正文的距离 */
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    /* 淡淡的分隔线 */
+    letter-spacing: 1px;
+    writing-mode: vertical-rl;
+    /* 确保落款也是竖排 */
+    /* 这里的 margin/border top 实际上对应物理上的上边缘 */
+    /* 我们希望它在左侧。Vertical flow 之后，Blocks stack R to L. Content -> Meta. */
+    /* Meta is the last child of poetry-content. */
+}

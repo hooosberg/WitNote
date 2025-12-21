@@ -406,10 +406,20 @@ export function useFileSystem(): UseFileSystemReturn {
     const deleteFile = useCallback(async (path: string) => {
         try {
             await window.fs.deleteFile(path)
+
+            // 立即刷新文件树以显示删除效果
+            // 注意：refreshTree 会保持 activeFolder 状态（见第 140-149 行的逻辑）
+            await refreshTree()
+
+            // 如果删除的是当前打开的文件，清空编辑器
+            if (activeFile?.path === path) {
+                setActiveFile(null)
+                setFileContent('')
+            }
         } catch (error) {
             console.error('删除文件失败:', error)
         }
-    }, [])
+    }, [activeFile, refreshTree])
 
     /**
      * 重命名文件/文件夹

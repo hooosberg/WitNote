@@ -1,7 +1,7 @@
 {
   "name": "witnote",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "智简笔记本 - 大智若简的本地化 AI 写作伴侣 (WitNote)",
   "main": "dist-electron/main.js",
   "author": "hooosberg <zikedece@proton.me>",
@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
+    "build:mas": "tsc && vite build && electron-builder --mac mas",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
   },
@@ -35,10 +36,13 @@
     "concurrently": "^8.2.2",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
+    "jsdom": "^27.3.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.3.3",
     "vite": "^5.0.10",
     "vite-plugin-electron": "^0.28.0",
     "vite-plugin-electron-renderer": "^0.14.5",
+    "vitest": "^4.0.16",
     "wait-on": "^7.2.0"
   },
   "build": {
@@ -77,14 +81,33 @@
           "arm64"
         ]
       },
+      "minimumSystemVersion": "12.0",
       "category": "public.app-category.productivity",
-      "icon": "build/icon.icns",
+      "icon": "build/dmg-icon/icon.icns",
       "darkModeSupport": true,
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "afterSign": "scripts/notarize.js"
+      "notarize": {
+        "teamId": "***REMOVED***"
+      }
+    },
+    "mas": {
+      "type": "distribution",
+      "target": {
+        "target": "mas",
+        "arch": [
+          "arm64"
+        ]
+      },
+      "entitlements": "build/entitlements.mas.plist",
+      "entitlementsInherit": "build/entitlements.mas.inherit.plist",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "provisioningProfile": "build/embedded.provisionprofile",
+      "category": "public.app-category.productivity",
+      "minimumSystemVersion": "12.0"
     },
     "dmg": {
       "title": "${productName}",

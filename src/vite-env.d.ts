@@ -68,9 +68,15 @@ interface OllamaAPI {
     onPullProgress(callback: (data: { model: string; output: string }) => void): () => void
 }
 
+// 应用信息 API
+interface AppAPI {
+    getVersion(): Promise<string>
+}
+
 // 全局 Window 接口扩展
 declare global {
     interface Window {
+        app: AppAPI
         fs: FileSystemAPI
         chat: ChatStorageAPI
         platform: PlatformAPI

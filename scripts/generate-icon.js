@@ -72,19 +72,44 @@ function generateSquircleMask(size) {
 }
 
 /**
- * 应用圆角遮罩到图片
+ * 应用圆角遮罩到图片，添加边距使图标符合 Apple 规范
+ * macOS 图标规范：图标内容应占据约 80% 的空间，四周留有边距
  */
 async function applySquircle(inputPath, outputPath, size) {
-    const mask = Buffer.from(generateSquircleMask(size));
+    // 图标内容占画布的比例（Apple 标准约 80%）
+    const CONTENT_RATIO = 0.80;
+    const contentSize = Math.round(size * CONTENT_RATIO);
+    const padding = Math.round((size - contentSize) / 2);
 
-    await sharp(inputPath)
-        .resize(size, size, {
+    // 为内容尺寸生成圆角遮罩（不是画布尺寸）
+    const contentMask = Buffer.from(generateSquircleMask(contentSize));
+
+    // 1. 缩放原图到内容尺寸并应用圆角
+    const roundedContent = await sharp(inputPath)
+        .resize(contentSize, contentSize, {
             fit: 'cover',
             position: 'center'
         })
         .composite([{
-            input: mask,
+            input: contentMask,
             blend: 'dest-in'
+        }])
+        .png()
+        .toBuffer();
+
+    // 2. 创建透明背景并将圆角内容放置于中心
+    await sharp({
+        create: {
+            width: size,
+            height: size,
+            channels: 4,
+            background: { r: 0, g: 0, b: 0, alpha: 0 }
+        }
+    })
+        .composite([{
+            input: roundedContent,
+            left: padding,
+            top: padding
         }])
         .png()
         .toFile(outputPath);
