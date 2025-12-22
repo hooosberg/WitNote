@@ -59,27 +59,6 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 
 ---
 
-## 📸 Screenshots
-
-### 🎯 Focus Mode
-![Focus Mode](src/pic/witnote%20宣传截图/英文版设计/专注模式.jpg)
-
-### 🎨 Multiple Themes
-![Themes](src/pic/witnote%20宣传截图/英文版设计/多种主题.jpg)
-
-### 💾 Offline Storage
-![Storage](src/pic/witnote%20宣传截图/英文版设计/离线存储.jpg)
-
-### 🔄 Format Conversion
-![Format](src/pic/witnote%20宣传截图/英文版设计/格式转换.jpg)
-
-### 📥 Model Download
-![Models](src/pic/witnote%20宣传截图/英文版设计/模型下载.jpg)
-
-### 👤 Character Customization
-![Persona](src/pic/witnote%20宣传截图/英文版设计/角色定制.jpg)
-
----
 
 ## 💻 System Requirements
 
