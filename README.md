@@ -131,10 +131,12 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 3. Choose installation path (customizable)
 4. Complete installation, launch from Desktop or Start Menu
 
-> 📝 **Notes**:
-> - Windows version is brand new — please [report issues](https://github.com/hooosberg/WitNote/issues) if you encounter any problems
-> - First launch may require trust from Windows Defender or antivirus software
-> - Built-in AI model needs some time to load on first use
+> 📝 **Important Notes for Windows Users**:
+> 
+> As an individual developer without an expensive EV Code Signing Certificate, you might encounter the following:
+> 1. **SmartScreen**: If you see "Windows protected your PC" (Unknown Publisher), please click **"More info"** -> **"Run anyway"**.
+> 2. **Antivirus Warning**: Windows Defender or other AV software might flag the installer. The project is open-source and safe. If blocked, please try disabling AV temporarily.
+> 3. **Run as Admin**: It is recommended to right-click the installer and **"Run as administrator"**.
 
 ---
 

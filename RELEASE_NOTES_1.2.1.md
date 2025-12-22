@@ -6,6 +6,15 @@
 - **8 Languages**: English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch, Español
 - Interface and AI responses automatically adapt to your language
 
+### 🪟 Windows Installation Notes
+⚠️ **Note**: Windows version is newly released. Feedback welcome!
+
+**For Windows Users**:
+Due to the lack of an EV Code Signing Certificate, you may need to:
+1. Right-click and **"Run as administrator"**.
+2. Click **"More info"** -> **"Run anyway"** if you see SmartScreen.
+3. Temporarily disable antivirus if installation is blocked.
+
 ### 🎨 Improved Icons
 - macOS icons now follow Apple's design guidelines
 - Proper squircle corners with standard sizing
