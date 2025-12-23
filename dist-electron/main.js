@@ -17305,128 +17305,6 @@ const IGNORED_PATTERNS = [
   "*~"
 ];
 let mainWindow = null;
-let ollamaProcess = null;
-function getOllamaPath() {
-  if (electron.app.isPackaged) {
-    if (process.platform === "darwin") {
-      return path.join(process.resourcesPath, "ollama", "mac", "ollama");
-    }
-    if (process.platform === "win32") {
-      return path.join(process.resourcesPath, "ollama", "win", "ollama.exe");
-    }
-  }
-  const { resolve: resolve2 } = require("path");
-  const devPath = resolve2(__dirname, "../public/ollama/mac/ollama");
-  console.log("📍 Ollama 开发路径:", devPath);
-  if (fs$1.existsSync(devPath)) {
-    return devPath;
-  }
-  console.log("⚠️ 开发路径不存在，尝试系统 ollama");
-  return "ollama";
-}
-function isMASBuild() {
-  return process.mas === true;
-}
-function getModelsPath() {
-  if (isMASBuild()) {
-    return path.join(electron.app.getPath("userData"), "ollama-models");
-  }
-  if (electron.app.isPackaged) {
-    return path.join(process.resourcesPath, "models", "ollama-models");
-  }
-  const { resolve: resolve2 } = require("path");
-  return resolve2(__dirname, "../public/models/ollama-models");
-}
-function getBundledModelsPath() {
-  return path.join(process.resourcesPath, "models", "ollama-models");
-}
-async function ensureModelsForMAS() {
-  if (!isMASBuild()) return;
-  const targetPath = getModelsPath();
-  const bundledPath = getBundledModelsPath();
-  if (fs$1.existsSync(targetPath)) {
-    console.log("✅ MAS 模型目录已存在:", targetPath);
-    return;
-  }
-  if (!fs$1.existsSync(bundledPath)) {
-    console.log("⚠️ 未找到内置模型:", bundledPath);
-    return;
-  }
-  console.log("📦 MAS 首次运行：复制内置模型到用户目录...");
-  console.log("   源:", bundledPath);
-  console.log("   目标:", targetPath);
-  try {
-    await copyDirectory(bundledPath, targetPath);
-    console.log("✅ 模型复制完成");
-  } catch (error2) {
-    console.error("❌ 模型复制失败:", error2);
-  }
-}
-async function copyDirectory(src, dest) {
-  await fs$1.promises.mkdir(dest, { recursive: true });
-  const entries = await fs$1.promises.readdir(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      await copyDirectory(srcPath, destPath);
-    } else {
-      await fs$1.promises.copyFile(srcPath, destPath);
-    }
-  }
-}
-async function startOllama() {
-  var _a, _b;
-  const ollamaPath = getOllamaPath();
-  const modelsPath = getModelsPath();
-  console.log("🤖 准备启动 Ollama...");
-  console.log("   路径:", ollamaPath);
-  console.log("   模型目录:", modelsPath);
-  try {
-    const response = await fetch("http://127.0.0.1:11434/api/tags");
-    if (response.ok) {
-      console.log("✅ Ollama 已在运行");
-      return;
-    }
-  } catch {
-  }
-  const env2 = {
-    ...process.env,
-    OLLAMA_HOST: "127.0.0.1:11434",
-    OLLAMA_MODELS: modelsPath
-  };
-  try {
-    ollamaProcess = child_process.spawn(ollamaPath, ["serve"], {
-      env: env2,
-      detached: false,
-      stdio: ["ignore", "pipe", "pipe"]
-    });
-    (_a = ollamaProcess.stdout) == null ? void 0 : _a.on("data", (data) => {
-      console.log("[Ollama]", data.toString().trim());
-    });
-    (_b = ollamaProcess.stderr) == null ? void 0 : _b.on("data", (data) => {
-      console.log("[Ollama]", data.toString().trim());
-    });
-    ollamaProcess.on("error", (error2) => {
-      console.error("❌ Ollama 启动失败:", error2.message);
-    });
-    ollamaProcess.on("exit", (code2) => {
-      console.log("📤 Ollama 已退出, code:", code2);
-      ollamaProcess = null;
-    });
-    await new Promise((resolve2) => setTimeout(resolve2, 2e3));
-    console.log("✅ Ollama 启动成功");
-  } catch (error2) {
-    console.error("❌ 启动 Ollama 失败:", error2);
-  }
-}
-function stopOllama() {
-  if (ollamaProcess) {
-    console.log("🛑 停止 Ollama...");
-    ollamaProcess.kill();
-    ollamaProcess = null;
-  }
-}
 function shouldIgnore(name) {
   if (name.startsWith(".")) return true;
   return IGNORED_PATTERNS.some((pattern2) => {
@@ -17669,19 +17547,12 @@ function setupIpcHandlers() {
   });
   const ollamaEnv = {
     ...process.env,
-    OLLAMA_HOST: "127.0.0.1:11434",
-    OLLAMA_MODELS: getModelsPath()
+    OLLAMA_HOST: "127.0.0.1:11434"
   };
-  electron.ipcMain.handle("ollama:openModelsFolder", () => {
-    const modelsPath = getModelsPath();
-    electron.shell.openPath(modelsPath);
-    return modelsPath;
-  });
   electron.ipcMain.handle("ollama:listModels", async () => {
     try {
-      const ollamaPath = getOllamaPath();
       return new Promise((resolve2) => {
-        const cmd = child_process.spawn(ollamaPath, ["list"], { env: ollamaEnv });
+        const cmd = child_process.spawn("ollama", ["list"], { env: ollamaEnv });
         let output = "";
         cmd.stdout.on("data", (data) => {
           output += data.toString();
@@ -17722,8 +17593,7 @@ function setupIpcHandlers() {
   electron.ipcMain.handle("ollama:pullModel", async (_event, modelName) => {
     return new Promise((resolve2, reject) => {
       var _a, _b;
-      const ollamaPath = getOllamaPath();
-      const pullProcess = child_process.spawn(ollamaPath, ["pull", modelName], { env: ollamaEnv });
+      const pullProcess = child_process.spawn("ollama", ["pull", modelName], { env: ollamaEnv });
       pullProcesses.set(modelName, pullProcess);
       let output = "";
       (_a = pullProcess.stdout) == null ? void 0 : _a.on("data", (data) => {
@@ -17757,8 +17627,7 @@ function setupIpcHandlers() {
       process2.kill("SIGTERM");
       pullProcesses.delete(modelName);
       try {
-        const ollamaPath = getOllamaPath();
-        child_process.spawn(ollamaPath, ["rm", modelName], { env: ollamaEnv });
+        child_process.spawn("ollama", ["rm", modelName], { env: ollamaEnv });
         console.log(`🗑️ 已清理未完成的模型: ${modelName}`);
       } catch (e) {
         console.log("清理未完成模型失败:", e);
@@ -17767,13 +17636,12 @@ function setupIpcHandlers() {
     }
     if (pullProcesses.size > 0) {
       const cancelledModels = [];
-      const ollamaPath = getOllamaPath();
       Array.from(pullProcesses.entries()).forEach(([name, proc]) => {
         console.log(`🛑 取消下载: ${name}`);
         proc.kill("SIGTERM");
         cancelledModels.push(name);
         try {
-          child_process.spawn(ollamaPath, ["rm", name], { env: ollamaEnv });
+          child_process.spawn("ollama", ["rm", name], { env: ollamaEnv });
           console.log(`🗑️ 已清理未完成的模型: ${name}`);
         } catch (e) {
           console.log("清理未完成模型失败:", e);
@@ -17786,8 +17654,7 @@ function setupIpcHandlers() {
   });
   electron.ipcMain.handle("ollama:deleteModel", async (_event, modelName) => {
     return new Promise((resolve2, reject) => {
-      const ollamaPath = getOllamaPath();
-      const deleteProcess = child_process.spawn(ollamaPath, ["rm", modelName], { env: ollamaEnv });
+      const deleteProcess = child_process.spawn("ollama", ["rm", modelName], { env: ollamaEnv });
       deleteProcess.on("close", (code2) => {
         if (code2 === 0) {
           resolve2({ success: true });
@@ -17852,8 +17719,6 @@ function createWindow() {
   });
 }
 electron.app.whenReady().then(async () => {
-  await ensureModelsForMAS();
-  await startOllama();
   setupIpcHandlers();
   createWindow();
   electron.app.on("activate", () => {
@@ -17866,7 +17731,6 @@ electron.app.on("window-all-closed", () => {
   if (watcher) {
     watcher.close();
   }
-  stopOllama();
   if (process.platform !== "darwin") {
     electron.app.quit();
   }
