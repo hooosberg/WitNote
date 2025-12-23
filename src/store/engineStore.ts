@@ -67,6 +67,8 @@ export interface UseEngineStoreReturn extends EngineState {
 const STORAGE_KEYS = {
     ENGINE: 'zen-ai-engine',
     MODEL: 'zen-selected-model',
+    WEBLLM_MODEL: 'zen-selected-webllm-model',
+    OLLAMA_MODEL: 'zen-selected-ollama-model',
     OLLAMA: 'zen-ollama-config',
     CLOUD: 'zen-cloud-config'
 };
@@ -107,14 +109,39 @@ export function useEngineStore(): UseEngineStoreReturn {
     // 设置引擎
     const setEngine = useCallback((engine: EngineType) => {
         localStorage.setItem(STORAGE_KEYS.ENGINE, engine);
-        setState(prev => ({ ...prev, currentEngine: engine, error: null }));
-    }, []);
+
+        // 切换引擎时，恢复该引擎上次使用的模型
+        let modelToRestore = DEFAULT_WEBLLM_MODEL;
+        if (engine === 'webllm') {
+            modelToRestore = localStorage.getItem(STORAGE_KEYS.WEBLLM_MODEL) || DEFAULT_WEBLLM_MODEL;
+        } else if (engine === 'ollama') {
+            // 如果只有 null，可以保留当前选中（但风险是当前选中可能是 webllm 的），或者用第一个 found model
+            modelToRestore = localStorage.getItem(STORAGE_KEYS.OLLAMA_MODEL) || '';
+        } else if (engine === 'openai') {
+            modelToRestore = state.cloudConfig.modelName;
+        }
+
+        setState(prev => ({
+            ...prev,
+            currentEngine: engine,
+            selectedModel: modelToRestore,
+            error: null
+        }));
+    }, [state.cloudConfig.modelName]);
 
     // 选择模型
     const selectModel = useCallback((modelId: string) => {
         localStorage.setItem(STORAGE_KEYS.MODEL, modelId);
+
+        // 分别存储引擎的模型选择
+        if (state.currentEngine === 'webllm') {
+            localStorage.setItem(STORAGE_KEYS.WEBLLM_MODEL, modelId);
+        } else if (state.currentEngine === 'ollama') {
+            localStorage.setItem(STORAGE_KEYS.OLLAMA_MODEL, modelId);
+        }
+
         setState(prev => ({ ...prev, selectedModel: modelId }));
-    }, []);
+    }, [state.currentEngine]);
 
     // 初始化 WebLLM
     const initWebLLM = useCallback(async (modelId?: string) => {

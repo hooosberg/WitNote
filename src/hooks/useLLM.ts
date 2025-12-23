@@ -133,6 +133,8 @@ export function useLLM(engineStore: UseEngineStoreReturn): UseLLMReturn {
                 setStatus(engineStore.ollamaAvailable ? 'ready' : 'detecting');
                 setModelName(engineStore.selectedModel);
                 setOllamaModels(engineStore.ollamaModels);
+                // 强制同步 selectedOllamaModel，确保 Settings 页面的选择能反映到 UI
+                setSelectedOllamaModel(engineStore.selectedModel);
                 setLoadProgress(null);
                 break;
             case 'openai':

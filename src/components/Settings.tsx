@@ -240,7 +240,16 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 {/* WebLLM - 本地内置 */}
                                 <button
                                     className={`engine-selector-item ${engineStore.currentEngine === 'webllm' ? 'active' : ''}`}
-                                    onClick={() => engineStore.setEngine('webllm')}
+                                    onClick={() => {
+                                        engineStore.setEngine('webllm')
+                                        // 自动初始化：显式获取目标模型 ID，避免因 state 异步更新导致使用的是旧引擎的模型 ID
+                                        const savedModel = localStorage.getItem('zen-selected-webllm-model');
+                                        const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id;
+
+                                        if (!engineStore.webllmReady && !engineStore.webllmLoading && targetModel) {
+                                            engineStore.initWebLLM(targetModel)
+                                        }
+                                    }}
                                     title="本地内置模型"
                                 >
                                     <div className="engine-circle"><Bot size={24} /></div>
@@ -429,7 +438,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                         <span className="status-action">测试连接</span>
                                     </button>
                                 </div>
-                                <p className="settings-hint">
+                                <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                     请确保 <a href="https://ollama.com" target="_blank" rel="noreferrer">Ollama</a> 已在后台运行。
                                 </p>
 
@@ -469,7 +478,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
 
                                 {llm && llm.status === 'ready' && (
                                     <>
-                                        <div style={{ marginTop: 24, marginBottom: 12 }}>
+                                        <div style={{ marginTop: '24px', marginBottom: '12px' }}>
                                             <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>已安装模型</h4>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -481,37 +490,34 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'space-between',
-                                                        padding: '10px 14px',
+                                                        padding: '12px 16px',
                                                         background: 'var(--bg-secondary)',
-                                                        borderRadius: '8px',
+                                                        borderRadius: '10px',
                                                         border: model.name === engineStore.selectedModel ? '2px solid var(--accent)' : '1px solid var(--border-color)'
                                                     }}>
                                                         <div>
-                                                            <span style={{ fontWeight: 500 }}>{model.name}</span>
-                                                            {model.name === engineStore.selectedModel && (
-                                                                <span style={{
-                                                                    marginLeft: '8px',
-                                                                    fontSize: '11px',
-                                                                    padding: '2px 8px',
-                                                                    borderRadius: '10px',
-                                                                    background: 'var(--accent)',
-                                                                    color: 'white'
-                                                                }}>
-                                                                    使用中
-                                                                </span>
-                                                            )}
-                                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                                            <span style={{ fontWeight: 600 }}>{model.name}</span>
+                                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                                                                 {model.formattedSize}
                                                             </div>
                                                         </div>
-                                                        {model.name !== engineStore.selectedModel && (
+                                                        {model.name !== engineStore.selectedModel ? (
                                                             <button
-                                                                className="download-btn"
+                                                                className="model-use-btn"
                                                                 onClick={() => engineStore.selectModel(model.name)}
-                                                                style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
                                                             >
                                                                 使用
                                                             </button>
+                                                        ) : (
+                                                            <span style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                                color: '#1e8e3e',
+                                                                fontSize: '13px'
+                                                            }}>
+                                                                <Check size={10} /> 使用中
+                                                            </span>
                                                         )}
                                                     </div>
                                                 ))
@@ -542,7 +548,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 </div>
 
                                 {/* 支持平台列表 */}
-                                <p className="settings-hint" style={{ marginBottom: '12px' }}>
+                                <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                     支持平台：OpenAI, Google Gemini, DeepSeek, Claude, Groq, Mistral, 零一万物, 通义千问 等 OpenAI 兼容接口。
                                 </p>
 
@@ -591,8 +597,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
 
                                 {/* 配置指南 */}
                                 <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                    <strong>📖 配置指南</strong>
-                                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8' }}>
+                                    <strong style={{ fontSize: '12px' }}>📖 配置指南</strong>
+                                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8', fontSize: '12px' }}>
                                         <li><a href="https://platform.openai.com/docs" target="_blank" rel="noreferrer">OpenAI 文档</a></li>
                                         <li><a href="https://ai.google.dev/docs" target="_blank" rel="noreferrer">Google Gemini 文档</a> (Base URL: generativelanguage.googleapis.com/v1beta/openai/)</li>
                                         <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noreferrer">DeepSeek 文档</a></li>

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Trash2, Settings, Bot, Server, Cloud, AlertCircle } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud, AlertCircle, Trash2 } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
+import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
 import { UseEngineStoreReturn } from '../store/engineStore'
 import { marked } from 'marked'
@@ -54,7 +55,7 @@ interface ChatPanelProps {
     openSettings?: () => void
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSettings }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore }) => {
     const { t } = useTranslation()
 
     const [inputValue, setInputValue] = useState('')
@@ -73,13 +74,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         sendMessage,
         abortGeneration,
         retryDetection,
-        deleteModel,
         redownloadModel
     } = llm
 
     const [showModelMenu, setShowModelMenu] = useState(false)
     const [expandedModel, setExpandedModel] = useState<string | null>(null)
+    const [showEngineMenu, setShowEngineMenu] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
+    const engineMenuRef = useRef<HTMLDivElement>(null)
+    const engineMenuContainerRef = useRef<HTMLDivElement>(null)
 
     // 点击外部关闭模型菜单
     useEffect(() => {
@@ -87,12 +90,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setShowModelMenu(false)
             }
+            // 检查点击是否在引擎菜单触发按钮或菜单容器内
+            const isEngineMenuClick =
+                (engineMenuRef.current && engineMenuRef.current.contains(e.target as Node)) ||
+                (engineMenuContainerRef.current && engineMenuContainerRef.current.contains(e.target as Node))
+            if (!isEngineMenuClick) {
+                setShowEngineMenu(false)
+            }
         }
-        if (showModelMenu) {
+        if (showModelMenu || showEngineMenu) {
             document.addEventListener('mousedown', handleClickOutside)
         }
         return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [showModelMenu])
+    }, [showModelMenu, showEngineMenu])
 
     // 滚动到底部
     const streamingContent = messages.find(m => m.isStreaming)?.content || ''
@@ -165,35 +175,85 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                 {/* 状态栏 */}
                 <div className="chat-status-bar">
                     <div className="chat-model-info">
-                        {/* 引擎图标 */}
-                        <div className={`ai-status-indicator ${isGenerating || status === 'loading' ? 'active' : 'idle'}`}>
+                        {/* 引擎图标（可点击切换） */}
+                        <div
+                            className={`ai-status-indicator ${isGenerating || status === 'loading' ? 'active' : 'idle'}`}
+                            onClick={() => engineStore && setShowEngineMenu(!showEngineMenu)}
+                            style={{ cursor: engineStore ? 'pointer' : 'default' }}
+                            ref={engineMenuRef}
+                        >
                             {engineStore?.currentEngine === 'webllm' && <Bot size={12} />}
                             {engineStore?.currentEngine === 'ollama' && <Server size={12} />}
                             {engineStore?.currentEngine === 'openai' && <Cloud size={12} />}
                             {!engineStore && <span className="indicator-dot"></span>}
                             <span className="indicator-glow"></span>
+
+                            {/* 引擎切换下拉菜单 */}
+                            {engineStore && showEngineMenu && createPortal(
+                                <div className="model-dropdown" ref={engineMenuContainerRef}>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', padding: '6px 8px', fontWeight: 600 }}>
+                                        AI 引擎
+                                    </div>
+                                    {[
+                                        { type: 'webllm' as const, icon: <Bot size={14} />, label: 'WebLLM' },
+                                        { type: 'ollama' as const, icon: <Server size={14} />, label: 'Ollama' },
+                                        { type: 'openai' as const, icon: <Cloud size={14} />, label: 'Cloud API' }
+                                    ].map((engine) => (
+                                        <button
+                                            key={engine.type}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                engineStore.setEngine(engine.type)
+
+                                                // WebLLM 自动初始化逻辑（与设置页面一致）
+                                                if (engine.type === 'webllm') {
+                                                    const savedModel = localStorage.getItem('zen-selected-webllm-model')
+                                                    const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id
+
+                                                    if (!engineStore.webllmReady && !engineStore.webllmLoading && targetModel) {
+                                                        engineStore.initWebLLM(targetModel)
+                                                    }
+                                                }
+
+                                                setShowEngineMenu(false)
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                width: '100%',
+                                                padding: '8px',
+                                                background: engineStore.currentEngine === engine.type ? 'rgba(76, 175, 80, 0.12)' : 'transparent',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                color: engineStore.currentEngine === engine.type ? 'var(--accent)' : 'var(--text-primary)',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {engine.icon}
+                                            <span>{engine.label}</span>
+                                            {engineStore.currentEngine === engine.type && <Check size={12} style={{ marginLeft: 'auto' }} />}
+                                        </button>
+                                    ))}
+                                </div>,
+                                document.body
+                            )}
                         </div>
 
                         {/* Ollama 离线警告 */}
                         {engineStore?.currentEngine === 'ollama' && !engineStore.ollamaAvailable && status !== 'ready' && (
                             <div className="engine-warning">
                                 <AlertCircle size={12} />
-                                <span>{t('chat.ollamaOffline', 'Ollama 未运行')}</span>
+                                <span>未连接</span>
                                 <button className="retry-btn" onClick={retryDetection}>
-                                    {t('chat.retry')}
+                                    重试
                                 </button>
                             </div>
                         )}
 
-                        {/* WebLLM 加载中 */}
-                        {engineStore?.currentEngine === 'webllm' && engineStore.webllmLoading && (
-                            <div className="engine-loading">
-                                <span>{t('chat.loading', '加载中')}...</span>
-                                {loadProgress && (
-                                    <span className="load-progress">{loadProgress.progress}%</span>
-                                )}
-                            </div>
-                        )}
+
 
                         {/* 正常状态 */}
                         {status === 'ready' ? (
@@ -253,15 +313,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                                             >
                                                                                 {t('settings.useThis')}
                                                                             </button>
-                                                                            {!isBuiltIn && (
-                                                                                <button
-                                                                                    className="model-delete-btn"
-                                                                                    onClick={() => deleteModel(model.name)}
-                                                                                    title={t('settings.deleteModel')}
-                                                                                >
-                                                                                    <Trash2 size={12} />
-                                                                                </button>
-                                                                            )}
+
                                                                         </>
                                                                     )}
                                                                 </div>
@@ -276,17 +328,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
 
 
 
-                                            {/* 更多模型链接 */}
-                                            <div
-                                                className="model-more-link"
-                                                onClick={() => {
-                                                    setShowModelMenu(false)
-                                                    openSettings?.()
-                                                }}
-                                            >
-                                                <Settings size={12} />
-                                                <span>{t('chat.moreModels')}</span>
-                                            </div>
+
                                         </div>,
                                         document.body
                                     )}
@@ -305,13 +347,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                         ) : status === 'loading' ? (
                             <div className="model-loading-status">
                                 <span className="loading-text">
-                                    {loadProgress ? `${t('chat.loadingModel')} ${loadProgress.progress}%` : t('chat.loading')}
+                                    {loadProgress ? `${t('chat.loading', '正在加载')} ${Math.round(loadProgress.progress * 100)}%` : t('chat.loading')}
                                 </span>
                                 {loadProgress && (
                                     <div className="loading-progress-bar">
                                         <div
                                             className="loading-progress-fill"
-                                            style={{ width: `${loadProgress.progress}%` }}
+                                            style={{ width: `${Math.round(loadProgress.progress * 100)}%` }}
                                         />
                                     </div>
                                 )}

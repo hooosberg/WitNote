@@ -110,29 +110,23 @@ export class OpenAIEngine {
 
         try {
             const baseUrl = this.config.baseUrl.trim().replace(/\/$/, '');
-            const response = await fetch(`${baseUrl}/models`, {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${this.config.apiKey}` },
+
+            // 直接尝试发送一个极简的聊天请求来验证连接
+            // 这样可以同时验证 API Key 有效性、BaseUrl 正确性以及 Model 是否可用
+            const response = await fetch(`${baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.config.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: this.config.modelName || 'gpt-4o',
+                    messages: [{ role: 'user', content: 'Hi' }],
+                    max_tokens: 1 // 限制消耗
+                }),
                 signal: AbortSignal.timeout(10000)
             });
 
-            if (!response.ok && response.status === 404) {
-                // 尝试发送最小请求
-                const chatRes = await fetch(`${baseUrl}/chat/completions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.config.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: this.config.modelName || 'gpt-4o',
-                        messages: [{ role: 'user', content: 'test' }],
-                        max_tokens: 1
-                    }),
-                    signal: AbortSignal.timeout(10000)
-                });
-                return chatRes.ok || chatRes.status === 400;
-            }
             return response.ok;
         } catch {
             return false;
