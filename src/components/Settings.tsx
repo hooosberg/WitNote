@@ -253,7 +253,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                     title="本地内置模型"
                                 >
                                     <div className="engine-circle"><Bot size={24} /></div>
-                                    <span className="engine-label">WebLLM</span>
+                                    <span className="engine-label">内置 WebLLM</span>
                                 </button>
 
                                 {/* Ollama */}
@@ -269,7 +269,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                             <rect x="14" y="14" width="7" height="7" rx="1"></rect>
                                         </svg>
                                     </div>
-                                    <span className="engine-label">Ollama (外部)</span>
+                                    <span className="engine-label">外部 Ollama</span>
                                 </button>
 
                                 {/* Cloud */}
@@ -284,7 +284,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                             <path d="M16.5 12a4.5 4.5 0 1 0-9 0"></path>
                                         </svg>
                                     </div>
-                                    <span className="engine-label">Cloud API</span>
+                                    <span className="engine-label">云端 Cloud API</span>
                                 </button>
                             </div>
                         </div>
@@ -427,7 +427,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         {engineStore.currentEngine === 'ollama' && (
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
-                                    <h3 className="settings-section-title">External Ollama</h3>
+                                    <h3 className="settings-section-title">外部 Ollama 设置</h3>
                                     <button
                                         className={`status-btn ${engineStore.ollamaAvailable ? 'connected' : 'error'}`}
                                         onClick={() => engineStore.refreshOllamaStatus()}
@@ -532,7 +532,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         {engineStore.currentEngine === 'openai' && (
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
-                                    <h3 className="settings-section-title">Cloud API 配置</h3>
+                                    <h3 className="settings-section-title">云端 Cloud API 设置</h3>
                                     <button
                                         className={`status-btn ${engineStore.cloudApiStatus === 'success' ? 'connected' : engineStore.cloudApiStatus === 'error' ? 'error' : 'untested'}`}
                                         onClick={() => engineStore.testCloudApi()}
