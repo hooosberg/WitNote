@@ -429,12 +429,12 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">External Ollama</h3>
                                     <button
-                                        className={`status-btn ${engineStore.ollamaAvailable ? 'connected' : 'disconnected'}`}
+                                        className={`status-btn ${engineStore.ollamaAvailable ? 'connected' : 'error'}`}
                                         onClick={() => engineStore.refreshOllamaStatus()}
                                         title="点击测试连接"
                                     >
                                         <span className="status-indicator" />
-                                        <span className="status-text">{engineStore.ollamaAvailable ? '已连接' : '未连接'}</span>
+                                        <span className="status-text">{engineStore.ollamaAvailable ? '已连接' : '连接失败'}</span>
                                         <span className="status-action">测试连接</span>
                                     </button>
                                 </div>

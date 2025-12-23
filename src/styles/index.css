@@ -1741,11 +1741,11 @@ select:focus {
   gap: 12px;
 }
 
-/* 状态栏 - 居中对齐 */
+/* 状态栏 - 左对齐 */
 .chat-status-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 0;
   font-size: 12px;
   gap: 6px;

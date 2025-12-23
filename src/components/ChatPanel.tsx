@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Bot, Server, Cloud, AlertCircle, Trash2 } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -72,16 +72,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore }) => {
         messages,
         isGenerating,
         sendMessage,
-        abortGeneration,
-        retryDetection,
-        redownloadModel
+        abortGeneration
     } = llm
 
     const [showModelMenu, setShowModelMenu] = useState(false)
     const [expandedModel, setExpandedModel] = useState<string | null>(null)
     const [showEngineMenu, setShowEngineMenu] = useState(false)
+    const [engineMenuPosition, setEngineMenuPosition] = useState<{ left: number; bottom: number } | null>(null)
     const menuRef = useRef<HTMLDivElement>(null)
-    const engineMenuRef = useRef<HTMLDivElement>(null)
+    const engineMenuRef = useRef<HTMLButtonElement>(null)
     const engineMenuContainerRef = useRef<HTMLDivElement>(null)
 
     // 点击外部关闭模型菜单
@@ -174,96 +173,172 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore }) => {
             <div className="chat-footer">
                 {/* 状态栏 */}
                 <div className="chat-status-bar">
-                    <div className="chat-model-info">
-                        {/* 引擎图标（可点击切换） */}
-                        <div
-                            className={`ai-status-indicator ${isGenerating || status === 'loading' ? 'active' : 'idle'}`}
-                            onClick={() => engineStore && setShowEngineMenu(!showEngineMenu)}
-                            style={{ cursor: engineStore ? 'pointer' : 'default' }}
-                            ref={engineMenuRef}
-                        >
-                            {engineStore?.currentEngine === 'webllm' && <Bot size={12} />}
-                            {engineStore?.currentEngine === 'ollama' && <Server size={12} />}
-                            {engineStore?.currentEngine === 'openai' && <Cloud size={12} />}
-                            {!engineStore && <span className="indicator-dot"></span>}
-                            <span className="indicator-glow"></span>
+                    <div className="chat-model-info" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {/* 引擎按钮 */}
+                        {engineStore && (
+                            <button
+                                className="engine-type-btn"
+                                onClick={() => {
+                                    if (engineMenuRef.current) {
+                                        const rect = engineMenuRef.current.getBoundingClientRect()
+                                        setEngineMenuPosition({
+                                            left: rect.left,
+                                            bottom: window.innerHeight - rect.top + 8
+                                        })
+                                    }
+                                    setShowEngineMenu(!showEngineMenu)
+                                }}
+                                ref={engineMenuRef}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '6px 10px',
+                                    background: 'var(--bg-hover)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    fontWeight: 500,
+                                    color: 'var(--text-primary)',
+                                    transition: 'all 0.2s',
+                                    whiteSpace: 'nowrap'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'var(--bg-card)'
+                                    e.currentTarget.style.borderColor = 'var(--accent)'
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'var(--bg-hover)'
+                                    e.currentTarget.style.borderColor = 'var(--border-color)'
+                                }}
+                            >
+                                {engineStore.currentEngine === 'webllm' && (
+                                    <>
+                                        <Bot size={14} />
+                                        <span>内置</span>
+                                    </>
+                                )}
+                                {engineStore.currentEngine === 'ollama' && (
+                                    <>
+                                        <Server size={14} />
+                                        <span>外部</span>
+                                    </>
+                                )}
+                                {engineStore.currentEngine === 'openai' && (
+                                    <>
+                                        <Cloud size={14} />
+                                        <span>云端</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
 
-                            {/* 引擎切换下拉菜单 */}
-                            {engineStore && showEngineMenu && createPortal(
-                                <div className="model-dropdown" ref={engineMenuContainerRef}>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', padding: '6px 8px', fontWeight: 600 }}>
-                                        AI 引擎
-                                    </div>
-                                    {[
-                                        { type: 'webllm' as const, icon: <Bot size={14} />, label: 'WebLLM' },
-                                        { type: 'ollama' as const, icon: <Server size={14} />, label: 'Ollama' },
-                                        { type: 'openai' as const, icon: <Cloud size={14} />, label: 'Cloud API' }
-                                    ].map((engine) => (
-                                        <button
-                                            key={engine.type}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                engineStore.setEngine(engine.type)
+                        {/* 引擎切换下拉菜单 */}
+                        {engineStore && showEngineMenu && engineMenuPosition && createPortal(
+                            <div
+                                className="model-dropdown"
+                                ref={engineMenuContainerRef}
+                                style={{
+                                    left: `${engineMenuPosition.left}px`,
+                                    bottom: `${engineMenuPosition.bottom}px`,
+                                    right: 'auto',
+                                    transform: 'none'
+                                }}
+                            >
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', padding: '6px 8px', fontWeight: 600 }}>
+                                    AI 引擎
+                                </div>
+                                {[
+                                    { type: 'webllm' as const, icon: <Bot size={14} />, label: '内置 WebLLM' },
+                                    { type: 'ollama' as const, icon: <Server size={14} />, label: '外部 Ollama' },
+                                    { type: 'openai' as const, icon: <Cloud size={14} />, label: '云端 Cloud API' }
+                                ].map((engine) => (
+                                    <button
+                                        key={engine.type}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            engineStore.setEngine(engine.type)
 
-                                                // WebLLM 自动初始化逻辑（与设置页面一致）
-                                                if (engine.type === 'webllm') {
-                                                    const savedModel = localStorage.getItem('zen-selected-webllm-model')
-                                                    const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id
+                                            // WebLLM 自动初始化逻辑（与设置页面一致）
+                                            if (engine.type === 'webllm') {
+                                                const savedModel = localStorage.getItem('zen-selected-webllm-model')
+                                                const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id
 
-                                                    if (!engineStore.webllmReady && !engineStore.webllmLoading && targetModel) {
-                                                        engineStore.initWebLLM(targetModel)
-                                                    }
+                                                if (!engineStore.webllmReady && !engineStore.webllmLoading && targetModel) {
+                                                    engineStore.initWebLLM(targetModel)
                                                 }
+                                            }
 
-                                                setShowEngineMenu(false)
-                                            }}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                width: '100%',
-                                                padding: '8px',
-                                                background: engineStore.currentEngine === engine.type ? 'rgba(76, 175, 80, 0.12)' : 'transparent',
-                                                border: 'none',
-                                                borderRadius: '6px',
-                                                cursor: 'pointer',
-                                                fontSize: '13px',
-                                                color: engineStore.currentEngine === engine.type ? 'var(--accent)' : 'var(--text-primary)',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {engine.icon}
-                                            <span>{engine.label}</span>
-                                            {engineStore.currentEngine === engine.type && <Check size={12} style={{ marginLeft: 'auto' }} />}
-                                        </button>
-                                    ))}
-                                </div>,
-                                document.body
-                            )}
-                        </div>
-
-                        {/* Ollama 离线警告 */}
-                        {engineStore?.currentEngine === 'ollama' && !engineStore.ollamaAvailable && status !== 'ready' && (
-                            <div className="engine-warning">
-                                <AlertCircle size={12} />
-                                <span>未连接</span>
-                                <button className="retry-btn" onClick={retryDetection}>
-                                    重试
-                                </button>
-                            </div>
+                                            setShowEngineMenu(false)
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            width: '100%',
+                                            padding: '8px',
+                                            background: engineStore.currentEngine === engine.type ? 'rgba(76, 175, 80, 0.12)' : 'transparent',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            color: engineStore.currentEngine === engine.type ? 'var(--accent)' : 'var(--text-primary)',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {engine.icon}
+                                        <span>{engine.label}</span>
+                                        {engineStore.currentEngine === engine.type && <Check size={12} style={{ marginLeft: 'auto' }} />}
+                                    </button>
+                                ))}
+                            </div>,
+                            document.body
                         )}
 
 
 
-                        {/* 正常状态 */}
+                        {/* 模型按钮 / 状态显示 */}
                         {status === 'ready' ? (
                             isGenerating ? (
-                                <span className="model-label thinking">{t('chat.thinking')}</span>
+                                <div className="model-status-btn" style={{
+                                    padding: '6px 10px',
+                                    background: 'var(--bg-hover)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: 500,
+                                    color: 'var(--text-secondary)'
+                                }}>
+                                    {t('chat.thinking')}
+                                </div>
                             ) : ollamaModels.length >= 1 && engineStore?.currentEngine === 'ollama' ? (
                                 <div className="webllm-model-selector" ref={menuRef}>
                                     <button
-                                        className="model-label clickable"
+                                        className="model-name-btn"
                                         onClick={() => setShowModelMenu(!showModelMenu)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '6px 10px',
+                                            background: 'var(--bg-hover)',
+                                            border: '1px solid var(--border-color)',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '12px',
+                                            fontWeight: 500,
+                                            color: 'var(--text-primary)',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = 'var(--bg-card)'
+                                            e.currentTarget.style.borderColor = 'var(--accent)'
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = 'var(--bg-hover)'
+                                            e.currentTarget.style.borderColor = 'var(--border-color)'
+                                        }}
                                     >
                                         {formatModelName(selectedOllamaModel || modelName)}
                                     </button>
@@ -334,13 +409,29 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore }) => {
                                     )}
                                 </div>
                             ) : engineStore?.currentEngine === 'webllm' ? (
-                                <span className="model-label" title="WebLLM">
+                                <div className="model-status-btn" style={{
+                                    padding: '6px 10px',
+                                    background: 'var(--bg-hover)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: 500,
+                                    color: 'var(--text-primary)'
+                                }}>
                                     {engineStore.selectedModel ? formatModelName(engineStore.selectedModel.split('/').pop() || '') : 'WebLLM'}
-                                </span>
+                                </div>
                             ) : engineStore?.currentEngine === 'openai' ? (
-                                <span className="model-label" title="Cloud API">
+                                <div className="model-status-btn" style={{
+                                    padding: '6px 10px',
+                                    background: 'var(--bg-hover)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: 500,
+                                    color: 'var(--text-primary)'
+                                }}>
                                     {engineStore.cloudConfig?.modelName || 'Cloud API'}
-                                </span>
+                                </div>
                             ) : (
                                 <span className="model-label">{formatModelName(modelName)}</span>
                             )
@@ -358,22 +449,29 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore }) => {
                                     </div>
                                 )}
                             </div>
-                        ) : status === 'error' ? (
-                            <div className="error-actions">
-                                {engineStore?.currentEngine === 'webllm' ? (
-                                    <button className="retry-btn warning" onClick={redownloadModel} title={t('chat.redownloadHint', '重新下载模型以修复文件损坏')}>
-                                        <Trash2 size={12} />
-                                        {t('chat.redownload', '重新下载模型')}
-                                    </button>
-                                ) : (
-                                    <button className="retry-btn" onClick={retryDetection}>
-                                        {t('chat.retry')}
-                                    </button>
-                                )}
+                        ) : status === 'error' ||
+                            (engineStore?.currentEngine === 'ollama' && !engineStore.ollamaAvailable) ||
+                            (engineStore?.currentEngine === 'openai' && engineStore.cloudApiStatus !== 'success') ? (
+                            <div className={`status-btn ${(engineStore?.currentEngine === 'openai' && engineStore.cloudApiStatus === 'error') ||
+                                (engineStore?.currentEngine === 'ollama' && !engineStore.ollamaAvailable)
+                                ? 'error'
+                                : engineStore?.currentEngine === 'openai' && engineStore.cloudApiStatus === 'untested'
+                                    ? 'untested'
+                                    : 'disconnected'
+                                }`} style={{
+                                    padding: '4px 12px',
+                                    fontSize: '12px',
+                                    cursor: 'default',
+                                    pointerEvents: 'none'
+                                }}>
+                                <span className="status-indicator" />
+                                <span className="status-text">
+                                    {engineStore?.currentEngine === 'openai'
+                                        ? (engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试')
+                                        : '连接失败'}
+                                </span>
                             </div>
-                        ) : (
-                            <span className="model-label">{t('chat.detecting')}</span>
-                        )}
+                        ) : null}
                     </div>
                 </div>
 
