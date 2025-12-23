@@ -1,1 +1,62 @@
-"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("fs",{getVaultPath:()=>e.ipcRenderer.invoke("fs:getVaultPath"),setVaultPath:r=>e.ipcRenderer.invoke("fs:setVaultPath",r),selectDirectory:()=>e.ipcRenderer.invoke("fs:selectDirectory"),disconnectVault:()=>e.ipcRenderer.invoke("fs:disconnectVault"),readDirectory:r=>e.ipcRenderer.invoke("fs:readDirectory",r),readFile:r=>e.ipcRenderer.invoke("fs:readFile",r),writeFile:(r,n)=>e.ipcRenderer.invoke("fs:writeFile",r,n),createFile:r=>e.ipcRenderer.invoke("fs:createFile",r),createDirectory:r=>e.ipcRenderer.invoke("fs:createDirectory",r),deleteFile:r=>e.ipcRenderer.invoke("fs:deleteFile",r),renameFile:(r,n)=>e.ipcRenderer.invoke("fs:renameFile",r,n),watch:r=>e.ipcRenderer.invoke("fs:watch",r),unwatch:()=>e.ipcRenderer.invoke("fs:unwatch"),onFileChange:r=>{const n=(o,i)=>{r(i)};return e.ipcRenderer.on("fs:change",n),()=>{e.ipcRenderer.removeListener("fs:change",n)}}});e.contextBridge.exposeInMainWorld("chat",{load:r=>e.ipcRenderer.invoke("chat:load",r),save:(r,n)=>e.ipcRenderer.invoke("chat:save",r,n)});e.contextBridge.exposeInMainWorld("platform",{os:process.platform,isMac:process.platform==="darwin",isWindows:process.platform==="win32"});e.contextBridge.exposeInMainWorld("appWindow",{setWidth:r=>e.ipcRenderer.invoke("window:setWidth",r)});e.contextBridge.exposeInMainWorld("app",{getVersion:()=>e.ipcRenderer.invoke("app:getVersion")});e.contextBridge.exposeInMainWorld("settings",{get:()=>e.ipcRenderer.invoke("settings:get"),set:(r,n)=>e.ipcRenderer.invoke("settings:set",r,n),reset:()=>e.ipcRenderer.invoke("settings:reset")});e.contextBridge.exposeInMainWorld("ollama",{openModelsFolder:()=>e.ipcRenderer.invoke("ollama:openModelsFolder"),listModels:()=>e.ipcRenderer.invoke("ollama:listModels"),pullModel:r=>e.ipcRenderer.invoke("ollama:pullModel",r),deleteModel:r=>e.ipcRenderer.invoke("ollama:deleteModel",r),cancelPull:r=>e.ipcRenderer.invoke("ollama:cancelPull",r),onPullProgress:r=>{const n=(o,i)=>r(i);return e.ipcRenderer.on("ollama:pullProgress",n),()=>e.ipcRenderer.removeListener("ollama:pullProgress",n)}});console.log("🔗 Preload 脚本已加载");
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("fs", {
+  // Vault 路径管理
+  getVaultPath: () => electron.ipcRenderer.invoke("fs:getVaultPath"),
+  setVaultPath: (path) => electron.ipcRenderer.invoke("fs:setVaultPath", path),
+  selectDirectory: () => electron.ipcRenderer.invoke("fs:selectDirectory"),
+  disconnectVault: () => electron.ipcRenderer.invoke("fs:disconnectVault"),
+  // 文件操作
+  readDirectory: (path) => electron.ipcRenderer.invoke("fs:readDirectory", path),
+  readFile: (path) => electron.ipcRenderer.invoke("fs:readFile", path),
+  writeFile: (path, content) => electron.ipcRenderer.invoke("fs:writeFile", path, content),
+  createFile: (path) => electron.ipcRenderer.invoke("fs:createFile", path),
+  createDirectory: (path) => electron.ipcRenderer.invoke("fs:createDirectory", path),
+  deleteFile: (path) => electron.ipcRenderer.invoke("fs:deleteFile", path),
+  renameFile: (oldPath, newPath) => electron.ipcRenderer.invoke("fs:renameFile", oldPath, newPath),
+  // 文件监听
+  watch: (path) => electron.ipcRenderer.invoke("fs:watch", path),
+  unwatch: () => electron.ipcRenderer.invoke("fs:unwatch"),
+  onFileChange: (callback) => {
+    const handler = (_event, data) => {
+      callback(data);
+    };
+    electron.ipcRenderer.on("fs:change", handler);
+    return () => {
+      electron.ipcRenderer.removeListener("fs:change", handler);
+    };
+  }
+});
+electron.contextBridge.exposeInMainWorld("chat", {
+  load: (filePath) => electron.ipcRenderer.invoke("chat:load", filePath),
+  save: (filePath, messages) => electron.ipcRenderer.invoke("chat:save", filePath, messages)
+});
+electron.contextBridge.exposeInMainWorld("platform", {
+  os: process.platform,
+  isMac: process.platform === "darwin",
+  isWindows: process.platform === "win32"
+});
+electron.contextBridge.exposeInMainWorld("appWindow", {
+  setWidth: (width) => electron.ipcRenderer.invoke("window:setWidth", width)
+});
+electron.contextBridge.exposeInMainWorld("app", {
+  getVersion: () => electron.ipcRenderer.invoke("app:getVersion")
+});
+electron.contextBridge.exposeInMainWorld("settings", {
+  get: () => electron.ipcRenderer.invoke("settings:get"),
+  set: (key, value) => electron.ipcRenderer.invoke("settings:set", key, value),
+  reset: () => electron.ipcRenderer.invoke("settings:reset")
+});
+electron.contextBridge.exposeInMainWorld("ollama", {
+  openModelsFolder: () => electron.ipcRenderer.invoke("ollama:openModelsFolder"),
+  listModels: () => electron.ipcRenderer.invoke("ollama:listModels"),
+  pullModel: (modelName) => electron.ipcRenderer.invoke("ollama:pullModel", modelName),
+  deleteModel: (modelName) => electron.ipcRenderer.invoke("ollama:deleteModel", modelName),
+  cancelPull: (modelName) => electron.ipcRenderer.invoke("ollama:cancelPull", modelName),
+  onPullProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    electron.ipcRenderer.on("ollama:pullProgress", handler);
+    return () => electron.ipcRenderer.removeListener("ollama:pullProgress", handler);
+  }
+});
+console.log("🔗 Preload 脚本已加载");

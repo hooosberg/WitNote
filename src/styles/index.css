@@ -1751,6 +1751,44 @@ select:focus {
   gap: 6px;
 }
 
+/* 引擎警告样式 */
+.engine-warning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ff6b6b;
+  font-size: 11px;
+}
+
+.engine-warning .retry-btn {
+  background: transparent;
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.engine-warning .retry-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+/* 引擎加载中样式 */
+.engine-loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.engine-loading .load-progress {
+  color: var(--accent-color);
+  font-weight: 500;
+}
+
 /* 模型选择区 - 居中 */
 .chat-model-info {
   display: flex;
@@ -3972,4 +4010,84 @@ select:focus {
   color: var(--text-tertiary);
   font-size: 14px;
   letter-spacing: 1px;
+}
+
+/* ============ 引擎选择器 ============ */
+.engine-selector-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  margin: 20px 20px 30px 20px;
+  padding: 0 10px;
+}
+
+/* 连接线 */
+.engine-selector-line {
+  position: absolute;
+  top: 25px;
+  left: 50px;
+  right: 50px;
+  height: 2px;
+  background-color: var(--border-color);
+  z-index: 0;
+}
+
+.engine-selector-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 90px;
+  padding: 0;
+}
+
+.engine-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--bg-main);
+  /* 必须不透明以遮挡线条 */
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-tertiary);
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+.engine-selector-item:hover .engine-circle {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  transform: translateY(-2px);
+  background-color: var(--bg-hover);
+}
+
+.engine-selector-item.active .engine-circle {
+  background-color: var(--bg-main);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  box-shadow: 0 0 0 4px var(--bg-active);
+  transform: scale(1.05);
+}
+
+.engine-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color 0.2s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.engine-selector-item.active .engine-label {
+  color: var(--text-primary);
+  font-weight: 600;
 }

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Download, Trash2, Settings } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Download, Trash2, Settings, Bot, Server, Cloud, AlertCircle } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { UseLLMReturn } from '../hooks/useLLM'
+import { UseEngineStoreReturn } from '../store/engineStore'
 import { marked } from 'marked'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
@@ -49,10 +50,11 @@ const renderLatex = (html: string): string => {
 
 interface ChatPanelProps {
     llm: UseLLMReturn
+    engineStore?: UseEngineStoreReturn
     openSettings?: () => void
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSettings }) => {
     const { t } = useTranslation()
 
     const [inputValue, setInputValue] = useState('')
@@ -73,6 +75,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
         retryDetection,
         pullModel,
         deleteModel,
+        redownloadModel,
         cancelPull,
         downloadProgressMap
     } = llm
@@ -165,14 +168,41 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
                 {/* 状态栏 */}
                 <div className="chat-status-bar">
                     <div className="chat-model-info">
+                        {/* 引擎图标 */}
                         <div className={`ai-status-indicator ${isGenerating || status === 'loading' ? 'active' : 'idle'}`}>
-                            <span className="indicator-dot"></span>
+                            {engineStore?.currentEngine === 'webllm' && <Bot size={12} />}
+                            {engineStore?.currentEngine === 'ollama' && <Server size={12} />}
+                            {engineStore?.currentEngine === 'openai' && <Cloud size={12} />}
+                            {!engineStore && <span className="indicator-dot"></span>}
                             <span className="indicator-glow"></span>
                         </div>
+
+                        {/* Ollama 离线警告 */}
+                        {engineStore?.currentEngine === 'ollama' && !engineStore.ollamaAvailable && status !== 'ready' && (
+                            <div className="engine-warning">
+                                <AlertCircle size={12} />
+                                <span>{t('chat.ollamaOffline', 'Ollama 未运行')}</span>
+                                <button className="retry-btn" onClick={retryDetection}>
+                                    {t('chat.retry', '重试')}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* WebLLM 加载中 */}
+                        {engineStore?.currentEngine === 'webllm' && engineStore.webllmLoading && (
+                            <div className="engine-loading">
+                                <span>{t('chat.loading', '加载中')}...</span>
+                                {loadProgress && (
+                                    <span className="load-progress">{loadProgress.progress}%</span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 正常状态 */}
                         {status === 'ready' ? (
                             isGenerating ? (
                                 <span className="model-label thinking">{t('chat.thinking')}</span>
-                            ) : ollamaModels.length >= 1 ? (
+                            ) : ollamaModels.length >= 1 && engineStore?.currentEngine === 'ollama' ? (
                                 <div className="webllm-model-selector" ref={menuRef}>
                                     <button
                                         className="model-label clickable"
@@ -316,6 +346,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
                                         document.body
                                     )}
                                 </div>
+                            ) : engineStore?.currentEngine === 'webllm' ? (
+                                <span className="model-label" title="WebLLM">
+                                    {engineStore.selectedModel ? formatModelName(engineStore.selectedModel.split('/').pop() || '') : 'WebLLM'}
+                                </span>
+                            ) : engineStore?.currentEngine === 'openai' ? (
+                                <span className="model-label" title="Cloud API">
+                                    {engineStore.cloudConfig?.modelName || 'Cloud API'}
+                                </span>
                             ) : (
                                 <span className="model-label">{formatModelName(modelName)}</span>
                             )
@@ -334,9 +372,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, openSettings }) => {
                                 )}
                             </div>
                         ) : status === 'error' ? (
-                            <button className="retry-btn" onClick={retryDetection}>
-                                {t('chat.retry')}
-                            </button>
+                            <div className="error-actions">
+                                {engineStore?.currentEngine === 'webllm' ? (
+                                    <button className="retry-btn warning" onClick={redownloadModel} title={t('chat.redownloadHint', '重新下载模型以修复文件损坏')}>
+                                        <Trash2 size={12} />
+                                        {t('chat.redownload', '重新下载模型')}
+                                    </button>
+                                ) : (
+                                    <button className="retry-btn" onClick={retryDetection}>
+                                        {t('chat.retry')}
+                                    </button>
+                                )}
+                            </div>
                         ) : (
                             <span className="model-label">{t('chat.detecting')}</span>
                         )}

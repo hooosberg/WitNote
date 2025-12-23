@@ -1,6 +1,6 @@
 /**
  * useLLM Hook
- * Ollama-only 架构：简化的本地AI引擎管理
+ * 三引擎适配器：WebLLM / Ollama / Cloud API 统一接口
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -14,6 +14,7 @@ import {
     RECOMMENDED_MODELS
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
+import { UseEngineStoreReturn } from '../store/engineStore';
 import { useSettings } from './useSettings';
 import { getCurrentLanguage } from '../i18n';
 
@@ -60,6 +61,7 @@ export interface UseLLMReturn {
     refreshModels: () => Promise<void>;
     pullModel: (modelName: string) => Promise<void>;
     deleteModel: (modelName: string) => Promise<void>;
+    redownloadModel: () => Promise<void>;
     cancelPull: (modelName?: string) => Promise<void>;
     downloadProgressMap: Map<string, { output: string; progress: number }>;
 }
@@ -72,7 +74,7 @@ function generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export function useLLM(): UseLLMReturn {
+export function useLLM(engineStore: UseEngineStoreReturn): UseLLMReturn {
     const { settings } = useSettings();
     // 如果用户设置了自定义提示词则使用，否则使用内置默认提示词
     const userSystemPrompt = settings.systemPrompt;
@@ -107,6 +109,50 @@ export function useLLM(): UseLLMReturn {
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
+
+    // 动态状态映射（根据引擎类型）
+    useEffect(() => {
+        switch (engineStore.currentEngine) {
+            case 'webllm':
+                if (engineStore.error) {
+                    setStatus('error');
+                    setErrorMessage(engineStore.error);
+                } else {
+                    setStatus(engineStore.webllmReady ? 'ready' : engineStore.webllmLoading ? 'loading' : 'detecting');
+                    setErrorMessage(null);
+                }
+                setModelName(engineStore.selectedModel);
+                // Map WebLLM progress to LoadProgress format
+                setLoadProgress(engineStore.webllmProgress ? {
+                    progress: engineStore.webllmProgress.progress,
+                    text: engineStore.webllmProgress.text,
+                    stage: 'download' // WebLLM is always downloading/loading
+                } : null);
+                break;
+            case 'ollama':
+                setStatus(engineStore.ollamaAvailable ? 'ready' : 'detecting');
+                setModelName(engineStore.selectedModel);
+                setOllamaModels(engineStore.ollamaModels);
+                setLoadProgress(null);
+                break;
+            case 'openai':
+                setStatus(engineStore.cloudApiStatus === 'success' ? 'ready' : 'detecting');
+                setModelName(engineStore.cloudConfig.modelName);
+                setLoadProgress(null);
+                break;
+        }
+    }, [
+        engineStore.currentEngine,
+        engineStore.webllmReady,
+        engineStore.webllmLoading,
+        engineStore.webllmProgress,
+        engineStore.error, // Listen to engine error changes
+        engineStore.ollamaAvailable,
+        engineStore.ollamaModels,
+        engineStore.selectedModel,
+        engineStore.cloudApiStatus,
+        engineStore.cloudConfig.modelName
+    ]);
 
     // 监听下载进度 - 按模型名分别追踪进度
     useEffect(() => {
@@ -279,8 +325,17 @@ export function useLLM(): UseLLMReturn {
      * 初始化 Ollama
      */
     const initializeOllama = useCallback(async (models: OllamaModel[]) => {
-        console.log('🟢 初始化 Ollama...');
+        console.log('🟢 初始化 Ollama，模型数:', models.length);
         setOllamaModels(models);
+
+        // 如果没有模型，直接设置为 ready 状态让用户下载模型
+        if (models.length === 0) {
+            console.log('⚠️ Ollama 服务在线但没有模型，用户可以下载模型');
+            setSelectedOllamaModel('');
+            setModelName('');
+            setStatus('ready'); // 允许用户下载模型
+            return;
+        }
 
         // 从 localStorage 恢复已保存的模型选择，如果不存在或无效则使用第一个模型
         const savedModel = localStorage.getItem('zen-selected-ollama-model');
@@ -305,50 +360,94 @@ export function useLLM(): UseLLMReturn {
     }, []);
 
     /**
-     * 检测并初始化
+     * 检测并初始化（根据当前选择的引擎）
      */
     const detectAndInitialize = useCallback(async () => {
-        console.log('🔍 开始检测 Ollama 引擎...');
-        setStatus('detecting');
+        console.log(`🔍 开始检测引擎: ${engineStore.currentEngine}`);
         setLoadProgress(null);
         setErrorMessage(null);
 
-        // 尝试 HTTP 检测
-        const httpModels = await OllamaService.detect();
-
-        // 尝试 IPC 获取模型列表
-        let models: OllamaModel[] = [];
-        if (window.ollama) {
-            try {
-                const listResult = await window.ollama.listModels();
-                if (listResult && listResult.success && Array.isArray(listResult.models)) {
-                    models = listResult.models.map((m: any) => ({
-                        name: m.name,
-                        size: 0,
-                        digest: m.id,
-                        modified_at: m.modified,
-                        formattedSize: m.size
-                    }));
+        switch (engineStore.currentEngine) {
+            case 'webllm':
+                // WebLLM 由 engineStore 自动管理，这里只更新状态
+                if (engineStore.webllmReady) {
+                    setStatus('ready');
+                    console.log('✅ WebLLM 已就绪');
+                } else if (engineStore.webllmLoading) {
+                    setStatus('loading');
+                    console.log('⏳ WebLLM 正在加载...');
+                } else {
+                    // 触发 WebLLM 初始化
+                    setStatus('detecting');
+                    console.log('🚀 触发 WebLLM 初始化');
+                    await engineStore.initWebLLM();
                 }
-            } catch (e) {
-                console.log('IPC listModels 失败:', e);
-            }
-        }
+                break;
 
-        // 合并结果
-        if (models.length === 0 && httpModels) {
-            models = httpModels;
-        }
+            case 'ollama':
+                // Ollama 检测逻辑
+                setStatus('detecting');
+                let ollamaOnline = false;
+                const httpModels = await OllamaService.detect();
+                if (httpModels !== null) {
+                    ollamaOnline = true;
+                    console.log('✅ Ollama HTTP 检测成功，发现模型:', httpModels.length);
+                }
 
-        if (models.length > 0) {
-            console.log('✅ Ollama 检测成功，模型数:', models.length);
-            await initializeOllama(models);
-        } else {
-            console.log('⚠️ 未检测到 Ollama 服务或模型');
-            setErrorMessage('未检测到 Ollama 服务。请确保应用已正确启动。');
-            setStatus('error');
+                let models: OllamaModel[] = [];
+                if (window.ollama) {
+                    try {
+                        const listResult = await window.ollama.listModels();
+                        if (listResult && listResult.success) {
+                            ollamaOnline = true;
+                            if (Array.isArray(listResult.models)) {
+                                models = listResult.models.map((m: any) => ({
+                                    name: m.name,
+                                    size: 0,
+                                    digest: m.id,
+                                    modified_at: m.modified,
+                                    formattedSize: m.size
+                                }));
+                            }
+                        }
+                    } catch (e) {
+                        console.log('IPC listModels 失败:', e);
+                    }
+                }
+
+                if (models.length === 0 && httpModels && httpModels.length > 0) {
+                    models = httpModels;
+                }
+
+                if (ollamaOnline) {
+                    console.log('✅ Ollama 服务在线，模型数:', models.length);
+                    await initializeOllama(models);
+                } else {
+                    console.log('⚠️ 未检测到 Ollama 服务');
+                    setErrorMessage('未检测到 Ollama 服务。请确保应用已正确启动。');
+                    setStatus('error');
+                }
+                break;
+
+            case 'openai':
+                // Cloud API 检测逻辑
+                if (engineStore.cloudConfig.apiKey) {
+                    if (engineStore.cloudApiStatus === 'success') {
+                        setStatus('ready');
+                        console.log('✅ Cloud API 已配置并验证');
+                    } else {
+                        setStatus('detecting');
+                        console.log('🔄 测试 Cloud API 连接...');
+                        await engineStore.testCloudApi();
+                    }
+                } else {
+                    setStatus('error');
+                    setErrorMessage('请先配置 API Key');
+                    console.log('⚠️ Cloud API 未配置');
+                }
+                break;
         }
-    }, [initializeOllama]);
+    }, [engineStore, initializeOllama]);
 
     /**
      * 获取系统提示词
@@ -475,14 +574,44 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         const searchResult = searchFiles(content.trim());
 
         let systemContent = getSystemPrompt();
-        if (contextInfo) systemContent += '\n\n' + contextInfo;
-        if (searchResult) systemContent += '\n\n' + searchResult;
+
+        // 对于 Cloud API (如 ChatGPT)，Context 放在 System Prompt 中效果较好
+        // 对于本地小模型 (WebLLM/Ollama)，放在 User Prompt 中往往被注视得更多
+        const isSmallModel = engineStore.currentEngine === 'webllm' || engineStore.currentEngine === 'ollama';
+
+        if (!isSmallModel) {
+            if (contextInfo) systemContent += '\n\n' + contextInfo;
+            if (searchResult) systemContent += '\n\n' + searchResult;
+        }
+
         llmMessages.push({ role: 'system', content: systemContent });
 
         messages.forEach(m => {
             llmMessages.push({ role: m.role, content: m.content });
         });
-        llmMessages.push({ role: 'user', content: content.trim() });
+
+        // 处理最后一条用户消息
+        let finalUserContent = content.trim();
+        if (isSmallModel) {
+            // 将上下文前置到用户问题之前
+            const parts = [];
+            if (contextInfo) parts.push(contextInfo);
+            if (searchResult) parts.push(searchResult);
+            parts.push(`【用户问题】${finalUserContent}`);
+
+            if (parts.length > 1) {
+                finalUserContent = parts.join('\n\n----------------\n\n');
+            }
+        }
+
+        llmMessages.push({ role: 'user', content: finalUserContent });
+
+        console.log('🤖 --- LLM Debug Info ---');
+        console.log('Engine:', engineStore.currentEngine);
+        console.log('Context Info:', contextInfo ? 'Present' : 'None');
+        console.log('Final Input Length:', finalUserContent.length);
+        console.log('Full Prompt:', JSON.stringify(llmMessages, null, 2));
+        console.log('-------------------------');
 
         const onToken = (token: string) => {
             setMessages(prev => {
@@ -536,15 +665,117 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         };
 
         try {
-            if (ollamaServiceRef.current) {
-                await ollamaServiceRef.current.streamChat(llmMessages, onToken, onComplete, onError);
-            } else {
-                throw new Error('Ollama 服务未初始化');
+            // 根据当前引擎调度
+            switch (engineStore.currentEngine) {
+                case 'webllm': {
+                    // WebLLM 引擎 - 尝试重新初始化以避免 BindingError
+                    const engine = engineStore.getEngine();
+                    if (!engine || !engineStore.webllmReady) {
+                        throw new Error('WebLLM 引擎未就绪');
+                    }
+                    try {
+                        // 获取最新用户消息
+                        const lastUserMessage = llmMessages.filter(m => m.role === 'user').pop();
+                        if (!lastUserMessage) {
+                            throw new Error('没有用户消息');
+                        }
+
+
+                        // 修正：使用构建好的完整消息历史 (包含 injected context)，而不是只发送单条 prompt
+                        // 这确保模型能看到文件上下文
+                        // 同时调用 resetChat() 确保状态干净 (或者让 engine 自动管理，WebLLM 通常会自动处理)
+                        // 但为了安全，如果 engine 是 stateful 的，我们应该传递完整 history 并让它处理
+
+                        // 使用 forwardTokensAndSample 或 chat.completions
+                        let response = '';
+                        try {
+                            // 先尝试流式生成
+                            const chunks = await engine.chat.completions.create({
+                                messages: llmMessages, // <--- 使用完整历史，包含 system prompt 和 context
+                                stream: false,
+                                max_tokens: 512
+                            });
+                            response = chunks.choices?.[0]?.message?.content || '';
+                        } catch (chatError) {
+                            // 如果 chat API 失败，尝试直接 generate
+                            console.warn('chat.completions 失败，尝试 generate:', chatError);
+                            if (engine.generate) {
+                                response = await engine.generate(String(prompt));
+                            } else {
+                                throw chatError;
+                            }
+                        }
+
+                        onToken(response);
+                        onComplete();
+                    } catch (webllmError) {
+                        const errorMsg = webllmError instanceof Error ? webllmError.message : String(webllmError);
+                        console.error('WebLLM 内部错误:', webllmError);
+
+                        // 检测"模型未加载"错误并提示重新初始化
+                        if (errorMsg.includes('Model not loaded') || errorMsg.includes('not loaded before')) {
+                            throw new Error('WebLLM 内部错误，请刷新页面或尝试重新加载模型');
+                        }
+
+
+                        // BindingError 是 MLC 库的已知问题
+
+                        // BindingError 是 MLC 库的已知问题
+                        if (errorMsg.includes('BindingError') || errorMsg.includes('VectorInt')) {
+                            console.log('🔄 检测到 WebLLM BindingError，报告严重错误...');
+                            const friendlyError = 'WebLLM 内部错误，请尝试点击"重新下载模型"';
+
+                            // 报告错误给 store，这会更新全局状态
+                            engineStore.reportError(friendlyError);
+                            setErrorMessage(friendlyError);
+
+                            // 停止生成状态
+                            setIsGenerating(false);
+
+                            // 更新最后一条消息显示错误和建议
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const lastMsg = updated[updated.length - 1];
+                                if (lastMsg && lastMsg.role === 'assistant') {
+                                    lastMsg.content = `❌ WebLLM 内部错误: ${errorMsg}\n\n建议尝试重新下载模型。`;
+                                    lastMsg.isStreaming = false;
+                                }
+                                return updated;
+                            });
+
+                            throw new Error(friendlyError);
+                        }
+                        throw new Error(`WebLLM 错误: ${errorMsg}`);
+                    }
+                    break;
+                }
+
+                case 'ollama': {
+                    // Ollama 引擎
+                    if (!ollamaServiceRef.current) {
+                        throw new Error('Ollama 服务未初始化');
+                    }
+                    await ollamaServiceRef.current.streamChat(llmMessages, onToken, onComplete, onError);
+                    break;
+                }
+
+                case 'openai': {
+                    // Cloud API 引擎 - 使用 callbacks 对象
+                    const engine = engineStore.getEngine();
+                    if (!engine || typeof engine.streamChat !== 'function') {
+                        throw new Error('Cloud API 引擎未初始化');
+                    }
+                    await engine.streamChat(llmMessages, { onToken, onComplete, onError });
+                    break;
+                }
+
+                default:
+                    throw new Error(`未知引擎类型: ${engineStore.currentEngine}`);
             }
         } catch (error) {
             onError(error instanceof Error ? error : new Error('未知错误'));
         }
-    }, [messages, isGenerating, status, activeChatPath, buildContextInfo, getSystemPrompt, searchFiles]);
+    }, [messages, isGenerating, status, activeChatPath, buildContextInfo, getSystemPrompt, searchFiles, engineStore]);
 
     /**
      * 加载聊天历史
@@ -574,11 +805,43 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
      * 中止生成
      */
     const abortGeneration = useCallback(() => {
-        if (ollamaServiceRef.current) {
-            ollamaServiceRef.current.abort();
-        }
         setIsGenerating(false);
-    }, []);
+        setMessages(prev => {
+            const updated = [...prev];
+            const lastMsg = updated[updated.length - 1];
+            if (lastMsg && lastMsg.role === 'assistant') {
+                lastMsg.isStreaming = false;
+                if (!lastMsg.content) {
+                    lastMsg.content = '(已取消)';
+                }
+            }
+            return updated;
+        });
+
+        // 根据当前引擎调用不同的中止方法
+        switch (engineStore.currentEngine) {
+            case 'webllm': {
+                const engine = engineStore.getEngine();
+                if (engine && engine.interruptGenerate) {
+                    engine.interruptGenerate();
+                }
+                break;
+            }
+            case 'ollama': {
+                if (ollamaServiceRef.current) {
+                    ollamaServiceRef.current.abort();
+                }
+                break;
+            }
+            case 'openai': {
+                const engine = engineStore.getEngine();
+                if (engine && typeof engine.abort === 'function') {
+                    engine.abort();
+                }
+                break;
+            }
+        }
+    }, [engineStore]);
 
     /**
      * 清空消息
@@ -586,6 +849,26 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
     const clearMessages = useCallback(() => {
         setMessages([]);
     }, []);
+
+    /**
+     * 重新下载当前 WebLLM 模型
+     */
+    const redownloadModel = useCallback(async () => {
+        if (engineStore.currentEngine !== 'webllm' || !engineStore.selectedModel) return;
+
+        console.log('🔄 开始重新下载模型:', engineStore.selectedModel);
+
+        try {
+            // 1. 删除缓存
+            await engineStore.deleteWebLLMModel(engineStore.selectedModel);
+
+            // 2. 重新初始化（会触发下载）
+            await engineStore.initWebLLM(engineStore.selectedModel);
+        } catch (error) {
+            console.error('重新下载失败:', error);
+            setErrorMessage('重新下载失败: ' + (error instanceof Error ? error.message : String(error)));
+        }
+    }, [engineStore]);
 
     /**
      * 重新检测
@@ -630,10 +913,12 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         setMessages(prev => [...prev, newMessage]);
     }, []);
 
-    // 启动时检测
+    // 启动时检测 - 只在组件挂载和引擎切换时执行
+    // 移除 hasInitializedRef 检查，确保每次切换引擎都重新检测
     useEffect(() => {
         detectAndInitialize();
-    }, [detectAndInitialize]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [engineStore.currentEngine]);
 
     return {
         status,
@@ -664,6 +949,7 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         refreshModels,
         pullModel,
         deleteModel,
+        redownloadModel,
         cancelPull,
         downloadProgressMap
     };

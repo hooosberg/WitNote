@@ -30,6 +30,7 @@ import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import { useFolderOrder } from './hooks/useFolderOrder'
 import { useSettings } from './hooks/useSettings'
+import { useEngineStore } from './store/engineStore'
 import './styles/index.css'
 
 // 颜色配置 - 红黄绿蓝
@@ -54,7 +55,8 @@ const generateFileName = (format: 'txt' | 'md' = 'md'): string => {
 const AppContent: React.FC = () => {
     const { t, i18n } = useTranslation()
     const fileSystem = useFileSystem()
-    const llm = useLLM()
+    const engineStore = useEngineStore()
+    const llm = useLLM(engineStore)
     const { } = useToast()
     const folderOrder = useFolderOrder()
     const { settings } = useSettings()
@@ -603,6 +605,7 @@ const AppContent: React.FC = () => {
                 onClose={() => setShowSettings(false)}
                 llm={llm}
                 defaultTab={settingsDefaultTab}
+                engineStore={engineStore}
             />
 
             {/* 可调整三栏布局 */}
@@ -968,7 +971,7 @@ const AppContent: React.FC = () => {
                     !rightCollapsed && (
                         <>
                             <Panel defaultSize={25} minSize={25} maxSize={25} className="panel-chat">
-                                <ChatPanel llm={llm} openSettings={() => openSettingsPanel('ai')} />
+                                <ChatPanel llm={llm} engineStore={engineStore} openSettings={() => openSettingsPanel('ai')} />
                             </Panel>
                         </>
                     )

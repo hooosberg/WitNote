@@ -17,14 +17,14 @@ import {
     Loader2,
     RotateCcw,
     Trash2,
-    Check,
-    Download,
-    FolderOpen
+    Check
 } from 'lucide-react';
 import { useSettings, AppSettings } from '../hooks/useSettings';
 import { changeLanguage, getCurrentLanguage, LanguageCode } from '../i18n';
 import { UseLLMReturn } from '../hooks/useLLM';
-import { ALL_MODELS, getDefaultSystemPrompt } from '../services/types';
+import { getDefaultSystemPrompt } from '../services/types';
+import { UseEngineStoreReturn } from '../store/engineStore';
+import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels';
 
 type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
 
@@ -44,9 +44,10 @@ interface SettingsProps {
     onClose: () => void;
     llm?: UseLLMReturn;
     defaultTab?: TabType;
+    engineStore: UseEngineStoreReturn;
 }
 
-export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
+export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: SettingsProps) {
     const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>(defaultTab || 'appearance');
 
@@ -230,162 +231,426 @@ export function Settings({ isOpen, onClose, llm, defaultTab }: SettingsProps) {
             case 'ai':
                 return (
                     <div className="settings-tab-content">
-                        <h3 className="settings-section-title">{t('settings.aiModelManagement')}</h3>
-                        <p className="settings-hint ollama-download-hint">
-                            {t('settings.builtInModelHint')}
-                        </p>
+                        {/* 引擎选择器 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title" style={{ textAlign: 'center', marginBottom: 0 }}>选择 AI 引擎</h3>
+                            <div className="engine-selector-container">
+                                <div className="engine-selector-line" />
 
-                        {/* 本地模型列表 */}
-                        {llm && (
-                            <>
-                                {/* 模型存储路径 */}
-                                <div className="model-storage-path">
-                                    <span className="path-label">{t('settings.modelStoragePath')}:</span>
-                                    <button
-                                        className="path-btn"
-                                        onClick={() => window.ollama?.openModelsFolder()}
-                                        title={t('settings.openFolder')}
-                                    >
-                                        <FolderOpen size={14} />
-                                        <span>{t('settings.openFolder')}</span>
-                                    </button>
-                                </div>
+                                {/* WebLLM - 实验性功能 */}
+                                <button
+                                    className={`engine-selector-item ${engineStore.currentEngine === 'webllm' ? 'active' : ''}`}
+                                    onClick={() => engineStore.setEngine('webllm')}
+                                    title="实验性功能，可能不稳定"
+                                >
+                                    <div className="engine-circle"><Bot size={24} /></div>
+                                    <span className="engine-label">WebLLM</span>
+                                    <span style={{ fontSize: '10px', color: '#ff9800', marginTop: '2px' }}>⚠️ 实验性</span>
+                                </button>
 
-                                <div className="settings-section-subtitle" style={{ marginTop: 16 }}>
-                                    <h4>{t('settings.installedModels')}</h4>
-                                </div>
-                                <div className="models-list">
-                                    {llm.ollamaModels.length === 0 ? (
-                                        <div className="empty-state">{t('settings.noModelsInstalled')}</div>
-                                    ) : (
-                                        llm.ollamaModels.map(model => {
-                                            const isBuiltIn = ALL_MODELS.find(m => m.name === model.name)?.builtIn;
-                                            return (
-                                                <div key={model.name} className="model-item">
-                                                    <div className="model-info">
-                                                        <div className="model-name">
-                                                            {model.name}
-                                                            {isBuiltIn && <span className="builtin-tag">{t('chat.builtIn')}</span>}
-                                                            {model.name === llm.selectedOllamaModel && (
-                                                                <span className="current-badge">{t('settings.currentUsing')}</span>
-                                                            )}
-                                                        </div>
-                                                        <div className="model-meta">
-                                                            {model.formattedSize || ''} • {model.modified_at?.split('T')[0]}
-                                                        </div>
-                                                    </div>
-                                                    <div className="model-actions">
-                                                        {model.name !== llm.selectedOllamaModel && (
-                                                            <button
-                                                                className="text-btn"
-                                                                onClick={() => llm.setSelectedOllamaModel(model.name)}
-                                                            >
-                                                                {t('settings.useThis')}
-                                                            </button>
-                                                        )}
-                                                        {!isBuiltIn && model.name !== llm.selectedOllamaModel && (
-                                                            <button
-                                                                className="icon-btn danger"
-                                                                onClick={() => llm.deleteModel(model.name)}
-                                                                title={t('settings.deleteModel')}
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
+                                {/* Ollama */}
+                                <button
+                                    className={`engine-selector-item ${engineStore.currentEngine === 'ollama' ? 'active' : ''}`}
+                                    onClick={() => engineStore.setEngine('ollama')}
+                                >
+                                    <div className="engine-circle">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"></path>
+                                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 0 0 5z"></path>
+                                            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                                            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                                        </svg>
+                                    </div>
+                                    <span className="engine-label">Ollama (外部)</span>
+                                </button>
 
-                                {/* 可下载模型列表 */}
-                                <h4 className="settings-section-subtitle" style={{ marginTop: 20 }}>
-                                    {t('settings.availableModels') || '可下载模型'}
-                                </h4>
-                                <div className="recommended-models">
-                                    {ALL_MODELS.map(rec => {
-                                        // 精确匹配模型名称
-                                        const isInstalled = llm.ollamaModels.some(m => m.name === rec.name);
-                                        const isDownloading = llm.downloadProgressMap.has(rec.name);
-                                        const progress = llm.downloadProgressMap.get(rec.name);
+                                {/* Cloud */}
+                                <button
+                                    className={`engine-selector-item ${engineStore.currentEngine === 'openai' ? 'active' : ''}`}
+                                    onClick={() => engineStore.setEngine('openai')}
+                                >
+                                    <div className="engine-circle">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M17.5 19c0-1.7-1.3-3-3-3h-11"></path>
+                                            <path d="M17.5 19a3.5 3.5 0 1 0 0-7h-1"></path>
+                                            <path d="M16.5 12a4.5 4.5 0 1 0-9 0"></path>
+                                        </svg>
+                                    </div>
+                                    <span className="engine-label">Cloud API</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* WebLLM 内容 */}
+                        {engineStore.currentEngine === 'webllm' && (
+                            <div className="settings-section fade-in">
+                                <div className="settings-section-header">
+                                    <h3 className="settings-section-title">内置 WebLLM 模型</h3>
+                                    <span style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontSize: '12px',
+                                        color: engineStore.webllmReady ? '#1e8e3e' : 'var(--text-secondary)'
+                                    }}>
+                                        <span style={{
+                                            width: '8px',
+                                            height: '8px',
+                                            borderRadius: '50%',
+                                            backgroundColor: engineStore.webllmReady ? '#1e8e3e' : '#ccc'
+                                        }} />
+                                        {engineStore.webllmReady ? '已就绪' : '未加载'}
+                                    </span>
+                                </div>
+                                <div className="recommended-models" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {ALL_WEBLLM_MODELS_INFO.map(modelInfo => {
+                                        const isSelected = engineStore.selectedModel === modelInfo.model_id;
+                                        const isLoading = isSelected && engineStore.webllmLoading;
+                                        const isReady = isSelected && engineStore.webllmReady;
+                                        const isCached = engineStore.webllmCachedModels.includes(modelInfo.model_id) || modelInfo.isBuiltIn;
+                                        const progressVal = engineStore.webllmProgress ? Math.round(engineStore.webllmProgress.progress * 100) : 0;
 
                                         return (
-                                            <div key={rec.name} className="model-card">
-                                                <div className="model-header">
-                                                    <div className="model-title">
-                                                        {rec.name}
-                                                        {rec.builtIn && <span className="builtin-tag">{t('chat.builtIn')}</span>}
+                                            <div key={modelInfo.model_id} className="model-card" style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '12px 16px',
+                                                background: 'var(--bg-secondary)',
+                                                borderRadius: '10px',
+                                                border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border-color)'
+                                            }}>
+                                                {/* 左侧：标题和描述 */}
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                        <span style={{ fontWeight: 600 }}>{modelInfo.displayName}</span>
+                                                        <span style={{
+                                                            fontSize: '11px',
+                                                            padding: '2px 8px',
+                                                            borderRadius: '10px',
+                                                            background: 'var(--border-color)',
+                                                            color: 'var(--text-secondary)'
+                                                        }}>
+                                                            {modelInfo.size}
+                                                        </span>
+                                                        {modelInfo.isBuiltIn && (
+                                                            <span className="builtin-tag">{t('chat.builtIn')}</span>
+                                                        )}
                                                     </div>
-                                                    <div className="model-size">{rec.size}</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                                        {modelInfo.description}
+                                                    </div>
+                                                    {/* 进度条 */}
+                                                    {isLoading && (
+                                                        <div style={{ marginTop: '8px' }}>
+                                                            <div style={{
+                                                                height: '4px',
+                                                                background: 'var(--border-color)',
+                                                                borderRadius: '2px',
+                                                                overflow: 'hidden'
+                                                            }}>
+                                                                <div style={{
+                                                                    width: `${progressVal}%`,
+                                                                    height: '100%',
+                                                                    background: 'var(--accent)',
+                                                                    transition: 'width 0.3s ease'
+                                                                }} />
+                                                            </div>
+                                                            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                                                                {progressVal}% {engineStore.webllmProgress?.text || ''}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                <div className="model-tagline-text">{t(rec.taglineKey)}</div>
-                                                <div className="model-footer">
-                                                    {isInstalled ? (
-                                                        <div className="status-installed">
-                                                            <Check size={14} />
-                                                            <span>{t('settings.installed')}</span>
-                                                        </div>
-                                                    ) : isDownloading ? (
-                                                        <div className="download-progress">
-                                                            <Loader2 size={14} className="spin" />
-                                                            <span className="progress-text">
-                                                                {progress?.progress || 0}%
-                                                            </span>
-                                                            <button
-                                                                className="cancel-btn"
-                                                                onClick={() => llm.cancelPull(rec.name)}
-                                                                title={t('models.cancelDownload')}
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
+                                                {/* 右侧：按钮 */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px' }}>
+                                                    {isLoading ? (
+                                                        <Loader2 size={18} className="spin" style={{ color: 'var(--accent)' }} />
+                                                    ) : isReady && isSelected ? (
+                                                        <span style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            color: '#1e8e3e',
+                                                            fontSize: '13px'
+                                                        }}>
+                                                            <Check size={16} /> 使用中
+                                                        </span>
                                                     ) : (
                                                         <button
                                                             className="download-btn"
-                                                            onClick={() => llm.pullModel(rec.name)}
+                                                            onClick={() => engineStore.initWebLLM(modelInfo.model_id)}
+                                                            style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
                                                         >
-                                                            <Download size={14} />
-                                                            {t('settings.download')}
+                                                            {isCached ? '使用' : '下载'}
+                                                        </button>
+                                                    )}
+
+                                                    {/* 删除按钮 */}
+                                                    {isCached && !modelInfo.isBuiltIn && !isLoading && (
+                                                        <button
+                                                            className="icon-btn"
+                                                            title="删除缓存"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (confirm(`删除 ${modelInfo.displayName} 的缓存？`)) {
+                                                                    engineStore.deleteWebLLMModel(modelInfo.model_id);
+                                                                }
+                                                            }}
+                                                            style={{ padding: '6px', color: 'var(--text-secondary)' }}
+                                                        >
+                                                            <Trash2 size={16} />
                                                         </button>
                                                     )}
                                                 </div>
                                             </div>
-                                        );
+                                        )
                                     })}
                                 </div>
+                                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                    <button
+                                        className="text-btn"
+                                        onClick={() => engineStore.refreshWebLLMCache()}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
+                                    >
+                                        <RotateCcw size={14} />
+                                        刷新状态
+                                    </button>
+                                    <button
+                                        className="text-btn danger"
+                                        onClick={() => {
+                                            if (confirm('确定要清理所有 WebLLM 缓存吗？这将删除所有已下载的模型。')) {
+                                                engineStore.clearAllWebLLMCache();
+                                            }
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
+                                    >
+                                        <Trash2 size={14} />
+                                        清理缓存
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                                {/* 下载进度条 - 显示所有正在下载的模型 */}
-                                {llm.downloadProgressMap.size > 0 && (
-                                    <div className="global-download-status">
-                                        {Array.from(llm.downloadProgressMap.entries()).map(([modelName, progressInfo]) => (
-                                            <div key={modelName} className="download-item">
-                                                <div className="status-header">
-                                                    <Loader2 size={14} className="spin" />
-                                                    <span>{t('settings.downloading') || '正在下载'} {modelName}...</span>
-                                                    <button
-                                                        className="cancel-btn"
-                                                        onClick={() => llm.cancelPull(modelName)}
-                                                        title={t('models.cancelDownload')}
-                                                    >
-                                                        {t('models.cancelDownload') || '取消'}
-                                                    </button>
-                                                </div>
-                                                <div className="download-progress-bar">
-                                                    <div
-                                                        className="download-progress-fill"
-                                                        style={{ width: `${progressInfo.progress}%` }}
-                                                    />
-                                                </div>
-                                                <div className="status-output">
-                                                    {progressInfo.progress}% - {progressInfo.output}
-                                                </div>
-                                            </div>
-                                        ))}
+                        {/* Ollama 内容 */}
+                        {engineStore.currentEngine === 'ollama' && (
+                            <div className="settings-section fade-in">
+                                <div className="settings-section-header">
+                                    <h3 className="settings-section-title">External Ollama</h3>
+                                    <span style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontSize: '12px',
+                                        color: engineStore.ollamaAvailable ? '#1e8e3e' : '#c5221f'
+                                    }}>
+                                        <span style={{
+                                            width: '8px',
+                                            height: '8px',
+                                            borderRadius: '50%',
+                                            backgroundColor: engineStore.ollamaAvailable ? '#1e8e3e' : '#c5221f'
+                                        }} />
+                                        {engineStore.ollamaAvailable ? `已连接` : '未连接'}
+                                    </span>
+                                </div>
+                                <p className="settings-hint">
+                                    请确保 <a href="https://ollama.com" target="_blank" rel="noreferrer">Ollama</a> 已在后台运行。
+                                </p>
+
+                                {/* 配置卡片 */}
+                                <div style={{
+                                    marginTop: '16px',
+                                    padding: '16px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+                                        <div style={{ flex: 2 }}>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>服务器地址</label>
+                                            <input
+                                                type="text"
+                                                className="settings-input"
+                                                value={engineStore.ollamaConfig.host}
+                                                onChange={(e) => engineStore.updateOllamaConfig({ host: e.target.value })}
+                                                placeholder="127.0.0.1"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>端口</label>
+                                            <input
+                                                type="number"
+                                                className="settings-input"
+                                                value={engineStore.ollamaConfig.port}
+                                                onChange={(e) => engineStore.updateOllamaConfig({ port: parseInt(e.target.value) || 11434 })}
+                                                placeholder="11434"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </div>
+                                        <button
+                                            className="download-btn"
+                                            onClick={() => engineStore.refreshOllamaStatus()}
+                                            style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '6px', whiteSpace: 'nowrap' }}
+                                        >
+                                            测试连接
+                                        </button>
                                     </div>
+                                </div>
+
+                                {llm && llm.status === 'ready' && (
+                                    <>
+                                        <div style={{ marginTop: 24, marginBottom: 12 }}>
+                                            <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>已安装模型</h4>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {llm.ollamaModels.length === 0 ? (
+                                                <div className="empty-state">{t('settings.noModelsInstalled')}</div>
+                                            ) : (
+                                                llm.ollamaModels.map(model => (
+                                                    <div key={model.name} style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        padding: '10px 14px',
+                                                        background: 'var(--bg-secondary)',
+                                                        borderRadius: '8px',
+                                                        border: model.name === engineStore.selectedModel ? '2px solid var(--accent)' : '1px solid var(--border-color)'
+                                                    }}>
+                                                        <div>
+                                                            <span style={{ fontWeight: 500 }}>{model.name}</span>
+                                                            {model.name === engineStore.selectedModel && (
+                                                                <span style={{
+                                                                    marginLeft: '8px',
+                                                                    fontSize: '11px',
+                                                                    padding: '2px 8px',
+                                                                    borderRadius: '10px',
+                                                                    background: 'var(--accent)',
+                                                                    color: 'white'
+                                                                }}>
+                                                                    使用中
+                                                                </span>
+                                                            )}
+                                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                                                {model.formattedSize}
+                                                            </div>
+                                                        </div>
+                                                        {model.name !== engineStore.selectedModel && (
+                                                            <button
+                                                                className="text-btn"
+                                                                onClick={() => engineStore.selectModel(model.name)}
+                                                                style={{ fontSize: '13px' }}
+                                                            >
+                                                                使用
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
                                 )}
-                            </>
+                            </div>
+                        )}
+
+                        {/* Cloud 内容 */}
+                        {engineStore.currentEngine === 'openai' && (
+                            <div className="settings-section fade-in">
+                                <div className="settings-section-header">
+                                    <h3 className="settings-section-title">Cloud API 配置</h3>
+                                    <span style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontSize: '12px',
+                                        color: engineStore.cloudApiStatus === 'success' ? '#1e8e3e' :
+                                            engineStore.cloudApiStatus === 'error' ? '#c5221f' : 'var(--text-secondary)'
+                                    }}>
+                                        <span style={{
+                                            width: '8px',
+                                            height: '8px',
+                                            borderRadius: '50%',
+                                            backgroundColor: engineStore.cloudApiStatus === 'success' ? '#1e8e3e' :
+                                                engineStore.cloudApiStatus === 'error' ? '#c5221f' : '#ccc'
+                                        }} />
+                                        {engineStore.cloudApiStatus === 'success' ? '已连接' :
+                                            engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试'}
+                                    </span>
+                                </div>
+
+                                {/* 支持平台列表 */}
+                                <p className="settings-hint" style={{ marginBottom: '12px' }}>
+                                    支持平台：OpenAI, Google Gemini, DeepSeek, Claude, Groq, Mistral, 零一万物, 通义千问 等 OpenAI 兼容接口。
+                                </p>
+
+                                <div style={{
+                                    padding: '16px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>API Key</label>
+                                            <input
+                                                type="password"
+                                                value={engineStore.cloudConfig.apiKey}
+                                                onChange={(e) => engineStore.updateCloudConfig({ apiKey: e.target.value })}
+                                                className="settings-input"
+                                                placeholder="sk-..."
+                                                style={{ width: '100%', fontFamily: 'monospace' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>Base URL</label>
+                                            <input
+                                                type="text"
+                                                value={engineStore.cloudConfig.baseUrl}
+                                                onChange={(e) => engineStore.updateCloudConfig({ baseUrl: e.target.value })}
+                                                className="settings-input"
+                                                placeholder="https://api.openai.com/v1"
+                                                style={{ width: '100%', fontFamily: 'monospace' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>模型名称</label>
+                                            <input
+                                                type="text"
+                                                value={engineStore.cloudConfig.modelName}
+                                                onChange={(e) => engineStore.updateCloudConfig({ modelName: e.target.value })}
+                                                className="settings-input"
+                                                placeholder="gpt-4o"
+                                                style={{ width: '100%', fontFamily: 'monospace' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                                        <button
+                                            className="download-btn"
+                                            onClick={() => engineStore.testCloudApi()}
+                                            style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '6px' }}
+                                        >
+                                            测试连接
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 配置指南 */}
+                                <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                    <strong>📖 配置指南</strong>
+                                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8' }}>
+                                        <li><a href="https://platform.openai.com/docs" target="_blank" rel="noreferrer">OpenAI 文档</a></li>
+                                        <li><a href="https://ai.google.dev/docs" target="_blank" rel="noreferrer">Google Gemini 文档</a> (Base URL: generativelanguage.googleapis.com/v1beta/openai/)</li>
+                                        <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noreferrer">DeepSeek 文档</a></li>
+                                    </ul>
+                                </div>
+
+                                <p className="settings-hint" style={{ fontSize: '12px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <HelpCircle size={12} /> API Key 仅保存在本地，不会上传。
+                                </p>
+                            </div>
                         )}
                     </div>
                 );
