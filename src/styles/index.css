@@ -2860,6 +2860,92 @@ select:focus {
   background: var(--accent-color);
 }
 
+/* 状态按钮 - 合并状态指示器和测试按钮 */
+.status-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.status-btn .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
+}
+
+.status-btn .status-action {
+  display: none;
+}
+
+/* 悬停时隐藏状态文字，显示操作文字 */
+.status-btn:hover .status-text {
+  display: none;
+}
+
+.status-btn:hover .status-action {
+  display: inline;
+}
+
+.status-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.status-btn:hover .status-indicator {
+  background-color: var(--accent-color) !important;
+}
+
+/* 连接状态 */
+.status-btn.connected {
+  color: #1e8e3e;
+  border-color: rgba(30, 142, 62, 0.3);
+}
+
+.status-btn.connected .status-indicator {
+  background-color: #1e8e3e;
+}
+
+/* 断开/未连接状态 */
+.status-btn.disconnected {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.status-btn.disconnected .status-indicator {
+  background-color: var(--text-tertiary);
+}
+
+/* 错误状态 */
+.status-btn.error {
+  color: #c5221f;
+  border-color: rgba(197, 34, 31, 0.3);
+}
+
+.status-btn.error .status-indicator {
+  background-color: #c5221f;
+}
+
+/* 未测试状态 */
+.status-btn.untested {
+  color: var(--text-tertiary);
+  border-color: var(--border-color);
+}
+
+.status-btn.untested .status-indicator {
+  background-color: #ccc;
+}
+
 .template-count {
   font-size: 11px;
   font-weight: 400;

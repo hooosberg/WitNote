@@ -237,15 +237,14 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="engine-selector-container">
                                 <div className="engine-selector-line" />
 
-                                {/* WebLLM - 实验性功能 */}
+                                {/* WebLLM - 本地内置 */}
                                 <button
                                     className={`engine-selector-item ${engineStore.currentEngine === 'webllm' ? 'active' : ''}`}
                                     onClick={() => engineStore.setEngine('webllm')}
-                                    title="实验性功能，可能不稳定"
+                                    title="本地内置模型"
                                 >
                                     <div className="engine-circle"><Bot size={24} /></div>
                                     <span className="engine-label">WebLLM</span>
-                                    <span style={{ fontSize: '10px', color: '#ff9800', marginTop: '2px' }}>⚠️ 实验性</span>
                                 </button>
 
                                 {/* Ollama */}
@@ -347,17 +346,27 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                                 height: '4px',
                                                                 background: 'var(--border-color)',
                                                                 borderRadius: '2px',
-                                                                overflow: 'hidden'
+                                                                overflow: 'hidden',
+                                                                minWidth: '200px'
                                                             }}>
                                                                 <div style={{
                                                                     width: `${progressVal}%`,
+                                                                    minWidth: progressVal > 0 ? '4px' : '0',
                                                                     height: '100%',
                                                                     background: 'var(--accent)',
                                                                     transition: 'width 0.3s ease'
                                                                 }} />
                                                             </div>
-                                                            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                                                                {progressVal}% {engineStore.webllmProgress?.text || ''}
+                                                            <div style={{
+                                                                fontSize: '11px',
+                                                                color: 'var(--text-secondary)',
+                                                                marginTop: '4px',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'nowrap',
+                                                                maxWidth: '300px'
+                                                            }}>
+                                                                {progressVal}% {engineStore.webllmProgress?.text || '加载中...'}
                                                             </div>
                                                         </div>
                                                     )}
@@ -408,28 +417,6 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                         )
                                     })}
                                 </div>
-                                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                    <button
-                                        className="text-btn"
-                                        onClick={() => engineStore.refreshWebLLMCache()}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
-                                    >
-                                        <RotateCcw size={14} />
-                                        刷新状态
-                                    </button>
-                                    <button
-                                        className="text-btn danger"
-                                        onClick={() => {
-                                            if (confirm('确定要清理所有 WebLLM 缓存吗？这将删除所有已下载的模型。')) {
-                                                engineStore.clearAllWebLLMCache();
-                                            }
-                                        }}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
-                                    >
-                                        <Trash2 size={14} />
-                                        清理缓存
-                                    </button>
-                                </div>
                             </div>
                         )}
 
@@ -438,21 +425,15 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">External Ollama</h3>
-                                    <span style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        fontSize: '12px',
-                                        color: engineStore.ollamaAvailable ? '#1e8e3e' : '#c5221f'
-                                    }}>
-                                        <span style={{
-                                            width: '8px',
-                                            height: '8px',
-                                            borderRadius: '50%',
-                                            backgroundColor: engineStore.ollamaAvailable ? '#1e8e3e' : '#c5221f'
-                                        }} />
-                                        {engineStore.ollamaAvailable ? `已连接` : '未连接'}
-                                    </span>
+                                    <button
+                                        className={`status-btn ${engineStore.ollamaAvailable ? 'connected' : 'disconnected'}`}
+                                        onClick={() => engineStore.refreshOllamaStatus()}
+                                        title="点击测试连接"
+                                    >
+                                        <span className="status-indicator" />
+                                        <span className="status-text">{engineStore.ollamaAvailable ? '已连接' : '未连接'}</span>
+                                        <span className="status-action">测试连接</span>
+                                    </button>
                                 </div>
                                 <p className="settings-hint">
                                     请确保 <a href="https://ollama.com" target="_blank" rel="noreferrer">Ollama</a> 已在后台运行。
@@ -489,13 +470,6 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                 style={{ width: '100%' }}
                                             />
                                         </div>
-                                        <button
-                                            className="download-btn"
-                                            onClick={() => engineStore.refreshOllamaStatus()}
-                                            style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '6px', whiteSpace: 'nowrap' }}
-                                        >
-                                            测试连接
-                                        </button>
                                     </div>
                                 </div>
 
@@ -559,24 +533,18 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">Cloud API 配置</h3>
-                                    <span style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        fontSize: '12px',
-                                        color: engineStore.cloudApiStatus === 'success' ? '#1e8e3e' :
-                                            engineStore.cloudApiStatus === 'error' ? '#c5221f' : 'var(--text-secondary)'
-                                    }}>
-                                        <span style={{
-                                            width: '8px',
-                                            height: '8px',
-                                            borderRadius: '50%',
-                                            backgroundColor: engineStore.cloudApiStatus === 'success' ? '#1e8e3e' :
-                                                engineStore.cloudApiStatus === 'error' ? '#c5221f' : '#ccc'
-                                        }} />
-                                        {engineStore.cloudApiStatus === 'success' ? '已连接' :
-                                            engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试'}
-                                    </span>
+                                    <button
+                                        className={`status-btn ${engineStore.cloudApiStatus === 'success' ? 'connected' : engineStore.cloudApiStatus === 'error' ? 'error' : 'untested'}`}
+                                        onClick={() => engineStore.testCloudApi()}
+                                        title="点击测试连接"
+                                    >
+                                        <span className="status-indicator" />
+                                        <span className="status-text">
+                                            {engineStore.cloudApiStatus === 'success' ? '已连接' :
+                                                engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试'}
+                                        </span>
+                                        <span className="status-action">测试连接</span>
+                                    </button>
                                 </div>
 
                                 {/* 支持平台列表 */}
@@ -624,16 +592,6 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                 style={{ width: '100%', fontFamily: 'monospace' }}
                                             />
                                         </div>
-                                    </div>
-
-                                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-                                        <button
-                                            className="download-btn"
-                                            onClick={() => engineStore.testCloudApi()}
-                                            style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '6px' }}
-                                        >
-                                            测试连接
-                                        </button>
                                     </div>
                                 </div>
 
