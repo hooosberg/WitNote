@@ -327,6 +327,33 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                 </span>
                                 <span className="status-action">点击设置</span>
                             </div>
+                        ) : (engineStore?.currentEngine === 'ollama' && engineStore.ollamaAvailable && ollamaModels.length === 0) ? (
+                            /* Ollama 已连接但没有模型 */
+                            <div
+                                className="status-btn untested"
+                                style={{
+                                    padding: '4px 12px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                title="点击设置"
+                                onClick={() => {
+                                    if (openSettings) {
+                                        openSettings()
+                                    }
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.opacity = '0.8'
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.opacity = '1'
+                                }}
+                            >
+                                <span className="status-indicator" />
+                                <span className="status-text">无可用模型</span>
+                                <span className="status-action">点击设置</span>
+                            </div>
                         ) : status === 'ready' ? (
                             isGenerating ? (
                                 <div className="model-status-btn" style={{
