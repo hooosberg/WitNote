@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Download, Trash2, Settings, Bot, Server, Cloud, AlertCircle } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Trash2, Settings, Bot, Server, Cloud, AlertCircle } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { UseLLMReturn } from '../hooks/useLLM'
 import { UseEngineStoreReturn } from '../store/engineStore'
@@ -73,11 +73,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         sendMessage,
         abortGeneration,
         retryDetection,
-        pullModel,
         deleteModel,
-        redownloadModel,
-        cancelPull,
-        downloadProgressMap
+        redownloadModel
     } = llm
 
     const [showModelMenu, setShowModelMenu] = useState(false)
@@ -183,7 +180,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                 <AlertCircle size={12} />
                                 <span>{t('chat.ollamaOffline', 'Ollama 未运行')}</span>
                                 <button className="retry-btn" onClick={retryDetection}>
-                                    {t('chat.retry', '重试')}
+                                    {t('chat.retry')}
                                 </button>
                             </div>
                         )}
@@ -277,59 +274,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                 })}
                                             </div>
 
-                                            {/* 推荐模型 */}
-                                            <div className="model-section">
-                                                <div className="model-section-title">{t('settings.recommendedModels')}</div>
-                                                {RECOMMENDED_MODELS.filter(rm => !ollamaModels.find(m => m.name === rm.name)).map((model) => {
-                                                    const isDownloading = downloadProgressMap.has(model.name)
-                                                    const progress = downloadProgressMap.get(model.name)
-                                                    const isExpanded = expandedModel === model.name
-                                                    return (
-                                                        <div key={model.name} className={`model-item recommended ${isExpanded ? 'expanded' : ''}`}>
-                                                            <div className="model-item-row">
-                                                                <div
-                                                                    className="model-item-left clickable"
-                                                                    onClick={() => setExpandedModel(isExpanded ? null : model.name)}
-                                                                >
-                                                                    <span className="model-item-name">{formatModelName(model.name)}</span>
-                                                                    <span className="model-item-desc">{model.size}</span>
-                                                                </div>
-                                                                <div className="model-item-right">
-                                                                    {isDownloading ? (
-                                                                        <div className="model-download-progress">
-                                                                            <div className="progress-bar">
-                                                                                <div
-                                                                                    className="progress-fill"
-                                                                                    style={{ width: `${progress?.progress || 0}%` }}
-                                                                                />
-                                                                            </div>
-                                                                            <span className="progress-text">{progress?.progress || 0}%</span>
-                                                                            <button
-                                                                                className="model-cancel-btn"
-                                                                                onClick={() => cancelPull(model.name)}
-                                                                                title={t('models.cancelDownload')}
-                                                                            >
-                                                                                <Square size={10} />
-                                                                            </button>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <button
-                                                                            className="model-download-btn"
-                                                                            onClick={() => pullModel(model.name)}
-                                                                        >
-                                                                            <Download size={12} />
-                                                                            {t('settings.download')}
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            {isExpanded && (
-                                                                <div className="model-tagline">{t(model.taglineKey)}</div>
-                                                            )}
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
+
 
                                             {/* 更多模型链接 */}
                                             <div

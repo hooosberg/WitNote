@@ -285,21 +285,15 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">内置 WebLLM 模型</h3>
-                                    <span style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        fontSize: '12px',
-                                        color: engineStore.webllmReady ? '#1e8e3e' : 'var(--text-secondary)'
-                                    }}>
-                                        <span style={{
-                                            width: '8px',
-                                            height: '8px',
-                                            borderRadius: '50%',
-                                            backgroundColor: engineStore.webllmReady ? '#1e8e3e' : '#ccc'
-                                        }} />
-                                        {engineStore.webllmReady ? '已就绪' : '未加载'}
-                                    </span>
+                                    <button
+                                        className={`status-btn ${engineStore.webllmReady ? 'connected' : 'disconnected'}`}
+                                        onClick={() => engineStore.webllmReady ? null : engineStore.initWebLLM(engineStore.selectedModel)}
+                                        title={engineStore.webllmReady ? '已就绪' : '点击加载'}
+                                    >
+                                        <span className="status-indicator" />
+                                        <span className="status-text">{engineStore.webllmReady ? '已就绪' : '未加载'}</span>
+                                        <span className="status-action">{engineStore.webllmReady ? '已就绪' : '加载模型'}</span>
+                                    </button>
                                 </div>
                                 <div className="recommended-models" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {ALL_WEBLLM_MODELS_INFO.map(modelInfo => {
@@ -512,9 +506,9 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                         </div>
                                                         {model.name !== engineStore.selectedModel && (
                                                             <button
-                                                                className="text-btn"
+                                                                className="download-btn"
                                                                 onClick={() => engineStore.selectModel(model.name)}
-                                                                style={{ fontSize: '13px' }}
+                                                                style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
                                                             >
                                                                 使用
                                                             </button>

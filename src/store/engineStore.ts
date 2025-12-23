@@ -338,6 +338,13 @@ export function useEngineStore(): UseEngineStoreReturn {
         }
     }, [state.ollamaConfig]);
 
+    // Ollama 配置改变时自动刷新状态
+    useEffect(() => {
+        if (state.currentEngine === 'ollama') {
+            refreshOllamaStatus();
+        }
+    }, [state.ollamaConfig.host, state.ollamaConfig.port]);
+
     // 更新 Cloud 配置
     const updateCloudConfig = useCallback((config: Partial<CloudConfig>) => {
         setState(prev => {
