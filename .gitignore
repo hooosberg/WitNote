@@ -58,3 +58,4 @@ src/pic/智简icon.psd
 # 宣传截图和设计素材（仅排除 PSD 原始文件）
 src/pic/witnote 宣传截图/海报设计.psd
 src/pic/logo/苹果商店/
+*.psd

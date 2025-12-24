@@ -44,7 +44,7 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ---
 
-## ✨ Features (v1.2.1)
+## ✨ Features (v1.2.3)
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
 - 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Built-in Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
@@ -103,7 +103,7 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 > This app is now **Apple Notarized**! No more "unverified developer" warnings!
 >
 > 😅 *~~The developer bravely took out a loan to afford the $99 Apple Developer account...~~*
-> *(Yes, this actually happened. Thanks to all users for your support!)*
+> **(Yes, this actually happened. Thanks to all users for your support!)*
 
 ### 🪟 Windows Installation
 
@@ -124,7 +124,7 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 ## 🔧 AI Engine Info
 
 ### 1. WebLLM (Built-in Light)
-The app includes a built-in WebLLM engine and `qwen2.5:0.5b` lightweight model.
+The app includes a built-in WebLLM engine with `qwen2.5:0.5b` model (requires download on first use, then works fully offline).
 - **Pros**: No extra software installation needed, works right after app download.
 - **Best for**: Quick Q&A, simple text polishing, low-end devices.
 
@@ -137,7 +137,7 @@ Supports connecting to locally running Ollama service.
 Supports connecting to OpenAI-compatible Cloud APIs.
 - **Pros**: Access the most powerful models on Earth with just an API Key.
 - **Best for**: Top-tier logical reasoning, or when local hardware cannot support large models.
-- **Config**: Enter API URL and Key in Settings (Supports DeepSeek, Moonshot, etc).
+- **Config**: Enter API URL and Key in Settings (Supports OpenAI, Gemini, DeepSeek, Moonshot, etc).
 
 ---
 
@@ -158,11 +158,14 @@ Supports connecting to OpenAI-compatible Cloud APIs.
 ### 🔄 Format Conversion
 ![Format](src/pic/witnote%20宣传截图/英文版设计/格式转换.jpg)
 
-### 📥 Model Download
-![Models](src/pic/witnote%20宣传截图/英文版设计/模型下载.jpg)
+### 🔄 Three Engines
+![Three Engines](src/pic/witnote%20宣传截图/英文版设计/THREE%20ENGINES%20CAN%20BE%20SWITCHED%20FREELY.jpg)
 
-### 👤 Character Customization
-![Persona](src/pic/witnote%20宣传截图/英文版设计/角色定制.jpg)
+### 🎭 Multi-Role Prompts
+![Multi-Role Prompts](src/pic/witnote%20宣传截图/英文版设计/MULTI-ROLE%20PROMPTS.jpg)
+
+### ⌨️ Shortcuts
+![Shortcuts](src/pic/witnote%20宣传截图/英文版设计/SHORTCUT%20KEY.jpg)
 
 ---
 
