@@ -322,7 +322,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                     <div className="settings-tab-content">
                         {/* 引擎选择器 */}
                         <div className="settings-section">
-                            <h3 className="settings-section-title" style={{ textAlign: 'center', marginBottom: 0 }}>选择 AI 引擎</h3>
+                            <h3 className="settings-section-title" style={{ textAlign: 'center', marginBottom: 0 }}>{t('settings.selectAiEngine')}</h3>
                             <div className="engine-selector-container">
                                 <div className="engine-selector-line" />
 
@@ -342,7 +342,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                     title="本地内置模型"
                                 >
                                     <div className="engine-circle"><Bot size={24} /></div>
-                                    <span className="engine-label">内置 WebLLM</span>
+                                    <span className="engine-label">{t('chat.engineWebLLM')}</span>
                                 </button>
 
                                 {/* Ollama */}
@@ -358,7 +358,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                             <rect x="14" y="14" width="7" height="7" rx="1"></rect>
                                         </svg>
                                     </div>
-                                    <span className="engine-label">外部 Ollama</span>
+                                    <span className="engine-label">{t('chat.engineOllama')}</span>
                                 </button>
 
                                 {/* Cloud */}
@@ -373,7 +373,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                             <path d="M16.5 12a4.5 4.5 0 1 0-9 0"></path>
                                         </svg>
                                     </div>
-                                    <span className="engine-label">云端 Cloud API</span>
+                                    <span className="engine-label">{t('chat.engineCloud')}</span>
                                 </button>
                             </div>
                         </div>
@@ -382,7 +382,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         {engineStore.currentEngine === 'webllm' && (
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
-                                    <h3 className="settings-section-title">内置 WebLLM 模型</h3>
+                                    <h3 className="settings-section-title">{t('chat.builtInWebLLMModels')}</h3>
                                 </div>
                                 <div className="recommended-models" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {ALL_WEBLLM_MODELS_INFO.map(modelInfo => {
@@ -464,8 +464,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                                     e.stopPropagation();
                                                                     setConfirmDialog({
                                                                         isOpen: true,
-                                                                        title: '取消下载',
-                                                                        message: '确定要取消下载吗？',
+                                                                        title: t('chat.confirmCancelDownloadTitle'),
+                                                                        message: t('chat.confirmCancelDownloadMessage'),
                                                                         onConfirm: () => {
                                                                             engineStore?.resetWebLLMSetup();
                                                                             setConfirmDialog(null);
@@ -503,7 +503,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
                                                             disabled
                                                         >
-                                                            <Check size={16} style={{ marginRight: '4px' }} /> 使用中
+                                                            <Check size={16} style={{ marginRight: '4px' }} /> {t('chat.inUse')}
                                                         </button>
                                                     ) : (
                                                         <button
@@ -511,7 +511,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             onClick={() => engineStore.initWebLLM(modelInfo.model_id)}
                                                             style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
                                                         >
-                                                            {isCached ? '使用' : '下载'}
+                                                            {isCached ? t('chat.use') : t('chat.download')}
                                                         </button>
                                                     )}
 
@@ -523,12 +523,12 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 const confirmMsg = modelInfo.isBuiltIn
-                                                                    ? `清除 ${modelInfo.displayName} 的缓存？清除后需要重新下载模型。`
-                                                                    : `删除 ${modelInfo.displayName} 的缓存？`;
+                                                                    ? t('chat.confirmClearCacheMessage', { name: modelInfo.displayName })
+                                                                    : t('chat.confirmDeleteCacheMessage', { name: modelInfo.displayName });
 
                                                                 setConfirmDialog({
                                                                     isOpen: true,
-                                                                    title: modelInfo.isBuiltIn ? '清除缓存' : '删除缓存',
+                                                                    title: modelInfo.isBuiltIn ? t('chat.confirmClearCacheTitle') : t('chat.confirmDeleteCacheTitle'),
                                                                     message: confirmMsg,
                                                                     onConfirm: async () => {
                                                                         setConfirmDialog(null);
@@ -627,19 +627,19 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         {engineStore.currentEngine === 'ollama' && (
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
-                                    <h3 className="settings-section-title">外部 Ollama 设置</h3>
+                                    <h3 className="settings-section-title">{t('settings.externalOllama')}</h3>
                                     <button
                                         className={`status-btn ${engineStore.ollamaAvailable ? 'connected' : 'error'}`}
                                         onClick={() => engineStore.refreshOllamaStatus()}
-                                        title="点击测试连接"
+                                        title={t('settings.clickToTest')}
                                     >
                                         <span className="status-indicator" />
-                                        <span className="status-text">{engineStore.ollamaAvailable ? '已连接' : '连接失败'}</span>
-                                        <span className="status-action">测试连接</span>
+                                        <span className="status-text">{engineStore.ollamaAvailable ? t('settings.connected') : t('settings.connectionFailed')}</span>
+                                        <span className="status-action">{t('settings.testConnection')}</span>
                                     </button>
                                 </div>
                                 <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                    请确保 <a href="https://ollama.com" target="_blank" rel="noreferrer">Ollama</a> 已在后台运行。
+                                    {t('settings.pleaseEnsureOllamaRunning')}
                                 </p>
 
                                 {/* 配置卡片 */}
@@ -652,7 +652,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 }}>
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
                                         <div style={{ flex: 2 }}>
-                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>服务器地址</label>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>{t('settings.serverAddress')}</label>
                                             <input
                                                 type="text"
                                                 className="settings-input"
@@ -663,7 +663,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                             />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>端口</label>
+                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>{t('settings.port')}</label>
                                             <input
                                                 type="number"
                                                 className="settings-input"
@@ -679,7 +679,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 {llm && llm.status === 'ready' && (
                                     <>
                                         <div style={{ marginTop: '24px', marginBottom: '12px' }}>
-                                            <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>已安装模型</h4>
+                                            <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>{t('settings.installedModels')}</h4>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {llm.ollamaModels.length === 0 ? (
@@ -705,14 +705,14 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                                 className="download-btn"
                                                                 onClick={() => engineStore.selectModel(model.name)}
                                                             >
-                                                                使用
+                                                                {t('settings.useModel')}
                                                             </button>
                                                         ) : (
                                                             <button
                                                                 className="download-btn"
                                                                 disabled
                                                             >
-                                                                <Check size={16} style={{ marginRight: '4px' }} /> 使用中
+                                                                <Check size={16} style={{ marginRight: '4px' }} /> {t('settings.inUse')}
                                                             </button>
                                                         )}
                                                     </div>
@@ -730,24 +730,24 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             engineStore.currentEngine === 'openai' && (
                                 <div className="settings-section fade-in">
                                     <div className="settings-section-header">
-                                        <h3 className="settings-section-title">云端 Cloud API 设置</h3>
+                                        <h3 className="settings-section-title">{t('settings.cloudApi')}</h3>
                                         <button
                                             className={`status-btn ${engineStore.cloudApiStatus === 'success' ? 'connected' : engineStore.cloudApiStatus === 'error' ? 'error' : 'untested'}`}
                                             onClick={() => engineStore.testCloudApi()}
-                                            title="点击测试连接"
+                                            title={t('settings.clickToTest')}
                                         >
                                             <span className="status-indicator" />
                                             <span className="status-text">
-                                                {engineStore.cloudApiStatus === 'success' ? '已连接' :
-                                                    engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试'}
+                                                {engineStore.cloudApiStatus === 'success' ? t('settings.connected') :
+                                                    engineStore.cloudApiStatus === 'error' ? t('settings.connectionFailed') : t('settings.notTested')}
                                             </span>
-                                            <span className="status-action">测试连接</span>
+                                            <span className="status-action">{t('settings.testConnection')}</span>
                                         </button>
                                     </div>
 
                                     {/* 支持平台列表 */}
                                     <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                        支持平台：OpenAI, Google Gemini, DeepSeek, Claude, Groq, Mistral, 零一万物, 通义千问 等 OpenAI 兼容接口。
+                                        {t('settings.supportedPlatforms')}
                                     </p>
 
                                     <div style={{
@@ -780,7 +780,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                 />
                                             </div>
                                             <div>
-                                                <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>模型名称</label>
+                                                <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>{t('settings.modelNameLabel')}</label>
                                                 <input
                                                     type="text"
                                                     value={engineStore.cloudConfig.modelName}
@@ -795,7 +795,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
 
                                     {/* 配置指南 */}
                                     <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                        <strong style={{ fontSize: '12px' }}>📖 配置指南</strong>
+                                        <strong style={{ fontSize: '12px' }}>📖 {t('settings.configGuide')}</strong>
                                         <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8', fontSize: '12px' }}>
                                             <li><a href="https://platform.openai.com/docs" target="_blank" rel="noreferrer">OpenAI 文档</a></li>
                                             <li><a href="https://ai.google.dev/docs" target="_blank" rel="noreferrer">Google Gemini 文档</a> (Base URL: generativelanguage.googleapis.com/v1beta/openai/)</li>
@@ -804,7 +804,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                     </div>
 
                                     <p className="settings-hint" style={{ fontSize: '12px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <HelpCircle size={12} /> API Key 仅保存在本地，不会上传。
+                                        <HelpCircle size={12} /> {t('settings.apiKeyLocalNotice')}
                                     </p>
                                 </div>
                             )
@@ -830,9 +830,9 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                     {/* 提示词长度切换器 */}
                                     <div className="prompt-level-toggle" style={{ display: 'flex', background: 'var(--bg-sidebar)', padding: '2px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                                         {[
-                                            { id: 'lite', icon: AlignLeft, label: '精简' },
-                                            { id: 'standard', icon: LayoutList, label: '标准' },
-                                            { id: 'full', icon: Gauge, label: '完整' }
+                                            { id: 'lite', icon: AlignLeft, label: t('settings.promptLevelLite') },
+                                            { id: 'standard', icon: LayoutList, label: t('settings.promptLevelStandard') },
+                                            { id: 'full', icon: Gauge, label: t('settings.promptLevelFull') }
                                         ].map((item) => {
                                             const Icon = item.icon;
                                             const isActive = promptLevel === item.id;
@@ -1240,7 +1240,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <p className="guide-contact">
                                 🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub</a>
                             </p>
-                            <p className="guide-version">版本 {appVersion} · 2025</p>
+                            <p className="guide-version">{t('settings.version')} {appVersion} · 2025</p>
                             <p className="guide-license">
                                 {t('guide.license')} <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
                             </p>
@@ -1327,7 +1327,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         {isLoading ? (
                             <div className="settings-loading">
                                 <Loader2 size={24} className="spin" />
-                                <span>Loading...</span>
+                                <span>{t('settings.loading')}</span>
                             </div>
                         ) : (
                             renderTabContent()
@@ -1339,13 +1339,13 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                     <button className="reset-btn" onClick={() => {
                         setConfirmDialog({
                             isOpen: true,
-                            title: '确定要重置所有设置为默认值吗?',
-                            message: '这将:',
+                            title: t('settings.resetConfirmTitle'),
+                            message: t('settings.resetConfirmMessage'),
                             details: [
-                                '恢复外观设置(茶色主题、17px字体等)',
-                                '切换到内置 WebLLM 引擎',
-                                '恢复默认提示词',
-                                '您的笔记内容不会受到影响'
+                                t('settings.resetDetail1'),
+                                t('settings.resetDetail2'),
+                                t('settings.resetDetail3'),
+                                t('settings.resetDetail4')
                             ],
                             onConfirm: async () => {
                                 await resetSettings();

@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import './ConfirmDialog.css';
 
 export interface ConfirmDialogProps {
@@ -10,6 +11,8 @@ export interface ConfirmDialogProps {
 }
 
 export default function ConfirmDialog({ title, message, details, onConfirm, onCancel }: ConfirmDialogProps) {
+    const { t } = useTranslation();
+
     return (
         <div className="confirm-overlay" onClick={onCancel}>
             <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
@@ -36,10 +39,10 @@ export default function ConfirmDialog({ title, message, details, onConfirm, onCa
                 {/* Buttons */}
                 <div className="confirm-buttons">
                     <button className="confirm-button cancel" onClick={onCancel}>
-                        取消
+                        {t('dialog.cancel')}
                     </button>
                     <button className="confirm-button confirm" onClick={onConfirm}>
-                        确定
+                        {t('dialog.confirm')}
                     </button>
                 </div>
             </div>

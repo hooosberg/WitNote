@@ -159,7 +159,21 @@ export function useEngineStore(): UseEngineStoreReturn {
         webllmInitLockRef.current = true;
         console.log('🔒 WebLLM 初始化锁已设置');
 
-        const targetModel = modelId || state.selectedModel;
+        // 确定目标模型：优先使用传入的 modelId，否则使用 selectedModel
+        // 但需要验证是否为有效的 WebLLM 模型格式
+        let targetModel = modelId || state.selectedModel;
+
+        // 验证是否为有效的 WebLLM 模型（防止使用 Ollama 格式的模型名）
+        // WebLLM 模型格式通常包含 "MLC" 字样，Ollama 格式是 "name:tag"
+        const isValidWebLLMModel = targetModel && (
+            targetModel.includes('-MLC') ||
+            targetModel === DEFAULT_WEBLLM_MODEL
+        );
+
+        if (!isValidWebLLMModel) {
+            console.warn(`⚠️ 模型名称 "${targetModel}" 不是有效的 WebLLM 格式，使用默认模型`);
+            targetModel = DEFAULT_WEBLLM_MODEL;
+        }
 
         // 取消之前的下载
         if (webllmEngineRef.current?.abort) {

@@ -5,7 +5,7 @@
 
 import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from 'electron'
 import { join, basename, extname, relative } from 'path'
-import { promises as fs, existsSync, mkdirSync } from 'fs'
+import { promises as fs, existsSync, mkdirSync, readFileSync } from 'fs'
 import Store from 'electron-store'
 import * as chokidar from 'chokidar'
 import { spawn } from 'child_process'
@@ -57,6 +57,61 @@ const settingsStore = new Store<AppSettings>({
         smartFormatConversion: true
     }
 })
+
+// ============ 菜单多语言支持 ============
+
+let menuTranslations: any = {}
+let currentLanguage = 'zh' // 默认中文
+
+/**
+ * 加载菜单语言文件
+ */
+function loadMenuLanguage(lang: string) {
+    try {
+        const isDev = !app.isPackaged
+        const langFilePath = isDev
+            ? join(__dirname, '../src/locales', `${lang}.json`)
+            : join(process.resourcesPath, 'app.asar/dist/assets/locales', `${lang}.json`)
+
+        if (existsSync(langFilePath)) {
+            const content = readFileSync(langFilePath, 'utf-8')
+            menuTranslations = JSON.parse(content)
+            currentLanguage = lang
+            console.log(`✓ 加载菜单语言: ${lang}`)
+        } else {
+            console.warn(`警告: 语言文件不存在: ${langFilePath}`)
+        }
+    } catch (error) {
+        console.error(`加载语言文件失败:`, error)
+    }
+}
+
+/**
+ * 菜单翻译函数
+ */
+function tm(key: string, params?: { [k: string]: string }): string {
+    const keys = key.split('.')
+    let value: any = menuTranslations
+
+    for (const k of keys) {
+        if (value && typeof value === 'object') {
+            value = value[k]
+        } else {
+            return key // 找不到返回键
+        }
+    }
+
+    let str = typeof value === 'string' ? value : key
+
+    // 替换参数
+    if (params) {
+        Object.keys(params).forEach(k => {
+            str = str.replace(`{${k}}`, params[k])
+        })
+    }
+
+    return str
+}
 
 // 文件监听器
 let watcher: chokidar.FSWatcher | null = null
@@ -449,6 +504,16 @@ function setupIpcHandlers() {
         return true
     })
 
+    // ============ 菜单语言切换 IPC 处理器 ============
+
+    // 切换菜单语言
+    ipcMain.handle('menu:changeLanguage', (_event, lang: string) => {
+        loadMenuLanguage(lang)
+        createApplicationMenu()
+        createDockMenu()
+        return true
+    })
+
     // ============ Ollama 模型管理 IPC 处理器 ============
     // MAS 沙盒环境中禁止使用 spawn 调用外部命令
 
@@ -628,112 +693,112 @@ function createApplicationMenu() {
         ...(isMac ? [{
             label: app.name,
             submenu: [
-                { role: 'about' as const, label: `关于 ${app.name}` },
+                { role: 'about' as const, label: tm('menu.about', { appName: app.name }) },
                 { type: 'separator' as const },
                 {
-                    label: '偏好设置...',
+                    label: tm('menu.preferences'),
                     accelerator: 'CmdOrCtrl+,',
                     click: () => {
                         mainWindow?.webContents.send('shortcuts:openSettings')
                     }
                 },
                 { type: 'separator' as const },
-                { role: 'services' as const, label: '服务' },
+                { role: 'services' as const, label: tm('menu.services') },
                 { type: 'separator' as const },
-                { role: 'hide' as const, label: `隐藏 ${app.name}` },
-                { role: 'hideOthers' as const, label: '隐藏其他' },
-                { role: 'unhide' as const, label: '显示全部' },
+                { role: 'hide' as const, label: tm('menu.hide', { appName: app.name }) },
+                { role: 'hideOthers' as const, label: tm('menu.hideOthers') },
+                { role: 'unhide' as const, label: tm('menu.unhide') },
                 { type: 'separator' as const },
-                { role: 'quit' as const, label: `退出 ${app.name}` }
+                { role: 'quit' as const, label: tm('menu.quit', { appName: app.name }) }
             ]
         }] : []),
         // 文件菜单
         {
-            label: '文件',
+            label: tm('menu.file'),
             submenu: [
                 {
-                    label: '新建文章',
+                    label: tm('menu.newArticle'),
                     accelerator: 'CmdOrCtrl+N',
                     click: () => {
                         mainWindow?.webContents.send('shortcuts:createArticle')
                     }
                 },
                 {
-                    label: '新建文件夹',
+                    label: tm('menu.newFolder'),
                     accelerator: 'CmdOrCtrl+Shift+N',
                     click: () => {
                         mainWindow?.webContents.send('shortcuts:createFolder')
                     }
                 },
                 { type: 'separator' as const },
-                isMac ? { role: 'close' as const, label: '关闭窗口' } : { role: 'quit' as const, label: '退出' }
+                isMac ? { role: 'close' as const, label: tm('menu.closeWindow') } : { role: 'quit' as const, label: tm('menu.quit', { appName: app.name }) }
             ]
         },
         // 编辑菜单
         {
-            label: '编辑',
+            label: tm('menu.edit'),
             submenu: [
-                { role: 'undo' as const, label: '撤销' },
-                { role: 'redo' as const, label: '重做' },
+                { role: 'undo' as const, label: tm('menu.undo') },
+                { role: 'redo' as const, label: tm('menu.redo') },
                 { type: 'separator' as const },
-                { role: 'cut' as const, label: '剪切' },
-                { role: 'copy' as const, label: '复制' },
-                { role: 'paste' as const, label: '粘贴' },
+                { role: 'cut' as const, label: tm('menu.cut') },
+                { role: 'copy' as const, label: tm('menu.copy') },
+                { role: 'paste' as const, label: tm('menu.paste') },
                 ...(isMac ? [
-                    { role: 'pasteAndMatchStyle' as const, label: '粘贴并匹配样式' },
-                    { role: 'delete' as const, label: '删除' },
-                    { role: 'selectAll' as const, label: '全选' }
+                    { role: 'pasteAndMatchStyle' as const, label: tm('menu.pasteAndMatchStyle') },
+                    { role: 'delete' as const, label: tm('menu.delete') },
+                    { role: 'selectAll' as const, label: tm('menu.selectAll') }
                 ] : [
-                    { role: 'delete' as const, label: '删除' },
+                    { role: 'delete' as const, label: tm('menu.delete') },
                     { type: 'separator' as const },
-                    { role: 'selectAll' as const, label: '全选' }
+                    { role: 'selectAll' as const, label: tm('menu.selectAll') }
                 ])
             ]
         },
         // 视图菜单
         {
-            label: '视图',
+            label: tm('menu.view'),
             submenu: [
                 {
-                    label: '专注模式',
+                    label: tm('menu.focusMode'),
                     accelerator: 'CmdOrCtrl+Shift+F',
                     click: () => {
                         mainWindow?.webContents.send('shortcuts:toggleFocusMode')
                     }
                 },
                 { type: 'separator' as const },
-                { role: 'reload' as const, label: '刷新' },
-                { role: 'forceReload' as const, label: '强制刷新' },
-                { role: 'toggleDevTools' as const, label: '开发者工具' },
+                { role: 'reload' as const, label: tm('menu.reload') },
+                { role: 'forceReload' as const, label: tm('menu.forceReload') },
+                { role: 'toggleDevTools' as const, label: tm('menu.devTools') },
                 { type: 'separator' as const },
-                { role: 'resetZoom' as const, label: '实际大小' },
-                { role: 'zoomIn' as const, label: '放大' },
-                { role: 'zoomOut' as const, label: '缩小' },
+                { role: 'resetZoom' as const, label: tm('menu.actualSize') },
+                { role: 'zoomIn' as const, label: tm('menu.zoomIn') },
+                { role: 'zoomOut' as const, label: tm('menu.zoomOut') },
                 { type: 'separator' as const },
-                { role: 'togglefullscreen' as const, label: '全屏' }
+                { role: 'togglefullscreen' as const, label: tm('menu.fullscreen') }
             ]
         },
         // 窗口菜单
         {
-            label: '窗口',
+            label: tm('menu.window'),
             submenu: [
-                { role: 'minimize' as const, label: '最小化' },
-                { role: 'zoom' as const, label: '缩放' },
+                { role: 'minimize' as const, label: tm('menu.minimize') },
+                { role: 'zoom' as const, label: tm('menu.zoom') },
                 ...(isMac ? [
                     { type: 'separator' as const },
-                    { role: 'front' as const, label: '前置全部窗口' }
+                    { role: 'front' as const, label: tm('menu.front') }
                 ] : [
-                    { role: 'close' as const, label: '关闭' }
+                    { role: 'close' as const, label: tm('menu.close') }
                 ])
             ]
         },
         // 帮助菜单
         {
             role: 'help' as const,
-            label: '帮助',
+            label: tm('menu.help'),
             submenu: [
                 {
-                    label: '访问 GitHub',
+                    label: tm('menu.visitGitHub'),
                     click: async () => {
                         await shell.openExternal('https://github.com/hooosberg/WitNote')
                     }
@@ -754,26 +819,26 @@ function createDockMenu() {
 
     const dockMenu = Menu.buildFromTemplate([
         {
-            label: '新建文章',
+            label: tm('menu.newArticle'),
             click: () => {
                 mainWindow?.webContents.send('shortcuts:createArticle')
             }
         },
         {
-            label: '新建文件夹',
+            label: tm('menu.newFolder'),
             click: () => {
                 mainWindow?.webContents.send('shortcuts:createFolder')
             }
         },
         { type: 'separator' },
         {
-            label: '打开设置',
+            label: tm('menu.openSettings'),
             click: () => {
                 mainWindow?.webContents.send('shortcuts:openSettings')
             }
         },
         {
-            label: '切换专注模式',
+            label: tm('menu.toggleFocusMode'),
             click: () => {
                 mainWindow?.webContents.send('shortcuts:toggleFocusMode')
             }
@@ -848,6 +913,9 @@ function createWindow() {
 // ============ 应用启动 ============
 
 app.whenReady().then(async () => {
+    // 加载默认菜单语言
+    loadMenuLanguage('zh')
+
     setupIpcHandlers()
     createApplicationMenu()  // 创建应用菜单
     createDockMenu()         // 创建 Dock 菜单 (仅 macOS)

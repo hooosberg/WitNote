@@ -850,10 +850,10 @@ const AppContent: React.FC = () => {
                                                         // 使用自定义确认对话框
                                                         setConfirmDialog({
                                                             isOpen: true,
-                                                            title: '断开链接文件夹',
-                                                            message: '这将断开应用与本地文件夹的连接,但不会删除文件夹中的任何文件。',
+                                                            title: t('sidebar.disconnectTitle'),
+                                                            message: t('sidebar.disconnectMessage'),
                                                             details: [
-                                                                '您的所有笔记和文件都会保留完好'
+                                                                t('sidebar.disconnectDetail')
                                                             ],
                                                             onConfirm: async () => {
                                                                 setConfirmDialog(null)

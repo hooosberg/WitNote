@@ -22,7 +22,7 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         displayName: 'Qwen 2.5 0.5B',
         size: '290MB',
         expectedBytes: 290,
-        description: '轻量模型，适合快速体验',
+        description: '',
         isBuiltIn: true
     }
 ];

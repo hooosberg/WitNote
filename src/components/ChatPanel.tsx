@@ -182,7 +182,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                             color: 'var(--text-primary)',
                             marginBottom: '12px',
                             marginTop: 0
-                        }}>首次使用提示</h3>
+                        }}>{t('chat.firstUseTitle')}</h3>
 
                         <p style={{
                             fontSize: '14px',
@@ -193,8 +193,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                             textAlign: 'center',
                             maxWidth: '300px'
                         }}>
-                            需要下载 AI 模型（约 {ALL_WEBLLM_MODELS_INFO[0]?.size || '290MB'}）<br />
-                            下载一次，永久离线可用
+                            <span dangerouslySetInnerHTML={{
+                                __html: t('chat.firstUseDesc', { size: ALL_WEBLLM_MODELS_INFO[0]?.size || '290MB' }).replace('\n', '<br />')
+                            }} />
                         </p>
 
                         <button
@@ -227,7 +228,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                             }}
                         >
                             <Cloud size={16} />
-                            开始下载并加载模型
+                            {t('chat.startDownload')}
                         </button>
                     </div>
                 )}
@@ -294,19 +295,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     {engineStore.currentEngine === 'webllm' && (
                                         <>
                                             <Bot size={14} />
-                                            <span>内置</span>
+                                            <span>{t('chat.engineWebLLMShort')}</span>
                                         </>
                                     )}
                                     {engineStore.currentEngine === 'ollama' && (
                                         <>
                                             <Server size={14} />
-                                            <span>外部</span>
+                                            <span>{t('chat.engineOllamaShort')}</span>
                                         </>
                                     )}
                                     {engineStore.currentEngine === 'openai' && (
                                         <>
                                             <Cloud size={14} />
-                                            <span>云端</span>
+                                            <span>{t('chat.engineCloudShort')}</span>
                                         </>
                                     )}
                                 </button>
@@ -326,11 +327,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                             width: 'max-content'
                                         }}
                                     >
-                                        <div className="model-section-title">AI 引擎</div>
+                                        <div className="model-section-title">{t('chat.aiEngine')}</div>
                                         {[
-                                            { type: 'webllm' as const, icon: <Bot size={14} />, label: '内置 WebLLM', bgColor: 'rgba(16, 185, 129, 0.08)' },
-                                            { type: 'ollama' as const, icon: <Server size={14} />, label: '外部 Ollama', bgColor: 'rgba(245, 158, 11, 0.08)' },
-                                            { type: 'openai' as const, icon: <Cloud size={14} />, label: '云端 Cloud API', bgColor: 'rgba(59, 130, 246, 0.08)' }
+                                            { type: 'webllm' as const, icon: <Bot size={14} />, label: t('chat.engineWebLLM'), bgColor: 'rgba(16, 185, 129, 0.08)' },
+                                            { type: 'ollama' as const, icon: <Server size={14} />, label: t('chat.engineOllama'), bgColor: 'rgba(245, 158, 11, 0.08)' },
+                                            { type: 'openai' as const, icon: <Cloud size={14} />, label: t('chat.engineCloud'), bgColor: 'rgba(59, 130, 246, 0.08)' }
                                         ].map((engine) => (
                                             <button
                                                 key={engine.type}
@@ -410,7 +411,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     cursor: 'pointer',
                                     transition: 'all 0.2s'
                                 }}
-                                title="点击设置"
+                                title={t('chat.clickToSetup')}
                                 onClick={() => {
                                     if (openSettings) {
                                         openSettings()
@@ -426,10 +427,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                 <span className="status-indicator" />
                                 <span className="status-text">
                                     {engineStore?.currentEngine === 'openai'
-                                        ? (engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试')
-                                        : '连接失败'}
+                                        ? (engineStore.cloudApiStatus === 'error' ? t('chat.connectionFailed') : t('chat.notTested'))
+                                        : t('chat.connectionFailed')}
                                 </span>
-                                <span className="status-action">点击设置</span>
+                                <span className="status-action">{t('chat.clickToSetup')}</span>
                             </div>
                         ) : (engineStore?.currentEngine === 'ollama' && engineStore.ollamaAvailable && ollamaModels.length === 0) ? (
                             /* Ollama 已连接但没有模型 */
@@ -441,7 +442,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     cursor: 'pointer',
                                     transition: 'all 0.2s'
                                 }}
-                                title="点击设置"
+                                title={t('chat.clickToSetup')}
                                 onClick={() => {
                                     if (openSettings) {
                                         openSettings()
@@ -455,8 +456,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                 }}
                             >
                                 <span className="status-indicator" />
-                                <span className="status-text">无可用模型</span>
-                                <span className="status-action">点击设置</span>
+                                <span className="status-text">{t('chat.noModelsAvailable')}</span>
+                                <span className="status-action">{t('chat.clickToSetup')}</span>
                             </div>
                         ) : status === 'ready' ? (
                             isGenerating ? (
@@ -529,7 +530,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                             background: 'rgba(245, 158, 11, 0.1)',
                                             borderRadius: '4px'
                                         }}>
-                                            外部
+                                            {t('chat.engineOllamaShort')}
                                         </span>
                                     </button>
                                     {showModelMenu && createPortal(
@@ -606,7 +607,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                                     alignItems: 'center',
                                                                     gap: '4px'
                                                                 }}>
-                                                                    <Check size={10} /> 使用中
+                                                                    <Check size={10} /> {t('chat.inUse')}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -663,7 +664,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                 background: 'rgba(16, 185, 129, 0.1)',
                                                 borderRadius: '4px'
                                             }}>
-                                                内置
+                                                {t('chat.builtIn')}
                                             </span>
 
                                         </div>
@@ -694,7 +695,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                         background: 'rgba(59, 130, 246, 0.1)',
                                         borderRadius: '4px'
                                     }}>
-                                        云端
+                                        {t('chat.engineCloudShort')}
                                     </span>
                                 </div>
                             ) : (
@@ -720,11 +721,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (confirm('确定要取消下载并回到首次使用界面吗？')) {
+                                            if (confirm(t('chat.cancelDownloadConfirm'))) {
                                                 engineStore?.resetWebLLMSetup();
                                             }
                                         }}
-                                        title="取消下载"
+                                        title={t('models.cancelDownload')}
                                         style={{
                                             padding: '4px',
                                             borderRadius: '50%',
