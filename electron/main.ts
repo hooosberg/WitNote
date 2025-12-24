@@ -60,34 +60,379 @@ const settingsStore = new Store<AppSettings>({
 
 // ============ 菜单多语言支持 ============
 
-let menuTranslations: any = {}
-let currentLanguage = 'zh' // 默认中文
-
 /**
- * 加载菜单语言文件
+ * 菜单翻译数据 - 支持 8 种语言
  */
-function loadMenuLanguage(lang: string) {
-    try {
-        const isDev = !app.isPackaged
-        const langFilePath = isDev
-            ? join(__dirname, '../src/locales', `${lang}.json`)
-            : join(process.resourcesPath, 'app.asar/dist/assets/locales', `${lang}.json`)
-
-        if (existsSync(langFilePath)) {
-            const content = readFileSync(langFilePath, 'utf-8')
-            menuTranslations = JSON.parse(content)
-            currentLanguage = lang
-            console.log(`✓ 加载菜单语言: ${lang}`)
-        } else {
-            console.warn(`警告: 语言文件不存在: ${langFilePath}`)
-        }
-    } catch (error) {
-        console.error(`加载语言文件失败:`, error)
+const allMenuTranslations: Record<string, any> = {
+    zh: {
+        about: '关于 {appName}',
+        preferences: '偏好设置...',
+        services: '服务',
+        hide: '隐藏 {appName}',
+        hideOthers: '隐藏其他',
+        unhide: '显示全部',
+        quit: '退出 {appName}',
+        file: '文件',
+        newArticle: '新建文章',
+        newFolder: '新建文件夹',
+        closeWindow: '关闭窗口',
+        edit: '编辑',
+        undo: '撤销',
+        redo: '重做',
+        cut: '剪切',
+        copy: '复制',
+        paste: '粘贴',
+        pasteAndMatchStyle: '粘贴并匹配样式',
+        delete: '删除',
+        selectAll: '全选',
+        view: '视图',
+        focusMode: '专注模式',
+        reload: '刷新',
+        forceReload: '强制刷新',
+        devTools: '开发者工具',
+        actualSize: '实际大小',
+        zoomIn: '放大',
+        zoomOut: '缩小',
+        fullscreen: '全屏',
+        window: '窗口',
+        minimize: '最小化',
+        zoom: '缩放',
+        front: '前置全部窗口',
+        close: '关闭',
+        help: '帮助',
+        visitGitHub: '访问 GitHub',
+        openSettings: '打开设置',
+        toggleFocusMode: '切换专注模式'
+    },
+    'zh-TW': {
+        about: '關於 {appName}',
+        preferences: '偏好設定...',
+        services: '服務',
+        hide: '隱藏 {appName}',
+        hideOthers: '隱藏其他',
+        unhide: '顯示全部',
+        quit: '結束 {appName}',
+        file: '檔案',
+        newArticle: '新建文章',
+        newFolder: '新建資料夾',
+        closeWindow: '關閉視窗',
+        edit: '編輯',
+        undo: '還原',
+        redo: '重做',
+        cut: '剪下',
+        copy: '複製',
+        paste: '貼上',
+        pasteAndMatchStyle: '貼上並符合樣式',
+        delete: '刪除',
+        selectAll: '全選',
+        view: '檢視',
+        focusMode: '專注模式',
+        reload: '重新載入',
+        forceReload: '強制重新載入',
+        devTools: '開發人員工具',
+        actualSize: '實際大小',
+        zoomIn: '放大',
+        zoomOut: '縮小',
+        fullscreen: '全螢幕',
+        window: '視窗',
+        minimize: '最小化',
+        zoom: '縮放',
+        front: '將全部移到最前面',
+        close: '關閉',
+        help: '說明',
+        visitGitHub: '造訪 GitHub',
+        openSettings: '開啟設定',
+        toggleFocusMode: '切換專注模式'
+    },
+    en: {
+        about: 'About {appName}',
+        preferences: 'Preferences...',
+        services: 'Services',
+        hide: 'Hide {appName}',
+        hideOthers: 'Hide Others',
+        unhide: 'Show All',
+        quit: 'Quit {appName}',
+        file: 'File',
+        newArticle: 'New Article',
+        newFolder: 'New Folder',
+        closeWindow: 'Close Window',
+        edit: 'Edit',
+        undo: 'Undo',
+        redo: 'Redo',
+        cut: 'Cut',
+        copy: 'Copy',
+        paste: 'Paste',
+        pasteAndMatchStyle: 'Paste and Match Style',
+        delete: 'Delete',
+        selectAll: 'Select All',
+        view: 'View',
+        focusMode: 'Focus Mode',
+        reload: 'Reload',
+        forceReload: 'Force Reload',
+        devTools: 'Developer Tools',
+        actualSize: 'Actual Size',
+        zoomIn: 'Zoom In',
+        zoomOut: 'Zoom Out',
+        fullscreen: 'Toggle Fullscreen',
+        window: 'Window',
+        minimize: 'Minimize',
+        zoom: 'Zoom',
+        front: 'Bring All to Front',
+        close: 'Close',
+        help: 'Help',
+        visitGitHub: 'Visit GitHub',
+        openSettings: 'Open Settings',
+        toggleFocusMode: 'Toggle Focus Mode'
+    },
+    ja: {
+        about: '{appName} について',
+        preferences: '環境設定...',
+        services: 'サービス',
+        hide: '{appName} を隠す',
+        hideOthers: 'ほかを隠す',
+        unhide: 'すべてを表示',
+        quit: '{appName} を終了',
+        file: 'ファイル',
+        newArticle: '新規記事',
+        newFolder: '新規フォルダ',
+        closeWindow: 'ウィンドウを閉じる',
+        edit: '編集',
+        undo: '取り消す',
+        redo: 'やり直す',
+        cut: 'カット',
+        copy: 'コピー',
+        paste: 'ペースト',
+        pasteAndMatchStyle: 'ペーストしてスタイルを合わせる',
+        delete: '削除',
+        selectAll: 'すべてを選択',
+        view: '表示',
+        focusMode: '集中モード',
+        reload: '再読み込み',
+        forceReload: '強制再読み込み',
+        devTools: '開発者ツール',
+        actualSize: '実際のサイズ',
+        zoomIn: '拡大',
+        zoomOut: '縮小',
+        fullscreen: 'フルスクリーン',
+        window: 'ウィンドウ',
+        minimize: '最小化',
+        zoom: '拡大/縮小',
+        front: 'すべてを手前に移動',
+        close: '閉じる',
+        help: 'ヘルプ',
+        visitGitHub: 'GitHub を開く',
+        openSettings: '設定を開く',
+        toggleFocusMode: '集中モードを切り替え'
+    },
+    ko: {
+        about: '{appName} 정보',
+        preferences: '환경설정...',
+        services: '서비스',
+        hide: '{appName} 숨기기',
+        hideOthers: '기타 숨기기',
+        unhide: '모두 표시',
+        quit: '{appName} 종료',
+        file: '파일',
+        newArticle: '새 글',
+        newFolder: '새 폴더',
+        closeWindow: '창 닫기',
+        edit: '편집',
+        undo: '실행 취소',
+        redo: '다시 실행',
+        cut: '오려두기',
+        copy: '복사',
+        paste: '붙여넣기',
+        pasteAndMatchStyle: '붙여넣고 스타일 맞추기',
+        delete: '삭제',
+        selectAll: '모두 선택',
+        view: '보기',
+        focusMode: '집중 모드',
+        reload: '새로 고침',
+        forceReload: '강제 새로 고침',
+        devTools: '개발자 도구',
+        actualSize: '실제 크기',
+        zoomIn: '확대',
+        zoomOut: '축소',
+        fullscreen: '전체 화면',
+        window: '창',
+        minimize: '최소화',
+        zoom: '확대/축소',
+        front: '모두 앞으로 가져오기',
+        close: '닫기',
+        help: '도움말',
+        visitGitHub: 'GitHub 방문',
+        openSettings: '설정 열기',
+        toggleFocusMode: '집중 모드 전환'
+    },
+    fr: {
+        about: 'À propos de {appName}',
+        preferences: 'Préférences...',
+        services: 'Services',
+        hide: 'Masquer {appName}',
+        hideOthers: 'Masquer les autres',
+        unhide: 'Tout afficher',
+        quit: 'Quitter {appName}',
+        file: 'Fichier',
+        newArticle: 'Nouvel Article',
+        newFolder: 'Nouveau Dossier',
+        closeWindow: 'Fermer la fenêtre',
+        edit: 'Édition',
+        undo: 'Annuler',
+        redo: 'Rétablir',
+        cut: 'Couper',
+        copy: 'Copier',
+        paste: 'Coller',
+        pasteAndMatchStyle: 'Coller et adapter le style',
+        delete: 'Supprimer',
+        selectAll: 'Tout sélectionner',
+        view: 'Présentation',
+        focusMode: 'Mode Focus',
+        reload: 'Actualiser',
+        forceReload: "Forcer l'actualisation",
+        devTools: 'Outils de développement',
+        actualSize: 'Taille réelle',
+        zoomIn: 'Zoom avant',
+        zoomOut: 'Zoom arrière',
+        fullscreen: 'Plein écran',
+        window: 'Fenêtre',
+        minimize: 'Réduire',
+        zoom: 'Zoom',
+        front: 'Tout ramener au premier plan',
+        close: 'Fermer',
+        help: 'Aide',
+        visitGitHub: 'Visiter GitHub',
+        openSettings: 'Ouvrir les Paramètres',
+        toggleFocusMode: 'Basculer Mode Focus'
+    },
+    de: {
+        about: 'Über {appName}',
+        preferences: 'Einstellungen...',
+        services: 'Dienste',
+        hide: '{appName} ausblenden',
+        hideOthers: 'Andere ausblenden',
+        unhide: 'Alle einblenden',
+        quit: '{appName} beenden',
+        file: 'Ablage',
+        newArticle: 'Neuer Artikel',
+        newFolder: 'Neuer Ordner',
+        closeWindow: 'Fenster schließen',
+        edit: 'Bearbeiten',
+        undo: 'Widerrufen',
+        redo: 'Wiederholen',
+        cut: 'Ausschneiden',
+        copy: 'Kopieren',
+        paste: 'Einfügen',
+        pasteAndMatchStyle: 'Einsetzen und Stil anpassen',
+        delete: 'Löschen',
+        selectAll: 'Alles auswählen',
+        view: 'Darstellung',
+        focusMode: 'Fokus-Modus',
+        reload: 'Neu laden',
+        forceReload: 'Neu laden erzwingen',
+        devTools: 'Entwicklertools',
+        actualSize: 'Tatsächliche Größe',
+        zoomIn: 'Vergrößern',
+        zoomOut: 'Verkleinern',
+        fullscreen: 'Vollbild',
+        window: 'Fenster',
+        minimize: 'Minimieren',
+        zoom: 'Zoomen',
+        front: 'Alle nach vorne bringen',
+        close: 'Schließen',
+        help: 'Hilfe',
+        visitGitHub: 'GitHub besuchen',
+        openSettings: 'Einstellungen öffnen',
+        toggleFocusMode: 'Fokus-Modus umschalten'
+    },
+    es: {
+        about: 'Acerca de {appName}',
+        preferences: 'Preferencias...',
+        services: 'Servicios',
+        hide: 'Ocultar {appName}',
+        hideOthers: 'Ocultar otros',
+        unhide: 'Mostrar todo',
+        quit: 'Salir de {appName}',
+        file: 'Archivo',
+        newArticle: 'Nuevo Artículo',
+        newFolder: 'Nueva Carpeta',
+        closeWindow: 'Cerrar ventana',
+        edit: 'Edición',
+        undo: 'Deshacer',
+        redo: 'Rehacer',
+        cut: 'Cortar',
+        copy: 'Copiar',
+        paste: 'Pegar',
+        pasteAndMatchStyle: 'Pegar y ajustar estilo',
+        delete: 'Eliminar',
+        selectAll: 'Seleccionar todo',
+        view: 'Vista',
+        focusMode: 'Modo Enfoque',
+        reload: 'Recargar',
+        forceReload: 'Forzar recarga',
+        devTools: 'Herramientas de desarrollo',
+        actualSize: 'Tamaño real',
+        zoomIn: 'Ampliar',
+        zoomOut: 'Reducir',
+        fullscreen: 'Pantalla completa',
+        window: 'Ventana',
+        minimize: 'Minimizar',
+        zoom: 'Zoom',
+        front: 'Traer todo al frente',
+        close: 'Cerrar',
+        help: 'Ayuda',
+        visitGitHub: 'Visitar GitHub',
+        openSettings: 'Abrir Ajustes',
+        toggleFocusMode: 'Alternar Modo Enfoque'
     }
 }
 
 /**
- * 菜单翻译函数
+ * 检测系统语言并映射到应用支持的语言
+ */
+function detectSystemLanguage(): string {
+    const locale = app.getLocale() // 例如: 'zh-CN', 'en-US', 'ja', 'ko'
+
+    const languageMap: Record<string, string> = {
+        'zh-CN': 'zh', 'zh-Hans': 'zh', 'zh-SG': 'zh',
+        'zh-TW': 'zh-TW', 'zh-Hant': 'zh-TW', 'zh-HK': 'zh-TW', 'zh-MO': 'zh-TW',
+        'en': 'en', 'en-US': 'en', 'en-GB': 'en', 'en-AU': 'en', 'en-CA': 'en',
+        'ja': 'ja', 'ja-JP': 'ja',
+        'ko': 'ko', 'ko-KR': 'ko',
+        'fr': 'fr', 'fr-FR': 'fr', 'fr-CA': 'fr',
+        'de': 'de', 'de-DE': 'de', 'de-AT': 'de', 'de-CH': 'de',
+        'es': 'es', 'es-ES': 'es', 'es-MX': 'es', 'es-AR': 'es'
+    }
+
+    // 完整匹配
+    if (languageMap[locale]) return languageMap[locale]
+
+    // 前缀匹配
+    const prefix = locale.split('-')[0]
+    if (languageMap[prefix]) return languageMap[prefix]
+
+    // 默认英文
+    return 'en'
+}
+
+// 当前使用的菜单翻译
+let menuTranslations: any = { menu: allMenuTranslations.en }
+
+/**
+ * 加载指定语言的菜单翻译
+ */
+function loadMenuLanguage(lang: string) {
+    const translations = allMenuTranslations[lang]
+    if (translations) {
+        menuTranslations = { menu: translations }
+        console.log(`✓ 菜单语言: ${lang}`)
+    } else {
+        menuTranslations = { menu: allMenuTranslations.en }
+        console.log(`⚠ 语言 ${lang} 不支持，使用英文`)
+    }
+}
+
+/**
+ * 菜单翻译函数 - 支持 menu.file 格式
  */
 function tm(key: string, params?: { [k: string]: string }): string {
     const keys = key.split('.')
@@ -97,7 +442,7 @@ function tm(key: string, params?: { [k: string]: string }): string {
         if (value && typeof value === 'object') {
             value = value[k]
         } else {
-            return key // 找不到返回键
+            return key
         }
     }
 
@@ -112,6 +457,7 @@ function tm(key: string, params?: { [k: string]: string }): string {
 
     return str
 }
+
 
 // 文件监听器
 let watcher: chokidar.FSWatcher | null = null
@@ -913,8 +1259,10 @@ function createWindow() {
 // ============ 应用启动 ============
 
 app.whenReady().then(async () => {
-    // 加载默认菜单语言
-    loadMenuLanguage('zh')
+    // 检测系统语言并加载菜单翻译
+    const systemLang = detectSystemLanguage()
+    loadMenuLanguage(systemLang)
+    console.log(`🌍 系统语言: ${app.getLocale()} → 菜单语言: ${systemLang}`)
 
     setupIpcHandlers()
     createApplicationMenu()  // 创建应用菜单

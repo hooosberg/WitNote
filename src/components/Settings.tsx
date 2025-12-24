@@ -48,6 +48,18 @@ import {
     getDefaultSystemPrompt,
     INSTRUCTION_TEMPLATE_STANDARD_ZH,
     INSTRUCTION_TEMPLATE_FULL_ZH,
+    INSTRUCTION_TEMPLATE_STANDARD_ZH_TW,
+    INSTRUCTION_TEMPLATE_FULL_ZH_TW,
+    INSTRUCTION_TEMPLATE_STANDARD_JA,
+    INSTRUCTION_TEMPLATE_FULL_JA,
+    INSTRUCTION_TEMPLATE_STANDARD_KO,
+    INSTRUCTION_TEMPLATE_FULL_KO,
+    INSTRUCTION_TEMPLATE_STANDARD_FR,
+    INSTRUCTION_TEMPLATE_FULL_FR,
+    INSTRUCTION_TEMPLATE_STANDARD_DE,
+    INSTRUCTION_TEMPLATE_FULL_DE,
+    INSTRUCTION_TEMPLATE_STANDARD_ES,
+    INSTRUCTION_TEMPLATE_FULL_ES,
     INSTRUCTION_TEMPLATE_STANDARD_EN,
     INSTRUCTION_TEMPLATE_FULL_EN
 } from '../services/types';
@@ -130,13 +142,34 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
         let suffix = '';
         const lang = currentLang;
 
-        if (lang === 'zh') {
-            if (level === 'standard') suffix = INSTRUCTION_TEMPLATE_STANDARD_ZH;
-            if (level === 'full') suffix = INSTRUCTION_TEMPLATE_FULL_ZH;
-        } else {
-            // 英文或其他语言使用英文模板
-            if (level === 'standard') suffix = INSTRUCTION_TEMPLATE_STANDARD_EN;
-            if (level === 'full') suffix = INSTRUCTION_TEMPLATE_FULL_EN;
+        if (level === 'standard') {
+            switch (lang) {
+                case 'zh': suffix = INSTRUCTION_TEMPLATE_STANDARD_ZH; break;
+                case 'zh-TW': suffix = INSTRUCTION_TEMPLATE_STANDARD_ZH_TW; break;
+                case 'ja': suffix = INSTRUCTION_TEMPLATE_STANDARD_JA; break;
+                case 'ko': suffix = INSTRUCTION_TEMPLATE_STANDARD_KO; break;
+                case 'fr': suffix = INSTRUCTION_TEMPLATE_STANDARD_FR; break;
+                case 'de': suffix = INSTRUCTION_TEMPLATE_STANDARD_DE; break;
+                case 'es': suffix = INSTRUCTION_TEMPLATE_STANDARD_ES; break;
+                case 'en':
+                default:
+                    suffix = INSTRUCTION_TEMPLATE_STANDARD_EN;
+                    break;
+            }
+        } else if (level === 'full') {
+            switch (lang) {
+                case 'zh': suffix = INSTRUCTION_TEMPLATE_FULL_ZH; break;
+                case 'zh-TW': suffix = INSTRUCTION_TEMPLATE_FULL_ZH_TW; break;
+                case 'ja': suffix = INSTRUCTION_TEMPLATE_FULL_JA; break;
+                case 'ko': suffix = INSTRUCTION_TEMPLATE_FULL_KO; break;
+                case 'fr': suffix = INSTRUCTION_TEMPLATE_FULL_FR; break;
+                case 'de': suffix = INSTRUCTION_TEMPLATE_FULL_DE; break;
+                case 'es': suffix = INSTRUCTION_TEMPLATE_FULL_ES; break;
+                case 'en':
+                default:
+                    suffix = INSTRUCTION_TEMPLATE_FULL_EN;
+                    break;
+            }
         }
 
         return basePrompt + suffix;

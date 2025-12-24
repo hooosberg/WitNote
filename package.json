@@ -113,6 +113,8 @@
     "dmg": {
       "title": "${productName}",
       "artifactName": "${productName}-${version}.${ext}",
+      "icon": "build/dmg-icon/icon.icns",
+      "iconSize": 128,
       "window": {
         "width": 540,
         "height": 380
