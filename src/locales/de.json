@@ -96,8 +96,10 @@
         "confirmCancelDownloadMessage": "Sind Sie sicher, dass Sie den Download abbrechen möchten?",
         "confirmClearCacheTitle": "Cache leeren",
         "confirmDeleteCacheTitle": "Cache löschen",
-        "confirmClearCacheMessage": "Cache für {name} leeren? Sie müssen das Modell neu herunterladen.",
-        "confirmDeleteCacheMessage": "Cache für {name} löschen?"
+        "confirmClearCacheMessage": "Möchten Sie den Modell-Cache wirklich leeren? Sie müssen das Modell neu herunterladen.",
+        "confirmDeleteCacheMessage": "Möchten Sie den Modell-Cache wirklich löschen?",
+        "cacheClearedMessage": "{dbCount} Datenbanken und {cacheCount} Caches wurden gelöscht. Seite wird neu geladen.",
+        "clearCacheFailed": "Cache leeren fehlgeschlagen"
     },
     "shortcuts": {
         "title": "Tastaturkürzel",

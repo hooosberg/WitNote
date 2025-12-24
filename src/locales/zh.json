@@ -89,7 +89,17 @@
         "notTested": "未测试",
         "clickToSetup": "点击设置",
         "noModelsAvailable": "无可用模型",
-        "cancelDownloadConfirm": "确定要取消下载并回到首次使用界面吗？"
+        "cancelDownloadConfirm": "确定要取消下载并回到首次使用界面吗？",
+        "builtInWebLLMModels": "内置 WebLLM 模型",
+        "localBuiltInModel": "本地内置模型",
+        "confirmCancelDownloadTitle": "取消下载",
+        "confirmCancelDownloadMessage": "确定要取消下载吗？",
+        "confirmClearCacheTitle": "清除缓存",
+        "confirmDeleteCacheTitle": "删除缓存",
+        "confirmClearCacheMessage": "确定要清除模型缓存吗？您需要重新下载模型。",
+        "confirmDeleteCacheMessage": "确定要删除模型缓存吗？",
+        "cacheClearedMessage": "已清除 {dbCount} 个数据库和 {cacheCount} 个缓存，页面即将刷新",
+        "clearCacheFailed": "清除失败"
     },
     "model": {
         "speedUltraFast": "🚀 极速",

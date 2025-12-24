@@ -11,6 +11,7 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import DOMPurify from 'dompurify'
 import '../styles/chat-markdown.css'
+import ConfirmDialog from './ConfirmDialog'
 
 // 配置 marked
 marked.setOptions({
@@ -79,6 +80,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
     const [showEngineMenu, setShowEngineMenu] = useState(false)
     const engineWrapperRef = useRef<HTMLDivElement>(null)
     const menuRef = useRef<HTMLDivElement>(null) // Keep for model menu
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    } | null>(null)
 
     // 点击外部关闭模型菜单
     useEffect(() => {
@@ -721,9 +728,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (confirm(t('chat.cancelDownloadConfirm'))) {
-                                                engineStore?.resetWebLLMSetup();
-                                            }
+                                            setConfirmDialog({
+                                                isOpen: true,
+                                                title: t('chat.confirmCancelDownloadTitle'),
+                                                message: t('chat.confirmCancelDownloadMessage'),
+                                                onConfirm: () => {
+                                                    engineStore?.resetWebLLMSetup();
+                                                    setConfirmDialog(null);
+                                                }
+                                            });
                                         }}
                                         title={t('models.cancelDownload')}
                                         style={{
@@ -774,6 +787,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                     )}
                 </div>
             </div>
+
+            {/* ConfirmDialog */}
+            {confirmDialog && createPortal(
+                <ConfirmDialog
+                    title={confirmDialog.title}
+                    message={confirmDialog.message}
+                    onConfirm={confirmDialog.onConfirm}
+                    onCancel={() => setConfirmDialog(null)}
+                />,
+                document.body
+            )}
         </div>
     )
 }

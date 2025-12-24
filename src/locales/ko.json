@@ -89,8 +89,17 @@
         "notTested": "테스트되지 않음",
         "clickToSetup": "설정하기",
         "noModelsAvailable": "사용 가능한 모델 없음",
-        "confirmDeleteCacheMessage": "{name} 캐시를 삭제하시겠습니까?",
-        "cancelDownloadConfirm": "다운로드를 취소하고 첫 화면으로 돌아가시겠습니까?"
+        "confirmDeleteCacheMessage": "모델 캐시를 삭제하시겠습니까?",
+        "cancelDownloadConfirm": "다운로드를 취소하고 첫 화면으로 돌아가시겠습니까?",
+        "builtInWebLLMModels": "내장 WebLLM 모델",
+        "localBuiltInModel": "로컬 내장 모델",
+        "confirmCancelDownloadTitle": "다운로드 취소",
+        "confirmCancelDownloadMessage": "다운로드를 취소하시겠습니까?",
+        "confirmClearCacheTitle": "캐시 지우기",
+        "confirmDeleteCacheTitle": "캐시 삭제",
+        "confirmClearCacheMessage": "모델 캐시를 지우시겠습니까? 모델을 다시 다운로드해야 합니다.",
+        "cacheClearedMessage": "{dbCount}개의 데이터베이스와 {cacheCount}개의 캐시를 삭제했습니다. 페이지가 새로고침됩니다.",
+        "clearCacheFailed": "캐시 지우기 실패"
     },
     "model": {
         "speedUltraFast": "🚀 초고속",

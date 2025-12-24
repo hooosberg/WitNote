@@ -96,8 +96,10 @@
         "confirmCancelDownloadMessage": "Êtes-vous sûr de vouloir annuler le téléchargement ?",
         "confirmClearCacheTitle": "Vider le cache",
         "confirmDeleteCacheTitle": "Supprimer le cache",
-        "confirmClearCacheMessage": "Vider le cache pour {name} ? Vous devrez re-télécharger le modèle.",
-        "confirmDeleteCacheMessage": "Supprimer le cache pour {name} ?"
+        "confirmClearCacheMessage": "Voulez-vous vraiment vider le cache du modèle ? Vous devrez re-télécharger le modèle.",
+        "confirmDeleteCacheMessage": "Voulez-vous vraiment supprimer le cache du modèle ?",
+        "cacheClearedMessage": "{dbCount} bases de données et {cacheCount} caches supprimés. La page va se recharger.",
+        "clearCacheFailed": "Échec du vidage du cache"
     },
     "shortcuts": {
         "title": "Raccourcis Clavier",

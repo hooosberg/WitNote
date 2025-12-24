@@ -96,8 +96,10 @@
         "confirmCancelDownloadMessage": "¿Está seguro de que desea cancelar la descarga?",
         "confirmClearCacheTitle": "Borrar caché",
         "confirmDeleteCacheTitle": "Eliminar caché",
-        "confirmClearCacheMessage": "¿Borrar caché de {name}? Necesitará volver a descargar el modelo.",
-        "confirmDeleteCacheMessage": "¿Eliminar caché de {name}?"
+        "confirmClearCacheMessage": "¿Está seguro de que desea borrar la caché del modelo? Necesitará volver a descargar el modelo.",
+        "confirmDeleteCacheMessage": "¿Está seguro de que desea eliminar la caché del modelo?",
+        "cacheClearedMessage": "Se eliminaron {dbCount} bases de datos y {cacheCount} cachés. La página se recargará.",
+        "clearCacheFailed": "Error al borrar caché"
     },
     "shortcuts": {
         "title": "Atajos de teclado",

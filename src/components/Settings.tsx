@@ -556,8 +556,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
                                                                 const confirmMsg = modelInfo.isBuiltIn
-                                                                    ? t('chat.confirmClearCacheMessage', { name: modelInfo.displayName })
-                                                                    : t('chat.confirmDeleteCacheMessage', { name: modelInfo.displayName });
+                                                                    ? t('chat.confirmClearCacheMessage')
+                                                                    : t('chat.confirmDeleteCacheMessage');
 
                                                                 setConfirmDialog({
                                                                     isOpen: true,
@@ -611,11 +611,17 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
 
                                                                                 // 4. 刷新页面
                                                                                 console.log('🔄 准备刷新页面');
-                                                                                alert(`已清除 ${dbs.length} 个数据库和 ${cacheNames.length} 个缓存，页面即将刷新`);
+                                                                                // 直接刷新页面，不需要额外确认
+                                                                                setConfirmDialog(null);
                                                                                 window.location.reload();
                                                                             } catch (error) {
                                                                                 console.error('❌ 清除失败:', error);
-                                                                                alert('清除失败: ' + error);
+                                                                                setConfirmDialog({
+                                                                                    isOpen: true,
+                                                                                    title: t('chat.clearCacheFailed'),
+                                                                                    message: String(error),
+                                                                                    onConfirm: () => setConfirmDialog(null)
+                                                                                });
                                                                             }
                                                                         } else {
                                                                             // 非内置模型：使用标准删除方法

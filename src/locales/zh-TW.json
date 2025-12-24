@@ -86,7 +86,17 @@
         "notTested": "未測試",
         "clickToSetup": "點擊設定",
         "noModelsAvailable": "無可用模型",
-        "cancelDownloadConfirm": "確定要取消下載並回到首次使用介面嗎？"
+        "cancelDownloadConfirm": "確定要取消下載並回到首次使用介面嗎？",
+        "builtInWebLLMModels": "內建 WebLLM 模型",
+        "localBuiltInModel": "本地內建模型",
+        "confirmCancelDownloadTitle": "取消下載",
+        "confirmCancelDownloadMessage": "確定要取消下載嗎？",
+        "confirmClearCacheTitle": "清除快取",
+        "confirmDeleteCacheTitle": "刪除快取",
+        "confirmClearCacheMessage": "確定要清除模型快取嗎？您需要重新下載模型。",
+        "confirmDeleteCacheMessage": "確定要刪除模型快取嗎？",
+        "cacheClearedMessage": "已清除 {dbCount} 個資料庫和 {cacheCount} 個快取，頁面即將重新整理",
+        "clearCacheFailed": "清除失敗"
     },
     "model": {
         "speedUltraFast": "🚀 極速",

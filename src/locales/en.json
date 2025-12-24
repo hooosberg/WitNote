@@ -96,8 +96,10 @@
         "confirmCancelDownloadMessage": "Are you sure you want to cancel the download?",
         "confirmClearCacheTitle": "Clear Cache",
         "confirmDeleteCacheTitle": "Delete Cache",
-        "confirmClearCacheMessage": "Clear cache for {name}? You will need to re-download the model.",
-        "confirmDeleteCacheMessage": "Delete cache for {name}?"
+        "confirmClearCacheMessage": "Are you sure you want to clear the model cache? You will need to re-download the model.",
+        "confirmDeleteCacheMessage": "Are you sure you want to delete the model cache?",
+        "cacheClearedMessage": "Cleared {dbCount} databases and {cacheCount} caches. Page will refresh.",
+        "clearCacheFailed": "Failed to clear cache"
     },
     "model": {
         "speedUltraFast": "🚀 Ultra Fast",

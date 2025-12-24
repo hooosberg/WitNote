@@ -89,8 +89,17 @@
         "notTested": "未テスト",
         "clickToSetup": "設定する",
         "noModelsAvailable": "利用可能なモデルなし",
-        "confirmDeleteCacheMessage": "{name}のキャッシュを削除しますか？",
-        "cancelDownloadConfirm": "ダウンロードをキャンセルして最初の画面に戻りますか？"
+        "confirmDeleteCacheMessage": "モデルキャッシュを削除しますか？",
+        "cancelDownloadConfirm": "ダウンロードをキャンセルして最初の画面に戻りますか？",
+        "builtInWebLLMModels": "内蔵 WebLLM モデル",
+        "localBuiltInModel": "ローカル内蔵モデル",
+        "confirmCancelDownloadTitle": "ダウンロードをキャンセル",
+        "confirmCancelDownloadMessage": "ダウンロードをキャンセルしますか？",
+        "confirmClearCacheTitle": "キャッシュをクリア",
+        "confirmDeleteCacheTitle": "キャッシュを削除",
+        "confirmClearCacheMessage": "モデルキャッシュをクリアしますか？モデルを再ダウンロードする必要があります。",
+        "cacheClearedMessage": "{dbCount}個のデータベースと{cacheCount}個のキャッシュを削除しました。ページがリロードされます。",
+        "clearCacheFailed": "キャッシュのクリアに失敗しました"
     },
     "model": {
         "speedUltraFast": "🚀 超高速",

@@ -10,7 +10,6 @@
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:mas": "tsc && vite build && electron-builder --mac mas",
-    "build:win": "tsc && vite build && electron-builder --win",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
   },
@@ -61,7 +60,22 @@
       "dist-electron/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "public/models/ollama-models",
+        "to": "models/ollama-models",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "mac": {
+      "extraResources": [
+        {
+          "from": "public/ollama/mac",
+          "to": "ollama/mac"
+        }
+      ],
       "target": [
         {
           "target": "dir",
@@ -84,11 +98,11 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "signIgnore": [],
-      "identity": "***REMOVED*** (***REMOVED***)",
-      "notarize": false
+      "notarize": {
+        "teamId": "***REMOVED***"
+      },
+      "afterSign": "scripts/notarize.js"
     },
-    "afterSign": "scripts/notarize.js",
     "mas": {
       "type": "distribution",
       "target": {
@@ -130,6 +144,12 @@
       "format": "UDZO"
     },
     "win": {
+      "extraResources": [
+        {
+          "from": "public/ollama/win",
+          "to": "ollama/win"
+        }
+      ],
       "target": [
         {
           "target": "nsis",
