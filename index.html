@@ -7,6 +7,19 @@
   <meta name="description" content="智简笔记本 - 本地优先的 AI 记事本" />
   <link rel="icon" type="image/png" href="/src/icon/智简icon 拷贝.png" />
   <title>智简笔记本 (WitNote)</title>
+  <script>
+    // 立即应用缓存的主题，避免 FOUC (Flash of Unstyled Content)
+    (function() {
+      try {
+        const cachedTheme = localStorage.getItem('zen-theme-cache');
+        if (cachedTheme) {
+          document.documentElement.setAttribute('data-theme', cachedTheme);
+        }
+      } catch (e) {
+        console.warn('Failed to load theme from cache', e);
+      }
+    })();
+  </script>
 </head>
 
 <body>

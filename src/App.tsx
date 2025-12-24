@@ -26,6 +26,7 @@ import ChatPanel from './components/ChatPanel'
 import InputDialog from './components/InputDialog'
 import { ToastProvider, useToast } from './components/Toast'
 import SettingsPanel from './components/Settings'
+import ConfirmDialog from './components/ConfirmDialog'
 import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import { useFolderOrder } from './hooks/useFolderOrder'
@@ -171,10 +172,10 @@ const AppContent: React.FC = () => {
 
     // 设置面板状态
     const [showSettings, setShowSettings] = useState(false)
-    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'guide'>('appearance')
+    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'>('appearance')
 
     // 打开设置面板的函数
-    const openSettingsPanel = (tab: 'appearance' | 'ai' | 'persona' | 'guide' = 'appearance') => {
+    const openSettingsPanel = (tab: 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about' = 'appearance') => {
         setSettingsDefaultTab(tab)
         setShowSettings(true)
     }
@@ -196,13 +197,21 @@ const AppContent: React.FC = () => {
         node: FileNode | null
     }>({ show: false, x: 0, y: 0, node: null })
 
-    // 侧边栏右键菜单（用于空白区域和根目录）
+    // 侧边栏右键菜单(用于空白区域和根目录)
     const [sidebarMenu, setSidebarMenu] = useState<{
         show: boolean
         x: number
         y: number
     }>({ show: false, x: 0, y: 0 })
 
+    // 自定义确认对话框状态
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        details?: string[];
+        onConfirm: () => void;
+    } | null>(null)
 
     const {
         vaultPath,
@@ -332,6 +341,49 @@ const AppContent: React.FC = () => {
         }
         if (vaultPath) loadPreviews()
     }, [activeFolder, fileTree, vaultPath])
+
+    // 快捷方式监听
+    useEffect(() => {
+        if (!window.shortcuts) return
+
+        // 监听新建文章快捷方式
+        const unsubCreateArticle = window.shortcuts.onCreateArticle(async () => {
+            const fileName = generateFileName(settings.defaultFormat)
+            await createNewFile(fileName)
+        })
+
+        // 监听新建文件夹快捷方式
+        const unsubCreateFolder = window.shortcuts.onCreateFolder(() => {
+            setNewFolderTargetDir(activeFolder?.path || '')
+            setShowNewFolderDialog(true)
+        })
+
+        // 监听打开设置快捷方式
+        const unsubOpenSettings = window.shortcuts.onOpenSettings(() => {
+            setShowSettings(true)
+        })
+
+        // 监听专注模式切换快捷方式
+        const unsubToggleFocusMode = window.shortcuts.onToggleFocusMode(() => {
+            if (autoHideLeft && autoHideRight && !manualFocusMode) {
+                // 在自动专注模式下（窗口<800px），调整窗口宽度到1000px
+                const appWindow = (window as unknown as { appWindow?: { setWidth: (w: number) => Promise<boolean> } }).appWindow
+                if (appWindow) {
+                    appWindow.setWidth(1000)
+                }
+            } else {
+                // 正常切换手动专注模式
+                setManualFocusMode(prev => !prev)
+            }
+        })
+
+        return () => {
+            unsubCreateArticle()
+            unsubCreateFolder()
+            unsubOpenSettings()
+            unsubToggleFocusMode()
+        }
+    }, [activeFolder, settings.defaultFormat, createNewFile, autoHideLeft, autoHideRight, manualFocusMode])
 
     // 关闭菜单（点击外部区域时）
     useEffect(() => {
@@ -794,15 +846,22 @@ const AppContent: React.FC = () => {
                                                 </button>
                                                 <button
                                                     className="sidebar-footer-btn connected flex-1"
-                                                    onClick={async () => {
-                                                        // 确认对话框
-                                                        const confirmed = window.confirm(t('sidebar.disconnectConfirm'))
-
-                                                        if (confirmed) {
-                                                            // 断开连接：清除存储的路径并重新加载
-                                                            await window.fs.disconnectVault()
-                                                            window.location.reload()
-                                                        }
+                                                    onClick={() => {
+                                                        // 使用自定义确认对话框
+                                                        setConfirmDialog({
+                                                            isOpen: true,
+                                                            title: '断开链接文件夹',
+                                                            message: '这将断开应用与本地文件夹的连接,但不会删除文件夹中的任何文件。',
+                                                            details: [
+                                                                '您的所有笔记和文件都会保留完好'
+                                                            ],
+                                                            onConfirm: async () => {
+                                                                setConfirmDialog(null)
+                                                                // 断开连接：清除存储的路径并重新加载
+                                                                await window.fs.disconnectVault()
+                                                                window.location.reload()
+                                                            }
+                                                        })
                                                     }}
                                                     title="断开连接"
                                                 >
@@ -1014,6 +1073,17 @@ const AppContent: React.FC = () => {
                     document.body
                 )
             }
+
+            {/* 自定义确认对话框 */}
+            {confirmDialog?.isOpen && (
+                <ConfirmDialog
+                    title={confirmDialog.title}
+                    message={confirmDialog.message}
+                    details={confirmDialog.details}
+                    onConfirm={confirmDialog.onConfirm}
+                    onCancel={() => setConfirmDialog(null)}
+                />
+            )}
         </div >
     )
 }

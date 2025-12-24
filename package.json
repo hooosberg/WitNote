@@ -1,7 +1,7 @@
 {
   "name": "witnote",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "智简笔记本 - 大智若简的本地化 AI 写作伴侣 (WitNote)",
   "main": "dist-electron/main.js",
   "author": "hooosberg <zikedece@proton.me>",

@@ -24,6 +24,7 @@ export interface EngineState {
     webllmLoading: boolean;
     webllmProgress: { progress: number; text: string } | null;
     webllmCachedModels: string[];
+    webllmFirstTimeSetup: boolean; // 是否显示首次设置提示
 
     // Ollama 状态
     ollamaAvailable: boolean;
@@ -48,6 +49,8 @@ export interface UseEngineStoreReturn extends EngineState {
     refreshWebLLMCache: () => Promise<void>;
     deleteWebLLMModel: (modelId: string) => Promise<void>;
     clearAllWebLLMCache: () => Promise<void>;
+    completeWebLLMSetup: () => void; // 完成首次设置
+    resetWebLLMSetup: () => void; // 重置首次设置（取消下载）
 
     // Ollama
     updateOllamaConfig: (config: Partial<OllamaConfig>) => void;
@@ -75,7 +78,7 @@ const STORAGE_KEYS = {
 
 export function useEngineStore(): UseEngineStoreReturn {
     // 从 localStorage 恢复配置（默认使用 Ollama，WebLLM 有已知问题）
-    const savedEngine = (localStorage.getItem(STORAGE_KEYS.ENGINE) as EngineType) || 'ollama';
+    const savedEngine = (localStorage.getItem(STORAGE_KEYS.ENGINE) as EngineType) || 'webllm';
     const savedModel = localStorage.getItem(STORAGE_KEYS.MODEL) || DEFAULT_WEBLLM_MODEL;
     const savedOllamaConfig: OllamaConfig = JSON.parse(
         localStorage.getItem(STORAGE_KEYS.OLLAMA) || '{"host":"127.0.0.1","port":11434}'
@@ -91,6 +94,7 @@ export function useEngineStore(): UseEngineStoreReturn {
         webllmLoading: false,
         webllmProgress: null,
         webllmCachedModels: [],
+        webllmFirstTimeSetup: !localStorage.getItem('webllm-setup-completed'),
         ollamaAvailable: false,
         ollamaConfig: savedOllamaConfig,
         ollamaModels: [],
@@ -173,14 +177,19 @@ export function useEngineStore(): UseEngineStoreReturn {
 
         try {
             // 动态导入 WebLLM
-            const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+            const { CreateMLCEngine, prebuiltAppConfig } = await import('@mlc-ai/web-llm');
 
             // 确保之前的引擎已卸载
             if (webllmEngineRef.current && webllmEngineRef.current.unload) {
                 await webllmEngineRef.current.unload();
             }
 
+            console.log('🚀 WebLLM 初始化:', { targetModel });
+
+            // 使用 WebLLM 预置配置
+            // 首次从 HuggingFace 下载模型并缓存，之后可离线使用
             const engine = await CreateMLCEngine(targetModel, {
+                appConfig: prebuiltAppConfig,
                 initProgressCallback: (progress) => {
                     setState(prev => ({
                         ...prev,
@@ -324,6 +333,29 @@ export function useEngineStore(): UseEngineStoreReturn {
         }
     }, []);
 
+    // 完成首次设置
+    const completeWebLLMSetup = useCallback(() => {
+        localStorage.setItem('webllm-setup-completed', 'true');
+        setState(prev => ({ ...prev, webllmFirstTimeSetup: false }));
+    }, []);
+
+    // 重置 WebLLM 首次设置
+    const resetWebLLMSetup = useCallback(() => {
+        // Assuming `isMas` is defined in the scope if needed, otherwise remove.
+        // if (isMas) return; 
+        localStorage.removeItem('webllm-setup-completed');
+        setState(prev => ({
+            ...prev,
+            webllmFirstTimeSetup: true,
+            webllmLoading: false,
+            webllmProgress: null,
+            webllmReady: false,
+            error: null
+        }));
+        // 如果可能，重新加载页面以确保 WebLLM 引擎完全重置
+        window.location.reload();
+    }, []);
+
     // 更新 Ollama 配置
     const updateOllamaConfig = useCallback((config: Partial<OllamaConfig>) => {
         setState(prev => {
@@ -441,8 +473,9 @@ export function useEngineStore(): UseEngineStoreReturn {
         const initEngine = async () => {
             switch (state.currentEngine) {
                 case 'webllm':
-                    // WebLLM: 如果未就绪且有选中模型，则初始化
-                    if (!state.webllmReady && state.selectedModel) {
+                    // WebLLM: 只有在非首次使用（已有缓存）时才自动初始化
+                    // 首次使用时，等待用户点击下载按钮
+                    if (!state.webllmReady && state.selectedModel && !state.webllmFirstTimeSetup) {
                         await initWebLLM(state.selectedModel);
                     }
                     break;
@@ -473,6 +506,8 @@ export function useEngineStore(): UseEngineStoreReturn {
         refreshWebLLMCache,
         deleteWebLLMModel,
         clearAllWebLLMCache,
+        completeWebLLMSetup,
+        resetWebLLMSetup,
         updateOllamaConfig,
         refreshOllamaStatus,
         updateCloudConfig,

@@ -11,22 +11,50 @@ import {
     Bot,
     MessageSquare,
     HelpCircle,
+    Keyboard,
+    Info,
     Sun,
     Moon,
     Coffee,
     Loader2,
     RotateCcw,
     Trash2,
-    Check
+    Check,
+    Plus,
+    PenTool,
+    BookOpen,
+    Book,
+    Languages,
+    GraduationCap,
+    Terminal,
+    Tent,
+    HeartHandshake,
+    Briefcase,
+    Lightbulb,
+    Activity,
+    Utensils,
+    Star,
+    Edit2,
+    Gauge,
+    LayoutList,
+    AlignLeft
 } from 'lucide-react';
-import { useSettings, AppSettings } from '../hooks/useSettings';
+import { useSettings, AppSettings, PRESET_ROLES } from '../hooks/useSettings';
 import { changeLanguage, getCurrentLanguage, LanguageCode } from '../i18n';
 import { UseLLMReturn } from '../hooks/useLLM';
-import { getDefaultSystemPrompt } from '../services/types';
+import ConfirmDialog from './ConfirmDialog';
+
+import {
+    getDefaultSystemPrompt,
+    INSTRUCTION_TEMPLATE_STANDARD_ZH,
+    INSTRUCTION_TEMPLATE_FULL_ZH,
+    INSTRUCTION_TEMPLATE_STANDARD_EN,
+    INSTRUCTION_TEMPLATE_FULL_EN
+} from '../services/types';
 import { UseEngineStoreReturn } from '../store/engineStore';
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels';
 
-type TabType = 'appearance' | 'ai' | 'persona' | 'guide';
+type TabType = 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about';
 
 const LANGUAGES: { code: LanguageCode; label: string }[] = [
     { code: 'en', label: 'English' },
@@ -47,9 +75,27 @@ interface SettingsProps {
     engineStore: UseEngineStoreReturn;
 }
 
+const RoleIcon = ({ name, size = 20, className }: { name: string, size?: number, className?: string }) => {
+    const IconMap: Record<string, any> = {
+        PenTool, BookOpen, Book, Languages, GraduationCap, Terminal,
+        Tent, HeartHandshake, Briefcase, Lightbulb, Activity, Utensils
+    };
+    const Icon = IconMap[name] || Bot;
+    return <Icon size={size} className={className} />;
+};
+
 export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: SettingsProps) {
     const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>(defaultTab || 'appearance');
+
+    // 自定义确认对话框状态
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        details?: string[];
+        onConfirm: () => void;
+    } | null>(null);
 
     // 当设置面板打开时，使用defaultTab
     useEffect(() => {
@@ -62,11 +108,54 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
         isLoading,
         setSetting,
         setTheme,
-        resetSettings
+        resetSettings,
+        addPromptTemplate,
+        removePromptTemplate,
+        updatePromptTemplate
     } = useSettings();
 
     const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
-    const [appVersion, setAppVersion] = useState('1.2.1'); // 默认版本号
+    const [appVersion, setAppVersion] = useState('1.2.1');
+    const [isCreatingRole, setIsCreatingRole] = useState(false);
+    const [newRoleName, setNewRoleName] = useState('');
+    const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+    const [editingRoleName, setEditingRoleName] = useState('');
+
+    // 提示词等级状态
+    const [promptLevel, setPromptLevel] = useState<'lite' | 'standard' | 'full'>('standard');
+    const [activeRoleId, setActiveRoleId] = useState<string | null>(null); // 当前选中的预设角色 ID
+
+    // 生成完整提示词
+    const generatePrompt = (basePrompt: string, level: 'lite' | 'standard' | 'full') => {
+        let suffix = '';
+        const lang = currentLang;
+
+        if (lang === 'zh') {
+            if (level === 'standard') suffix = INSTRUCTION_TEMPLATE_STANDARD_ZH;
+            if (level === 'full') suffix = INSTRUCTION_TEMPLATE_FULL_ZH;
+        } else {
+            // 英文或其他语言使用英文模板
+            if (level === 'standard') suffix = INSTRUCTION_TEMPLATE_STANDARD_EN;
+            if (level === 'full') suffix = INSTRUCTION_TEMPLATE_FULL_EN;
+        }
+
+        return basePrompt + suffix;
+    };
+
+    // 当 Prompt Level 改变且有选中的预设角色时，自动更新提示词
+    useEffect(() => {
+        if (activeRoleId) {
+            const role = PRESET_ROLES.find(r => r.id === activeRoleId);
+            if (role) {
+                const basePrompt = t(role.promptKey);
+                const newPrompt = generatePrompt(basePrompt, promptLevel);
+                // 仅当内容确实改变时才更新，避免死循环（虽然 setSetting 是异步的）
+                if (settings.systemPrompt !== newPrompt) {
+                    setSetting('systemPrompt', newPrompt);
+                }
+            }
+        }
+    }, [promptLevel, activeRoleId, currentLang]); // 默认版本号
 
     // 获取应用版本号
     useEffect(() => {
@@ -242,11 +331,11 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                     className={`engine-selector-item ${engineStore.currentEngine === 'webllm' ? 'active' : ''}`}
                                     onClick={() => {
                                         engineStore.setEngine('webllm')
-                                        // 自动初始化：显式获取目标模型 ID，避免因 state 异步更新导致使用的是旧引擎的模型 ID
+                                        // 自动初始化：只有在非首次使用时才自动加载
                                         const savedModel = localStorage.getItem('zen-selected-webllm-model');
                                         const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id;
 
-                                        if (!engineStore.webllmReady && !engineStore.webllmLoading && targetModel) {
+                                        if (!engineStore.webllmReady && !engineStore.webllmLoading && !engineStore.webllmFirstTimeSetup && targetModel) {
                                             engineStore.initWebLLM(targetModel)
                                         }
                                     }}
@@ -294,22 +383,13 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">内置 WebLLM 模型</h3>
-                                    <button
-                                        className={`status-btn ${engineStore.webllmReady ? 'connected' : 'disconnected'}`}
-                                        onClick={() => engineStore.webllmReady ? null : engineStore.initWebLLM(engineStore.selectedModel)}
-                                        title={engineStore.webllmReady ? '已就绪' : '点击加载'}
-                                    >
-                                        <span className="status-indicator" />
-                                        <span className="status-text">{engineStore.webllmReady ? '已就绪' : '未加载'}</span>
-                                        <span className="status-action">{engineStore.webllmReady ? '已就绪' : '加载模型'}</span>
-                                    </button>
                                 </div>
                                 <div className="recommended-models" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {ALL_WEBLLM_MODELS_INFO.map(modelInfo => {
                                         const isSelected = engineStore.selectedModel === modelInfo.model_id;
                                         const isLoading = isSelected && engineStore.webllmLoading;
                                         const isReady = isSelected && engineStore.webllmReady;
-                                        const isCached = engineStore.webllmCachedModels.includes(modelInfo.model_id) || modelInfo.isBuiltIn;
+                                        const isCached = engineStore.webllmCachedModels.includes(modelInfo.model_id);
                                         const progressVal = engineStore.webllmProgress ? Math.round(engineStore.webllmProgress.progress * 100) : 0;
 
                                         return (
@@ -318,9 +398,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
                                                 padding: '12px 16px',
-                                                background: 'var(--bg-secondary)',
-                                                borderRadius: '10px',
-                                                border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border-color)'
+                                                background: 'var(--bg-card)',
+                                                borderRadius: '10px'
                                             }}>
                                                 {/* 左侧：标题和描述 */}
                                                 <div style={{ flex: 1 }}>
@@ -378,17 +457,54 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                 {/* 右侧：按钮 */}
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px' }}>
                                                     {isLoading ? (
-                                                        <Loader2 size={18} className="spin" style={{ color: 'var(--accent)' }} />
+                                                        <>
+                                                            <Loader2 size={18} className="spin" style={{ color: 'var(--accent)' }} />
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setConfirmDialog({
+                                                                        isOpen: true,
+                                                                        title: '取消下载',
+                                                                        message: '确定要取消下载吗？',
+                                                                        onConfirm: () => {
+                                                                            engineStore?.resetWebLLMSetup();
+                                                                            setConfirmDialog(null);
+                                                                        }
+                                                                    });
+                                                                }}
+                                                                title="取消下载"
+                                                                style={{
+                                                                    padding: '6px',
+                                                                    borderRadius: '50%',
+                                                                    border: 'none',
+                                                                    background: 'transparent',
+                                                                    color: 'var(--text-secondary)',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    e.currentTarget.style.color = '#ff453a';
+                                                                    e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)';
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    e.currentTarget.style.color = 'var(--text-secondary)';
+                                                                    e.currentTarget.style.background = 'transparent';
+                                                                }}
+                                                            >
+                                                                <X size={16} />
+                                                            </button>
+                                                        </>
                                                     ) : isReady && isSelected ? (
-                                                        <span style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            color: '#1e8e3e',
-                                                            fontSize: '13px'
-                                                        }}>
-                                                            <Check size={16} /> 使用中
-                                                        </span>
+                                                        <button
+                                                            className="download-btn"
+                                                            style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
+                                                            disabled
+                                                        >
+                                                            <Check size={16} style={{ marginRight: '4px' }} /> 使用中
+                                                        </button>
                                                     ) : (
                                                         <button
                                                             className="download-btn"
@@ -399,20 +515,104 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                         </button>
                                                     )}
 
-                                                    {/* 删除按钮 */}
-                                                    {isCached && !modelInfo.isBuiltIn && !isLoading && (
+                                                    {/* 清除/删除缓存按钮 */}
+                                                    {(isCached || (isReady && isSelected)) && !isLoading && (
                                                         <button
-                                                            className="icon-btn"
-                                                            title="删除缓存"
-                                                            onClick={(e) => {
+                                                            className="icon-btn delete-model-btn"
+                                                            title={modelInfo.isBuiltIn ? "清除缓存" : "删除缓存"}
+                                                            onClick={async (e) => {
                                                                 e.stopPropagation();
-                                                                if (confirm(`删除 ${modelInfo.displayName} 的缓存？`)) {
-                                                                    engineStore.deleteWebLLMModel(modelInfo.model_id);
-                                                                }
+                                                                const confirmMsg = modelInfo.isBuiltIn
+                                                                    ? `清除 ${modelInfo.displayName} 的缓存？清除后需要重新下载模型。`
+                                                                    : `删除 ${modelInfo.displayName} 的缓存？`;
+
+                                                                setConfirmDialog({
+                                                                    isOpen: true,
+                                                                    title: modelInfo.isBuiltIn ? '清除缓存' : '删除缓存',
+                                                                    message: confirmMsg,
+                                                                    onConfirm: async () => {
+                                                                        setConfirmDialog(null);
+                                                                        if (modelInfo.isBuiltIn) {
+                                                                            // 内置模型：彻底清除所有缓存（类似 Chrome DevTools 的 Clear site data）
+                                                                            try {
+                                                                                console.log('🧹 开始清除所有站点数据...');
+
+                                                                                // 1. 删除所有 IndexedDB 数据库（不过滤）
+                                                                                const dbs = await window.indexedDB.databases();
+                                                                                console.log('📦 发现数据库:', dbs.map(db => db.name));
+
+                                                                                const deletePromises = dbs.map(db => new Promise<void>((resolve) => {
+                                                                                    if (db.name) {
+                                                                                        console.log('🗑️ 删除:', db.name);
+                                                                                        const req = window.indexedDB.deleteDatabase(db.name);
+                                                                                        req.onsuccess = () => {
+                                                                                            console.log('✅', db.name);
+                                                                                            resolve();
+                                                                                        };
+                                                                                        req.onerror = (e) => {
+                                                                                            console.error('❌', db.name, e);
+                                                                                            resolve(); // 继续删除其他
+                                                                                        };
+                                                                                        req.onblocked = () => {
+                                                                                            console.warn('⚠️ 阻塞:', db.name);
+                                                                                            resolve();
+                                                                                        };
+                                                                                    } else {
+                                                                                        resolve();
+                                                                                    }
+                                                                                }));
+
+                                                                                await Promise.all(deletePromises);
+                                                                                console.log('✅ 所有 IndexedDB 已清除');
+
+                                                                                // 2. 清除所有 Cache Storage
+                                                                                const cacheNames = await caches.keys();
+                                                                                console.log('📦 发现 Cache:', cacheNames);
+                                                                                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                                                                                console.log('✅ 所有 Cache 已清除');
+
+                                                                                // 3. 清除 localStorage 相关标记
+                                                                                localStorage.removeItem('webllm-setup-completed');
+                                                                                localStorage.removeItem('zen-selected-webllm-model');
+                                                                                console.log('✅ localStorage 已清理');
+
+                                                                                // 4. 刷新页面
+                                                                                console.log('🔄 准备刷新页面');
+                                                                                alert(`已清除 ${dbs.length} 个数据库和 ${cacheNames.length} 个缓存，页面即将刷新`);
+                                                                                window.location.reload();
+                                                                            } catch (error) {
+                                                                                console.error('❌ 清除失败:', error);
+                                                                                alert('清除失败: ' + error);
+                                                                            }
+                                                                        } else {
+                                                                            // 非内置模型：使用标准删除方法
+                                                                            engineStore.deleteWebLLMModel(modelInfo.model_id);
+                                                                        }
+                                                                    }
+                                                                });
                                                             }}
-                                                            style={{ padding: '6px', color: 'var(--text-secondary)' }}
+                                                            style={{
+                                                                padding: '8px',
+                                                                color: 'var(--text-secondary)',
+                                                                background: 'transparent',
+                                                                border: 'none',
+                                                                borderRadius: '6px',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.color = '#ff453a';
+                                                                e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.color = 'var(--text-secondary)';
+                                                                e.currentTarget.style.background = 'transparent';
+                                                            }}
                                                         >
-                                                            <Trash2 size={16} />
+                                                            <Trash2 size={18} />
                                                         </button>
                                                     )}
                                                 </div>
@@ -491,9 +691,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                         alignItems: 'center',
                                                         justifyContent: 'space-between',
                                                         padding: '12px 16px',
-                                                        background: 'var(--bg-secondary)',
-                                                        borderRadius: '10px',
-                                                        border: model.name === engineStore.selectedModel ? '2px solid var(--accent)' : '1px solid var(--border-color)'
+                                                        background: 'var(--bg-card)',
+                                                        borderRadius: '10px'
                                                     }}>
                                                         <div>
                                                             <span style={{ fontWeight: 600 }}>{model.name}</span>
@@ -503,21 +702,18 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                         </div>
                                                         {model.name !== engineStore.selectedModel ? (
                                                             <button
-                                                                className="model-use-btn"
+                                                                className="download-btn"
                                                                 onClick={() => engineStore.selectModel(model.name)}
                                                             >
                                                                 使用
                                                             </button>
                                                         ) : (
-                                                            <span style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '4px',
-                                                                color: '#1e8e3e',
-                                                                fontSize: '13px'
-                                                            }}>
-                                                                <Check size={10} /> 使用中
-                                                            </span>
+                                                            <button
+                                                                className="download-btn"
+                                                                disabled
+                                                            >
+                                                                <Check size={16} style={{ marginRight: '4px' }} /> 使用中
+                                                            </button>
                                                         )}
                                                     </div>
                                                 ))
@@ -526,109 +722,156 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                     </>
                                 )}
                             </div>
-                        )}
+                        )
+                        }
 
                         {/* Cloud 内容 */}
-                        {engineStore.currentEngine === 'openai' && (
-                            <div className="settings-section fade-in">
-                                <div className="settings-section-header">
-                                    <h3 className="settings-section-title">云端 Cloud API 设置</h3>
-                                    <button
-                                        className={`status-btn ${engineStore.cloudApiStatus === 'success' ? 'connected' : engineStore.cloudApiStatus === 'error' ? 'error' : 'untested'}`}
-                                        onClick={() => engineStore.testCloudApi()}
-                                        title="点击测试连接"
-                                    >
-                                        <span className="status-indicator" />
-                                        <span className="status-text">
-                                            {engineStore.cloudApiStatus === 'success' ? '已连接' :
-                                                engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试'}
-                                        </span>
-                                        <span className="status-action">测试连接</span>
-                                    </button>
-                                </div>
+                        {
+                            engineStore.currentEngine === 'openai' && (
+                                <div className="settings-section fade-in">
+                                    <div className="settings-section-header">
+                                        <h3 className="settings-section-title">云端 Cloud API 设置</h3>
+                                        <button
+                                            className={`status-btn ${engineStore.cloudApiStatus === 'success' ? 'connected' : engineStore.cloudApiStatus === 'error' ? 'error' : 'untested'}`}
+                                            onClick={() => engineStore.testCloudApi()}
+                                            title="点击测试连接"
+                                        >
+                                            <span className="status-indicator" />
+                                            <span className="status-text">
+                                                {engineStore.cloudApiStatus === 'success' ? '已连接' :
+                                                    engineStore.cloudApiStatus === 'error' ? '连接失败' : '未测试'}
+                                            </span>
+                                            <span className="status-action">测试连接</span>
+                                        </button>
+                                    </div>
 
-                                {/* 支持平台列表 */}
-                                <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                    支持平台：OpenAI, Google Gemini, DeepSeek, Claude, Groq, Mistral, 零一万物, 通义千问 等 OpenAI 兼容接口。
-                                </p>
+                                    {/* 支持平台列表 */}
+                                    <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                        支持平台：OpenAI, Google Gemini, DeepSeek, Claude, Groq, Mistral, 零一万物, 通义千问 等 OpenAI 兼容接口。
+                                    </p>
 
-                                <div style={{
-                                    padding: '16px',
-                                    background: 'var(--bg-secondary)',
-                                    borderRadius: '10px',
-                                    border: '1px solid var(--border-color)'
-                                }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <div>
-                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>API Key</label>
-                                            <input
-                                                type="password"
-                                                value={engineStore.cloudConfig.apiKey}
-                                                onChange={(e) => engineStore.updateCloudConfig({ apiKey: e.target.value })}
-                                                className="settings-input"
-                                                placeholder="sk-..."
-                                                style={{ width: '100%', fontFamily: 'monospace' }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>Base URL</label>
-                                            <input
-                                                type="text"
-                                                value={engineStore.cloudConfig.baseUrl}
-                                                onChange={(e) => engineStore.updateCloudConfig({ baseUrl: e.target.value })}
-                                                className="settings-input"
-                                                placeholder="https://api.openai.com/v1"
-                                                style={{ width: '100%', fontFamily: 'monospace' }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>模型名称</label>
-                                            <input
-                                                type="text"
-                                                value={engineStore.cloudConfig.modelName}
-                                                onChange={(e) => engineStore.updateCloudConfig({ modelName: e.target.value })}
-                                                className="settings-input"
-                                                placeholder="gpt-4o"
-                                                style={{ width: '100%', fontFamily: 'monospace' }}
-                                            />
+                                    <div style={{
+                                        padding: '16px',
+                                        background: 'var(--bg-secondary)',
+                                        borderRadius: '10px',
+                                        border: '1px solid var(--border-color)'
+                                    }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>API Key</label>
+                                                <input
+                                                    type="password"
+                                                    value={engineStore.cloudConfig.apiKey}
+                                                    onChange={(e) => engineStore.updateCloudConfig({ apiKey: e.target.value })}
+                                                    className="settings-input"
+                                                    placeholder="sk-..."
+                                                    style={{ width: '100%', fontFamily: 'monospace' }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>Base URL</label>
+                                                <input
+                                                    type="text"
+                                                    value={engineStore.cloudConfig.baseUrl}
+                                                    onChange={(e) => engineStore.updateCloudConfig({ baseUrl: e.target.value })}
+                                                    className="settings-input"
+                                                    placeholder="https://api.openai.com/v1"
+                                                    style={{ width: '100%', fontFamily: 'monospace' }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>模型名称</label>
+                                                <input
+                                                    type="text"
+                                                    value={engineStore.cloudConfig.modelName}
+                                                    onChange={(e) => engineStore.updateCloudConfig({ modelName: e.target.value })}
+                                                    className="settings-input"
+                                                    placeholder="gpt-4o"
+                                                    style={{ width: '100%', fontFamily: 'monospace' }}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* 配置指南 */}
-                                <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                    <strong style={{ fontSize: '12px' }}>📖 配置指南</strong>
-                                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8', fontSize: '12px' }}>
-                                        <li><a href="https://platform.openai.com/docs" target="_blank" rel="noreferrer">OpenAI 文档</a></li>
-                                        <li><a href="https://ai.google.dev/docs" target="_blank" rel="noreferrer">Google Gemini 文档</a> (Base URL: generativelanguage.googleapis.com/v1beta/openai/)</li>
-                                        <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noreferrer">DeepSeek 文档</a></li>
-                                    </ul>
-                                </div>
+                                    {/* 配置指南 */}
+                                    <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                        <strong style={{ fontSize: '12px' }}>📖 配置指南</strong>
+                                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8', fontSize: '12px' }}>
+                                            <li><a href="https://platform.openai.com/docs" target="_blank" rel="noreferrer">OpenAI 文档</a></li>
+                                            <li><a href="https://ai.google.dev/docs" target="_blank" rel="noreferrer">Google Gemini 文档</a> (Base URL: generativelanguage.googleapis.com/v1beta/openai/)</li>
+                                            <li><a href="https://api-docs.deepseek.com/" target="_blank" rel="noreferrer">DeepSeek 文档</a></li>
+                                        </ul>
+                                    </div>
 
-                                <p className="settings-hint" style={{ fontSize: '12px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <HelpCircle size={12} /> API Key 仅保存在本地，不会上传。
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                                    <p className="settings-hint" style={{ fontSize: '12px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <HelpCircle size={12} /> API Key 仅保存在本地，不会上传。
+                                    </p>
+                                </div>
+                            )
+                        }
+                    </div >
                 );
 
             case 'persona':
-                // 根据当前语言获取默认提示词
-                const defaultPromptForLang = getDefaultSystemPrompt(currentLang);
+                // 根据当前语言和等级获取默认提示词
+                const defaultPromptForLang = getDefaultSystemPrompt(currentLang, promptLevel);
                 // 获取当前显示的提示词：如果用户设置了则显示用户的，否则显示内置默认
                 const displayPrompt = settings.systemPrompt || defaultPromptForLang;
                 const isCustomized = settings.systemPrompt && settings.systemPrompt.trim() !== '';
 
                 return (
                     <div className="settings-tab-content">
+                        {/* 系统提示词编辑区 */}
                         <div className="settings-section">
                             <div className="settings-section-header">
-                                <h3 className="settings-section-title">{t('settings.defaultPrompt')}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <h3 className="settings-section-title" style={{ margin: 0 }}>{t('settings.defaultPrompt')}</h3>
+
+                                    {/* 提示词长度切换器 */}
+                                    <div className="prompt-level-toggle" style={{ display: 'flex', background: 'var(--bg-sidebar)', padding: '2px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                                        {[
+                                            { id: 'lite', icon: AlignLeft, label: '精简' },
+                                            { id: 'standard', icon: LayoutList, label: '标准' },
+                                            { id: 'full', icon: Gauge, label: '完整' }
+                                        ].map((item) => {
+                                            const Icon = item.icon;
+                                            const isActive = promptLevel === item.id;
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    onClick={() => setPromptLevel(item.id as any)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        padding: '4px 8px',
+                                                        border: 'none',
+                                                        borderRadius: '4px',
+                                                        background: isActive ? 'var(--bg-card)' : 'transparent',
+                                                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                                        boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                                        cursor: 'pointer',
+                                                        fontSize: '11px',
+                                                        fontWeight: isActive ? 500 : 400,
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    title={item.label}
+                                                >
+                                                    <Icon size={12} />
+                                                    <span>{item.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
                                 {isCustomized && (
                                     <button
                                         className="restore-default-btn"
-                                        onClick={() => setSetting('systemPrompt', '')}
+                                        onClick={() => {
+                                            setSetting('systemPrompt', '');
+                                            setActiveRoleId(null);
+                                        }}
                                     >
                                         <RotateCcw size={14} />
                                         {t('settings.restoreDefault')}
@@ -642,7 +885,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 value={displayPrompt}
                                 onChange={(e) => setSetting('systemPrompt', e.target.value)}
                                 className="settings-textarea"
-                                rows={10}
+                                rows={8}
                             />
                             {!isCustomized && (
                                 <p className="settings-hint" style={{ marginTop: '8px' }}>
@@ -650,10 +893,296 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 </p>
                             )}
                         </div>
+
+                        {/* 快捷角色选择区 */}
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">{t('settings.quickRoles')}</h3>
+                            <p className="settings-hint">{t('settings.quickRolesHint')}</p>
+
+                            {/* 预设角色按钮网格 */}
+                            <div className="role-buttons-grid">
+                                {PRESET_ROLES.map(role => (
+                                    <button
+                                        key={role.id}
+                                        className={`role-btn ${activeRoleId === role.id ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setActiveRoleId(role.id);
+                                            const newPrompt = generatePrompt(t(role.promptKey), promptLevel);
+                                            setSetting('systemPrompt', newPrompt);
+                                        }}
+                                        title={t(role.promptKey)}
+                                        style={activeRoleId === role.id ? { borderColor: 'var(--accent-color)', background: 'var(--bg-active)' } : {}}
+                                    >
+                                        <div className="role-icon-wrapper">
+                                            <RoleIcon name={role.icon} size={20} />
+                                        </div>
+                                        <span className="role-name">{t(role.nameKey)}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* 用户自定义角色 */}
+                            {settings.promptTemplates.length > 0 && (
+                                <>
+                                    <h4 className="settings-subtitle">{t('settings.customRoles')}</h4>
+                                    <div className="role-buttons-grid">
+                                        {settings.promptTemplates.map(template => (
+                                            <div key={template.id} className="role-btn-wrapper">
+                                                {editingRoleId === template.id ? (
+                                                    <div className="role-edit-input-wrapper">
+                                                        <input
+                                                            type="text"
+                                                            value={editingRoleName}
+                                                            onChange={(e) => setEditingRoleName(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    if (editingRoleName.trim()) {
+                                                                        updatePromptTemplate(template.id, { name: editingRoleName.trim() });
+                                                                        setEditingRoleId(null);
+                                                                    }
+                                                                } else if (e.key === 'Escape') {
+                                                                    setEditingRoleId(null);
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                if (editingRoleName.trim()) {
+                                                                    updatePromptTemplate(template.id, { name: editingRoleName.trim() });
+                                                                }
+                                                                setEditingRoleId(null);
+                                                            }}
+                                                            autoFocus
+                                                            className="role-edit-input"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        className="role-btn custom"
+                                                        onClick={() => setSetting('systemPrompt', template.content)}
+                                                        title={template.content}
+                                                    >
+                                                        <div className="role-icon-wrapper text-yellow-500">
+                                                            <Star size={20} fill="var(--warning-color, #f59e0b)" color="var(--warning-color, #f59e0b)" fillOpacity={0.2} />
+                                                        </div>
+                                                        <span className="role-name">{template.name}</span>
+
+                                                        <div className="role-actions">
+                                                            <button
+                                                                className="role-action-btn edit"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditingRoleId(template.id);
+                                                                    setEditingRoleName(template.name);
+                                                                }}
+                                                                title={t('dialog.rename')}
+                                                            >
+                                                                <Edit2 size={12} />
+                                                            </button>
+                                                            <button
+                                                                className="role-action-btn delete"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setConfirmDialog({
+                                                                        isOpen: true,
+                                                                        title: t('dialog.delete'),
+                                                                        message: t('dialog.deleteConfirm') + ` "${template.name}"?`,
+                                                                        onConfirm: () => {
+                                                                            removePromptTemplate(template.id);
+                                                                            setConfirmDialog(null);
+                                                                        }
+                                                                    });
+                                                                }}
+                                                                title={t('dialog.delete')}
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
+                                                        </div>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 保存当前为自定义角色按钮 - 始终显示 */}
+                            {settings.promptTemplates.length < 5 && (
+                                <div className="save-role-container">
+                                    {isCreatingRole ? (
+                                        <div className="save-role-input-group">
+                                            <input
+                                                type="text"
+                                                value={newRoleName}
+                                                onChange={(e) => setNewRoleName(e.target.value)}
+                                                placeholder={t('settings.saveRolePrompt')}
+                                                className="save-role-input"
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && newRoleName.trim()) {
+                                                        addPromptTemplate(newRoleName.trim(), displayPrompt);
+                                                        setIsCreatingRole(false);
+                                                        setNewRoleName('');
+                                                    } else if (e.key === 'Escape') {
+                                                        setIsCreatingRole(false);
+                                                        setNewRoleName('');
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                className="save-role-confirm-btn"
+                                                onClick={() => {
+                                                    if (newRoleName.trim()) {
+                                                        addPromptTemplate(newRoleName.trim(), displayPrompt);
+                                                        setIsCreatingRole(false);
+                                                        setNewRoleName('');
+                                                    }
+                                                }}
+                                            >
+                                                <Check size={14} />
+                                            </button>
+                                            <button
+                                                className="save-role-cancel-btn"
+                                                onClick={() => {
+                                                    setIsCreatingRole(false);
+                                                    setNewRoleName('');
+                                                }}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            className="save-custom-role-btn"
+                                            onClick={() => {
+                                                setIsCreatingRole(true);
+                                            }}
+                                        >
+                                            <Plus size={16} />
+                                            {t('settings.saveAsCustomRole')}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
 
-            case 'guide':
+            case 'shortcuts':
+                return (
+                    <div className="settings-tab-content shortcuts-content">
+                        <div className="settings-section">
+                            <h3 className="settings-section-title">{t('shortcuts.title')}</h3>
+                            <p className="settings-hint" style={{ marginBottom: '20px' }}>
+                                {t('shortcuts.description')}
+                            </p>
+                        </div>
+
+                        {/* 通用快捷键 */}
+                        <div className="settings-section">
+                            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>
+                                {t('shortcuts.general')}
+                            </h4>
+                            <div className="shortcut-list">
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.newArticle')}</span>
+                                    <kbd className="shortcut-key">Cmd+N</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.newFolder')}</span>
+                                    <kbd className="shortcut-key">Cmd+Shift+N</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.openSettings')}</span>
+                                    <kbd className="shortcut-key">Cmd+,</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.focusMode')}</span>
+                                    <kbd className="shortcut-key">Cmd+Shift+F</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.closeWindow')}</span>
+                                    <kbd className="shortcut-key">Cmd+W</kbd>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 编辑器快捷键 */}
+                        <div className="settings-section">
+                            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>
+                                {t('shortcuts.editing')}
+                            </h4>
+                            <div className="shortcut-list">
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.undo')}</span>
+                                    <kbd className="shortcut-key">Cmd+Z</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.redo')}</span>
+                                    <kbd className="shortcut-key">Cmd+Shift+Z</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.cut')}</span>
+                                    <kbd className="shortcut-key">Cmd+X</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.copy')}</span>
+                                    <kbd className="shortcut-key">Cmd+C</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.paste')}</span>
+                                    <kbd className="shortcut-key">Cmd+V</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.selectAll')}</span>
+                                    <kbd className="shortcut-key">Cmd+A</kbd>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 视图快捷键 */}
+                        <div className="settings-section">
+                            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>
+                                {t('shortcuts.view')}
+                            </h4>
+                            <div className="shortcut-list">
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.refresh')}</span>
+                                    <kbd className="shortcut-key">Cmd+R</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.devTools')}</span>
+                                    <kbd className="shortcut-key">Cmd+Alt+I</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.actualSize')}</span>
+                                    <kbd className="shortcut-key">Cmd+0</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.zoomIn')}</span>
+                                    <kbd className="shortcut-key">Cmd++</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.zoomOut')}</span>
+                                    <kbd className="shortcut-key">Cmd+-</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.fullscreen')}</span>
+                                    <kbd className="shortcut-key">Ctrl+Cmd+F</kbd>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Windows 说明 */}
+                        {window.platform?.isWindows && (
+                            <div className="settings-section">
+                                <p className="settings-hint" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                    {t('shortcuts.windowsHint')}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                );
+
+            case 'about':
                 return (
                     <div className="settings-tab-content guide-content">
                         <div className="settings-section">
@@ -721,6 +1250,11 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <h3 className="settings-section-title">{t('settings.credits.title')}</h3>
                             <div className="guide-credits">
                                 <p className="credit-item">
+                                    <strong>WebLLM</strong> - {t('settings.credits.webllmDesc')}<br />
+                                    <a href="https://github.com/mlc-ai/web-llm" target="_blank" rel="noopener noreferrer">github.com/mlc-ai/web-llm</a><br />
+                                    <span className="license-tag">Apache License 2.0</span>
+                                </p>
+                                <p className="credit-item">
                                     <strong>Ollama</strong> - {t('settings.credits.ollamaDesc')}<br />
                                     <a href="https://github.com/ollama/ollama" target="_blank" rel="noopener noreferrer">github.com/ollama/ollama</a><br />
                                     <span className="license-tag">MIT License</span>
@@ -774,11 +1308,18 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <span>{t('settings.persona')}</span>
                         </button>
                         <button
-                            className={`settings-tab ${activeTab === 'guide' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('guide')}
+                            className={`settings-tab ${activeTab === 'shortcuts' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('shortcuts')}
                         >
-                            <HelpCircle size={18} />
-                            <span>{t('settings.guide')}</span>
+                            <Keyboard size={18} />
+                            <span>{t('settings.shortcuts')}</span>
+                        </button>
+                        <button
+                            className={`settings-tab ${activeTab === 'about' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('about')}
+                        >
+                            <Info size={18} />
+                            <span>{t('settings.about')}</span>
                         </button>
                     </div>
 
@@ -795,12 +1336,40 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                 </div>
 
                 <div className="settings-footer">
-                    <button className="reset-btn" onClick={resetSettings}>
+                    <button className="reset-btn" onClick={() => {
+                        setConfirmDialog({
+                            isOpen: true,
+                            title: '确定要重置所有设置为默认值吗?',
+                            message: '这将:',
+                            details: [
+                                '恢复外观设置(茶色主题、17px字体等)',
+                                '切换到内置 WebLLM 引擎',
+                                '恢复默认提示词',
+                                '您的笔记内容不会受到影响'
+                            ],
+                            onConfirm: async () => {
+                                await resetSettings();
+                                engineStore.setEngine('webllm');
+                                setConfirmDialog(null);
+                            }
+                        });
+                    }}>
                         <RotateCcw size={16} />
                         {t('settings.resetToDefault')}
                     </button>
                 </div>
             </div>
+
+            {/* 自定义确认对话框 */}
+            {confirmDialog?.isOpen && (
+                <ConfirmDialog
+                    title={confirmDialog.title}
+                    message={confirmDialog.message}
+                    details={confirmDialog.details}
+                    onConfirm={confirmDialog.onConfirm}
+                    onCancel={() => setConfirmDialog(null)}
+                />
+            )}
         </div>
     );
 }

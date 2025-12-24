@@ -12,6 +12,30 @@ export interface PromptTemplate {
     content: string;
 }
 
+// 预设角色类型
+export interface PresetRole {
+    id: string;
+    nameKey: string;     // 翻译键 - 角色名称
+    icon: string;        // Lucide 图标名称
+    promptKey: string;   // 翻译键 - 提示词内容
+}
+
+// 预设角色列表
+export const PRESET_ROLES: PresetRole[] = [
+    { id: 'writer', nameKey: 'roles.writer', icon: 'PenTool', promptKey: 'roles.writerPrompt' },
+    { id: 'novelist', nameKey: 'roles.novelist', icon: 'BookOpen', promptKey: 'roles.novelistPrompt' },
+    { id: 'diary', nameKey: 'roles.diary', icon: 'Book', promptKey: 'roles.diaryPrompt' },
+    { id: 'translator', nameKey: 'roles.translator', icon: 'Languages', promptKey: 'roles.translatorPrompt' },
+    { id: 'learner', nameKey: 'roles.learner', icon: 'GraduationCap', promptKey: 'roles.learnerPrompt' },
+    { id: 'coder', nameKey: 'roles.coder', icon: 'Terminal', promptKey: 'roles.coderPrompt' },
+    { id: 'outdoor', nameKey: 'roles.outdoor', icon: 'Tent', promptKey: 'roles.outdoorPrompt' },
+    { id: 'psyche', nameKey: 'roles.psyche', icon: 'HeartHandshake', promptKey: 'roles.psychePrompt' },
+    { id: 'business', nameKey: 'roles.business', icon: 'Briefcase', promptKey: 'roles.businessPrompt' },
+    { id: 'creative', nameKey: 'roles.creative', icon: 'Lightbulb', promptKey: 'roles.creativePrompt' },
+    { id: 'health', nameKey: 'roles.health', icon: 'Activity', promptKey: 'roles.healthPrompt' },
+    { id: 'chef', nameKey: 'roles.chef', icon: 'Utensils', promptKey: 'roles.chefPrompt' },
+];
+
 // 应用设置
 export interface AppSettings {
     // 外观
@@ -39,7 +63,7 @@ export interface AppSettings {
 // 默认设置
 export const DEFAULT_SETTINGS: AppSettings = {
     // 外观
-    theme: 'light',
+    theme: 'tea',
     fontFamily: 'system',
     fontSize: 17,
 
@@ -47,8 +71,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     ollamaBaseUrl: 'http://localhost:11434',
     ollamaEnabled: true,
 
-    // AI 策略
-    preferredEngine: 'ollama',
+    // AI 策略 - 默认使用内置 WebLLM 引擎
+    preferredEngine: 'webllm',
     autoFallback: true,
 
     // 角色设定 - 空字符串表示使用内置默认提示词
@@ -88,7 +112,18 @@ function generateId(): string {
 }
 
 export function useSettings(): UseSettingsReturn {
-    const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
+    const [settings, setSettingsState] = useState<AppSettings>(() => {
+        // 尝试从缓存读取主题，作为初始状态
+        try {
+            const cachedTheme = localStorage.getItem('zen-theme-cache');
+            if (cachedTheme && ['light', 'dark', 'tea'].includes(cachedTheme)) {
+                return { ...DEFAULT_SETTINGS, theme: cachedTheme as any };
+            }
+        } catch (e) {
+            // ignore
+        }
+        return DEFAULT_SETTINGS;
+    });
     const [isLoading, setIsLoading] = useState(true);
 
     // 加载设置
@@ -99,6 +134,10 @@ export function useSettings(): UseSettingsReturn {
                     const stored = await window.settings.get();
                     if (stored) {
                         setSettingsState({ ...DEFAULT_SETTINGS, ...stored });
+                        // 同步缓存：确保现有用户的配置也能写入缓存
+                        if (stored.theme) {
+                            localStorage.setItem('zen-theme-cache', stored.theme as string);
+                        }
                     }
                 }
             } catch (error) {
@@ -145,6 +184,11 @@ export function useSettings(): UseSettingsReturn {
         value: AppSettings[K]
     ) => {
         setSettingsState(prev => ({ ...prev, [key]: value }));
+
+        // 如果是设置主题，同时缓存到 localStorage，确保下次启动时不闪烁
+        if (key === 'theme') {
+            localStorage.setItem('zen-theme-cache', value as string);
+        }
 
         // 派发自定义事件通知其他组件
         window.dispatchEvent(new CustomEvent('settings-changed', {

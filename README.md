@@ -24,7 +24,7 @@
 > Fully compliant with Apple's security & privacy standards. Currently under review. Your support and stars ⭐️ keep us going!
 
 **WitNote** is a local-first AI writing companion for macOS and Windows.
-With a built-in **Ollama AI engine** and an ultra-minimalist **native card interface**, it works right out of the box. No cloud dependency, no privacy concerns — intelligence made lightweight.
+Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired with an ultra-minimalist **native card interface**, it works right out of the box. No cloud dependency, no privacy concerns — intelligence made lightweight.
 
 ![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
 
@@ -32,9 +32,10 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 
 ## 🌟 Core Philosophy
 
-- **Smart**: Local AI, ready out of the box
-  - Built-in Ollama engine, auto-starts, ready to use
-  - Pre-installed lightweight model, no extra configuration needed
+- **Smart**: Three Engines in One, Freedom to Choose
+  - **WebLLM**: Built-in lightweight model in browser, no installation, works out of the box
+  - **Ollama**: Powerful local model, strong performance, completely offline
+  - **Cloud API**: Connect to cloud intelligence, infinite possibilities
 - **Simple**: No complexity
   - iOS-style card management, drag to organize
   - Smart focus mode — window narrows, editor simplifies
@@ -46,12 +47,13 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 ## ✨ Features (v1.2.1)
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
-- 🤖 **Local AI Engine** — Built-in Ollama, support downloading models like Qwen, Llama 3, Gemma, etc.
+- 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Built-in Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
+- 🎭 **Rich Role Library** — Built-in 10+ selected role prompts (Writer, Translator, Polisher, etc.), one-click switch & custom support
 - 🌍 **Global Communication** — **Supports 8 Languages**: 
   - English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch, Español
   - Interface and AI responses automatically adapt to your language
-- 🔒 **Privacy First** — All AI inference is local, no data upload, Apple Notarized
-- 💬 **Customizable AI Persona** — Editable system prompt with one-click restore to default
+- 🔒 **Privacy First** — All AI inference is local (when using local engines), no data upload, Apple Notarized
+- 💬 **Highly Customizable** — Freely edit system prompts to craft your exclusive AI assistant
 - 🎨 **Multiple Themes** — Light / Dark / Zen Tea, fully optimized dark mode
 - 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting, polished context menus
 - 🔍 **Context Aware** — AI can directly read your current article or folder contents
@@ -121,17 +123,21 @@ With a built-in **Ollama AI engine** and an ultra-minimalist **native card inter
 
 ## 🔧 AI Engine Info
 
-### Ready Out of the Box
-The app includes a built-in Ollama engine and the `qwen2.5:0.5b` lightweight model. Works right from the first launch, no configuration needed.
+### 1. WebLLM (Built-in Light)
+The app includes a built-in WebLLM engine and `qwen2.5:0.5b` lightweight model.
+- **Pros**: No extra software installation needed, works right after app download.
+- **Best for**: Quick Q&A, simple text polishing, low-end devices.
 
-### Expand with More Models
-For more powerful AI capabilities, download additional models from Settings:
+### 2. Ollama (Local Power)
+Supports connecting to locally running Ollama service.
+- **Pros**: Runs 7B, 14B or even larger models, powerful performance, completely offline.
+- **Usage**: Install [Ollama](https://ollama.com) first, then download more models in Settings (e.g., qwen2.5:7b, llama3, etc).
 
-| Model | Size | Use Case |
-|-------|------|----------|
-| qwen2.5:0.5b | ~400MB | Quick Q&A (built-in) |
-| qwen2.5:1.5b | ~1GB | Daily writing assistance |
-| qwen2.5:3b | ~2GB | Deep writing, long-form content |
+### 3. Cloud API (Limitless Cloud)
+Supports connecting to OpenAI-compatible Cloud APIs.
+- **Pros**: Access the most powerful models on Earth with just an API Key.
+- **Best for**: Top-tier logical reasoning, or when local hardware cannot support large models.
+- **Config**: Enter API URL and Key in Settings (Supports DeepSeek, Moonshot, etc).
 
 ---
 

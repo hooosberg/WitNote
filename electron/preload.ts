@@ -142,5 +142,32 @@ contextBridge.exposeInMainWorld('ollama', {
     }
 })
 
+// 暴露快捷方式 API
+contextBridge.exposeInMainWorld('shortcuts', {
+    onCreateArticle: (callback: () => void): (() => void) => {
+        const handler = () => callback()
+        ipcRenderer.on('shortcuts:createArticle', handler)
+        return () => ipcRenderer.removeListener('shortcuts:createArticle', handler)
+    },
+
+    onCreateFolder: (callback: () => void): (() => void) => {
+        const handler = () => callback()
+        ipcRenderer.on('shortcuts:createFolder', handler)
+        return () => ipcRenderer.removeListener('shortcuts:createFolder', handler)
+    },
+
+    onOpenSettings: (callback: () => void): (() => void) => {
+        const handler = () => callback()
+        ipcRenderer.on('shortcuts:openSettings', handler)
+        return () => ipcRenderer.removeListener('shortcuts:openSettings', handler)
+    },
+
+    onToggleFocusMode: (callback: () => void): (() => void) => {
+        const handler = () => callback()
+        ipcRenderer.on('shortcuts:toggleFocusMode', handler)
+        return () => ipcRenderer.removeListener('shortcuts:toggleFocusMode', handler)
+    }
+})
+
 console.log('🔗 Preload 脚本已加载')
 

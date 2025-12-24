@@ -10,7 +10,7 @@ import {
     LLMStatus,
     LoadProgress,
     OllamaModel,
-    getDefaultSystemPrompt,
+    getSystemPromptByEngine,
     RECOMMENDED_MODELS
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
@@ -378,11 +378,15 @@ export function useLLM(engineStore: UseEngineStoreReturn): UseLLMReturn {
                 } else if (engineStore.webllmLoading) {
                     setStatus('loading');
                     console.log('⏳ WebLLM 正在加载...');
-                } else {
-                    // 触发 WebLLM 初始化
+                } else if (!engineStore.webllmFirstTimeSetup) {
+                    // 只有在非首次使用时才自动初始化（已有缓存）
                     setStatus('detecting');
-                    console.log('🚀 触发 WebLLM 初始化');
+                    console.log('🚀 触发 WebLLM 初始化（已有缓存）');
                     await engineStore.initWebLLM();
+                } else {
+                    // 首次使用，等待用户点击下载按钮
+                    setStatus('detecting');
+                    console.log('⏸️ 首次使用，等待用户确认下载');
                 }
                 break;
 
@@ -453,15 +457,15 @@ export function useLLM(engineStore: UseEngineStoreReturn): UseLLMReturn {
 
     /**
      * 获取系统提示词
-     * 如果用户设置了自定义提示词则使用，否则根据当前语言使用内置默认提示词
+     * 如果用户设置了自定义提示词则使用，否则根据引擎类型和当前语言使用对应级别的内置提示词
      */
     const getSystemPrompt = useCallback(() => {
         if (userSystemPrompt && userSystemPrompt.trim()) {
             return userSystemPrompt.trim();
         }
-        // 根据当前语言获取默认提示词
-        return getDefaultSystemPrompt(getCurrentLanguage());
-    }, [userSystemPrompt]);
+        // 根据引擎类型和当前语言获取对应级别的提示词
+        return getSystemPromptByEngine(engineStore.currentEngine, getCurrentLanguage());
+    }, [userSystemPrompt, engineStore.currentEngine]);
 
     /**
      * 构建上下文信息

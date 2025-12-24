@@ -10,6 +10,9 @@ import Store from 'electron-store'
 import * as chokidar from 'chokidar'
 import { spawn } from 'child_process'
 
+// 检测是否在 Mac App Store 沙盒环境中运行
+const isMAS = (process as NodeJS.Process & { mas?: boolean }).mas === true
+
 // 禁用 GPU 沙箱以支持 WebGPU (WebLLM 需要)
 app.commandLine.appendSwitch('enable-features', 'Vulkan')
 app.commandLine.appendSwitch('use-vulkan')
@@ -420,152 +423,364 @@ function setupIpcHandlers() {
         return true
     })
 
+    // ============ 快捷方式 IPC 处理器 ============
+
+    // 触发新建文章
+    ipcMain.handle('shortcuts:createArticle', () => {
+        mainWindow?.webContents.send('shortcuts:createArticle')
+        return true
+    })
+
+    // 触发新建文件夹
+    ipcMain.handle('shortcuts:createFolder', () => {
+        mainWindow?.webContents.send('shortcuts:createFolder')
+        return true
+    })
+
+    // 触发打开设置
+    ipcMain.handle('shortcuts:openSettings', () => {
+        mainWindow?.webContents.send('shortcuts:openSettings')
+        return true
+    })
+
+    // 触发专注模式切换
+    ipcMain.handle('shortcuts:toggleFocusMode', () => {
+        mainWindow?.webContents.send('shortcuts:toggleFocusMode')
+        return true
+    })
+
     // ============ Ollama 模型管理 IPC 处理器 ============
-    // 使用系统安装的 ollama 命令
+    // MAS 沙盒环境中禁止使用 spawn 调用外部命令
 
-    const ollamaEnv = {
-        ...process.env,
-        OLLAMA_HOST: '127.0.0.1:11434'
-    }
+    if (isMAS) {
+        // MAS 版本：返回友好的不可用提示
+        const masUnavailableError = {
+            success: false,
+            error: 'Ollama 命令行功能在 App Store 版本中不可用。请使用 WebLLM 或通过 HTTP API 连接外部 Ollama 服务。',
+            models: []
+        }
 
-    // 获取已安装模型列表
-    ipcMain.handle('ollama:listModels', async () => {
-        try {
-            return new Promise((resolve) => {
-                const cmd = spawn('ollama', ['list'], { env: ollamaEnv })
-                let output = ''
-                cmd.stdout.on('data', (data: Buffer) => {
-                    output += data.toString()
-                })
-                cmd.on('close', (code: number) => {
-                    if (code === 0) {
-                        try {
-                            const lines = output.trim().split('\n').slice(1)
-                            const models = lines.map(line => {
-                                const parts = line.split(/\s{2,}/)
-                                if (parts.length >= 3) {
-                                    return {
-                                        name: parts[0],
-                                        id: parts[1],
-                                        size: parts[2],
-                                        modified: parts[3] || ''
+        ipcMain.handle('ollama:listModels', async () => masUnavailableError)
+        ipcMain.handle('ollama:pullModel', async () => masUnavailableError)
+        ipcMain.handle('ollama:cancelPull', async () => masUnavailableError)
+        ipcMain.handle('ollama:deleteModel', async () => masUnavailableError)
+
+        console.log('🛡️ MAS 沙盒模式: Ollama 命令行功能已禁用')
+    } else {
+        // 非 MAS 版本：使用系统安装的 ollama 命令
+        const ollamaEnv = {
+            ...process.env,
+            OLLAMA_HOST: '127.0.0.1:11434'
+        }
+
+        // 获取已安装模型列表
+        ipcMain.handle('ollama:listModels', async () => {
+            try {
+                return new Promise((resolve) => {
+                    const cmd = spawn('ollama', ['list'], { env: ollamaEnv })
+                    let output = ''
+                    cmd.stdout.on('data', (data: Buffer) => {
+                        output += data.toString()
+                    })
+                    cmd.on('close', (code: number) => {
+                        if (code === 0) {
+                            try {
+                                const lines = output.trim().split('\n').slice(1)
+                                const models = lines.map(line => {
+                                    const parts = line.split(/\s{2,}/)
+                                    if (parts.length >= 3) {
+                                        return {
+                                            name: parts[0],
+                                            id: parts[1],
+                                            size: parts[2],
+                                            modified: parts[3] || ''
+                                        }
                                     }
-                                }
-                                return null
-                            }).filter(m => m !== null)
-                            resolve({ success: true, models })
-                        } catch {
-                            resolve({ success: false, error: '解析模型列表失败' })
+                                    return null
+                                }).filter(m => m !== null)
+                                resolve({ success: true, models })
+                            } catch {
+                                resolve({ success: false, error: '解析模型列表失败' })
+                            }
+                        } else {
+                            resolve({ success: false, error: '获取模型列表失败' })
                         }
+                    })
+                    cmd.on('error', (err: Error) => {
+                        resolve({ success: false, error: err.message })
+                    })
+                })
+            } catch (error) {
+                return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+            }
+        })
+
+        // 存储当前下载进程引用 - 使用 Map 支持多模型并行下载
+        const pullProcesses = new Map<string, ReturnType<typeof spawn>>();
+
+        // 下载模型
+        ipcMain.handle('ollama:pullModel', async (_event, modelName: string) => {
+            return new Promise((resolve, reject) => {
+                const pullProcess = spawn('ollama', ['pull', modelName], { env: ollamaEnv })
+
+                // 存储进程引用
+                pullProcesses.set(modelName, pullProcess)
+
+                let output = ''
+                pullProcess.stdout?.on('data', (data: Buffer) => {
+                    const text = data.toString()
+                    output += text
+                    mainWindow?.webContents.send('ollama:pullProgress', { model: modelName, output: text })
+                })
+                pullProcess.stderr?.on('data', (data: Buffer) => {
+                    const text = data.toString()
+                    output += text
+                    mainWindow?.webContents.send('ollama:pullProgress', { model: modelName, output: text })
+                })
+                pullProcess.on('close', (code: number) => {
+                    // 清理进程引用
+                    pullProcesses.delete(modelName)
+                    if (code === 0) {
+                        resolve({ success: true, output })
                     } else {
-                        resolve({ success: false, error: '获取模型列表失败' })
+                        reject(new Error(`下载失败，退出码: ${code}`))
                     }
                 })
-                cmd.on('error', (err: Error) => {
-                    resolve({ success: false, error: err.message })
+                pullProcess.on('error', (error: Error) => {
+                    pullProcesses.delete(modelName)
+                    reject(error)
                 })
             })
-        } catch (error) {
-            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-        }
-    })
-    // 存储当前下载进程引用 - 使用 Map 支持多模型并行下载
-    const pullProcesses = new Map<string, ReturnType<typeof spawn>>();
-
-    // 下载模型
-    ipcMain.handle('ollama:pullModel', async (_event, modelName: string) => {
-        return new Promise((resolve, reject) => {
-            const pullProcess = spawn('ollama', ['pull', modelName], { env: ollamaEnv })
-
-            // 存储进程引用
-            pullProcesses.set(modelName, pullProcess)
-
-            let output = ''
-            pullProcess.stdout?.on('data', (data: Buffer) => {
-                const text = data.toString()
-                output += text
-                mainWindow?.webContents.send('ollama:pullProgress', { model: modelName, output: text })
-            })
-            pullProcess.stderr?.on('data', (data: Buffer) => {
-                const text = data.toString()
-                output += text
-                mainWindow?.webContents.send('ollama:pullProgress', { model: modelName, output: text })
-            })
-            pullProcess.on('close', (code: number) => {
-                // 清理进程引用
-                pullProcesses.delete(modelName)
-                if (code === 0) {
-                    resolve({ success: true, output })
-                } else {
-                    reject(new Error(`下载失败，退出码: ${code}`))
-                }
-            })
-            pullProcess.on('error', (error: Error) => {
-                pullProcesses.delete(modelName)
-                reject(error)
-            })
         })
-    })
 
-    // 取消下载 - 支持指定模型名
-    ipcMain.handle('ollama:cancelPull', async (_event, modelName?: string) => {
-        // 如果指定了模型名，取消特定模型的下载
-        if (modelName && pullProcesses.has(modelName)) {
-            console.log(`🛑 取消下载: ${modelName}`)
-            const process = pullProcesses.get(modelName)!
-            process.kill('SIGTERM')
-            pullProcesses.delete(modelName)
-
-            // 删除未完成的模型文件
-            try {
-                spawn('ollama', ['rm', modelName], { env: ollamaEnv })
-                console.log(`🗑️ 已清理未完成的模型: ${modelName}`)
-            } catch (e) {
-                console.log('清理未完成模型失败:', e)
-            }
-
-            return { success: true, cancelled: modelName }
-        }
-
-        // 如果没有指定模型名，取消所有下载（向后兼容）
-        if (pullProcesses.size > 0) {
-            const cancelledModels: string[] = []
-
-            Array.from(pullProcesses.entries()).forEach(([name, proc]) => {
-                console.log(`🛑 取消下载: ${name}`)
-                proc.kill('SIGTERM')
-                cancelledModels.push(name)
+        // 取消下载 - 支持指定模型名
+        ipcMain.handle('ollama:cancelPull', async (_event, modelName?: string) => {
+            // 如果指定了模型名，取消特定模型的下载
+            if (modelName && pullProcesses.has(modelName)) {
+                console.log(`🛑 取消下载: ${modelName}`)
+                const process = pullProcesses.get(modelName)!
+                process.kill('SIGTERM')
+                pullProcesses.delete(modelName)
 
                 // 删除未完成的模型文件
                 try {
-                    spawn('ollama', ['rm', name], { env: ollamaEnv })
-                    console.log(`🗑️ 已清理未完成的模型: ${name}`)
+                    spawn('ollama', ['rm', modelName], { env: ollamaEnv })
+                    console.log(`🗑️ 已清理未完成的模型: ${modelName}`)
                 } catch (e) {
                     console.log('清理未完成模型失败:', e)
                 }
-            })
 
-            pullProcesses.clear()
-            return { success: true, cancelled: cancelledModels.join(', ') }
-        }
+                return { success: true, cancelled: modelName }
+            }
 
-        return { success: false, error: '没有正在进行的下载' }
-    })
+            // 如果没有指定模型名，取消所有下载（向后兼容）
+            if (pullProcesses.size > 0) {
+                const cancelledModels: string[] = []
 
-    // 删除模型
-    ipcMain.handle('ollama:deleteModel', async (_event, modelName: string) => {
-        return new Promise((resolve, reject) => {
-            const deleteProcess = spawn('ollama', ['rm', modelName], { env: ollamaEnv })
-            deleteProcess.on('close', (code: number) => {
-                if (code === 0) {
-                    resolve({ success: true })
-                } else {
-                    reject(new Error(`删除失败，退出码: ${code}`))
-                }
-            })
-            deleteProcess.on('error', (error: Error) => reject(error))
+                Array.from(pullProcesses.entries()).forEach(([name, proc]) => {
+                    console.log(`🛑 取消下载: ${name}`)
+                    proc.kill('SIGTERM')
+                    cancelledModels.push(name)
+
+                    // 删除未完成的模型文件
+                    try {
+                        spawn('ollama', ['rm', name], { env: ollamaEnv })
+                        console.log(`🗑️ 已清理未完成的模型: ${name}`)
+                    } catch (e) {
+                        console.log('清理未完成模型失败:', e)
+                    }
+                })
+
+                pullProcesses.clear()
+                return { success: true, cancelled: cancelledModels.join(', ') }
+            }
+
+            return { success: false, error: '没有正在进行的下载' }
         })
-    })
+
+        // 删除模型
+        ipcMain.handle('ollama:deleteModel', async (_event, modelName: string) => {
+            return new Promise((resolve, reject) => {
+                const deleteProcess = spawn('ollama', ['rm', modelName], { env: ollamaEnv })
+                deleteProcess.on('close', (code: number) => {
+                    if (code === 0) {
+                        resolve({ success: true })
+                    } else {
+                        reject(new Error(`删除失败，退出码: ${code}`))
+                    }
+                })
+                deleteProcess.on('error', (error: Error) => reject(error))
+            })
+        })
+    }
+}
+
+// ============ 菜单创建 ============
+
+/**
+ * 创建应用菜单（macOS 风格）
+ */
+function createApplicationMenu() {
+    const isMac = process.platform === 'darwin'
+
+    const template: Electron.MenuItemConstructorOptions[] = [
+        // macOS 应用菜单
+        ...(isMac ? [{
+            label: app.name,
+            submenu: [
+                { role: 'about' as const, label: `关于 ${app.name}` },
+                { type: 'separator' as const },
+                {
+                    label: '偏好设置...',
+                    accelerator: 'CmdOrCtrl+,',
+                    click: () => {
+                        mainWindow?.webContents.send('shortcuts:openSettings')
+                    }
+                },
+                { type: 'separator' as const },
+                { role: 'services' as const, label: '服务' },
+                { type: 'separator' as const },
+                { role: 'hide' as const, label: `隐藏 ${app.name}` },
+                { role: 'hideOthers' as const, label: '隐藏其他' },
+                { role: 'unhide' as const, label: '显示全部' },
+                { type: 'separator' as const },
+                { role: 'quit' as const, label: `退出 ${app.name}` }
+            ]
+        }] : []),
+        // 文件菜单
+        {
+            label: '文件',
+            submenu: [
+                {
+                    label: '新建文章',
+                    accelerator: 'CmdOrCtrl+N',
+                    click: () => {
+                        mainWindow?.webContents.send('shortcuts:createArticle')
+                    }
+                },
+                {
+                    label: '新建文件夹',
+                    accelerator: 'CmdOrCtrl+Shift+N',
+                    click: () => {
+                        mainWindow?.webContents.send('shortcuts:createFolder')
+                    }
+                },
+                { type: 'separator' as const },
+                isMac ? { role: 'close' as const, label: '关闭窗口' } : { role: 'quit' as const, label: '退出' }
+            ]
+        },
+        // 编辑菜单
+        {
+            label: '编辑',
+            submenu: [
+                { role: 'undo' as const, label: '撤销' },
+                { role: 'redo' as const, label: '重做' },
+                { type: 'separator' as const },
+                { role: 'cut' as const, label: '剪切' },
+                { role: 'copy' as const, label: '复制' },
+                { role: 'paste' as const, label: '粘贴' },
+                ...(isMac ? [
+                    { role: 'pasteAndMatchStyle' as const, label: '粘贴并匹配样式' },
+                    { role: 'delete' as const, label: '删除' },
+                    { role: 'selectAll' as const, label: '全选' }
+                ] : [
+                    { role: 'delete' as const, label: '删除' },
+                    { type: 'separator' as const },
+                    { role: 'selectAll' as const, label: '全选' }
+                ])
+            ]
+        },
+        // 视图菜单
+        {
+            label: '视图',
+            submenu: [
+                {
+                    label: '专注模式',
+                    accelerator: 'CmdOrCtrl+Shift+F',
+                    click: () => {
+                        mainWindow?.webContents.send('shortcuts:toggleFocusMode')
+                    }
+                },
+                { type: 'separator' as const },
+                { role: 'reload' as const, label: '刷新' },
+                { role: 'forceReload' as const, label: '强制刷新' },
+                { role: 'toggleDevTools' as const, label: '开发者工具' },
+                { type: 'separator' as const },
+                { role: 'resetZoom' as const, label: '实际大小' },
+                { role: 'zoomIn' as const, label: '放大' },
+                { role: 'zoomOut' as const, label: '缩小' },
+                { type: 'separator' as const },
+                { role: 'togglefullscreen' as const, label: '全屏' }
+            ]
+        },
+        // 窗口菜单
+        {
+            label: '窗口',
+            submenu: [
+                { role: 'minimize' as const, label: '最小化' },
+                { role: 'zoom' as const, label: '缩放' },
+                ...(isMac ? [
+                    { type: 'separator' as const },
+                    { role: 'front' as const, label: '前置全部窗口' }
+                ] : [
+                    { role: 'close' as const, label: '关闭' }
+                ])
+            ]
+        },
+        // 帮助菜单
+        {
+            role: 'help' as const,
+            label: '帮助',
+            submenu: [
+                {
+                    label: '访问 GitHub',
+                    click: async () => {
+                        await shell.openExternal('https://github.com/hooosberg/WitNote')
+                    }
+                }
+            ]
+        }
+    ]
+
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+}
+
+/**
+ * 创建 Dock 菜单（仅 macOS）
+ */
+function createDockMenu() {
+    if (process.platform !== 'darwin') return
+
+    const dockMenu = Menu.buildFromTemplate([
+        {
+            label: '新建文章',
+            click: () => {
+                mainWindow?.webContents.send('shortcuts:createArticle')
+            }
+        },
+        {
+            label: '新建文件夹',
+            click: () => {
+                mainWindow?.webContents.send('shortcuts:createFolder')
+            }
+        },
+        { type: 'separator' },
+        {
+            label: '打开设置',
+            click: () => {
+                mainWindow?.webContents.send('shortcuts:openSettings')
+            }
+        },
+        {
+            label: '切换专注模式',
+            click: () => {
+                mainWindow?.webContents.send('shortcuts:toggleFocusMode')
+            }
+        }
+    ])
+
+    app.dock.setMenu(dockMenu)
 }
 
 // ============ 窗口创建 ============
@@ -609,11 +824,6 @@ function createWindow() {
 
     mainWindow = new BrowserWindow(windowOptions)
 
-    // Windows 上移除菜单栏，只保留标题栏
-    if (!isMac) {
-        Menu.setApplicationMenu(null)
-    }
-
     // 开发模式连接 Vite 开发服务器
     if (VITE_DEV_SERVER_URL) {
         console.log('🔗 开发模式: 连接到', VITE_DEV_SERVER_URL)
@@ -639,6 +849,8 @@ function createWindow() {
 
 app.whenReady().then(async () => {
     setupIpcHandlers()
+    createApplicationMenu()  // 创建应用菜单
+    createDockMenu()         // 创建 Dock 菜单 (仅 macOS)
     createWindow()
 
     app.on('activate', () => {

@@ -59,4 +59,26 @@ electron.contextBridge.exposeInMainWorld("ollama", {
     return () => electron.ipcRenderer.removeListener("ollama:pullProgress", handler);
   }
 });
+electron.contextBridge.exposeInMainWorld("shortcuts", {
+  onCreateArticle: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:createArticle", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:createArticle", handler);
+  },
+  onCreateFolder: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:createFolder", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:createFolder", handler);
+  },
+  onOpenSettings: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:openSettings", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:openSettings", handler);
+  },
+  onToggleFocusMode: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:toggleFocusMode", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:toggleFocusMode", handler);
+  }
+});
 console.log("🔗 Preload 脚本已加载");

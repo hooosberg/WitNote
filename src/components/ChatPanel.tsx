@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Bot, Server, Cloud } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -76,7 +76,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
     } = llm
 
     const [showModelMenu, setShowModelMenu] = useState(false)
-    const [expandedModel, setExpandedModel] = useState<string | null>(null)
     const [showEngineMenu, setShowEngineMenu] = useState(false)
     const engineWrapperRef = useRef<HTMLDivElement>(null)
     const menuRef = useRef<HTMLDivElement>(null) // Keep for model menu
@@ -137,11 +136,103 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         return size ? `${base} ${size.toUpperCase()}` : base
     }
 
+
+    // WebLLM 首次使用提示显示状态
+    const showWebLLMSetup = engineStore?.currentEngine === 'webllm' &&
+        !engineStore.webllmReady &&
+        engineStore.webllmFirstTimeSetup &&
+        !engineStore.webllmLoading;
+
     return (
         <div className="chat-panel-v2">
-            {/* 消息区域 */}
-            <div className="chat-messages">
-                {messages.length === 0 ? (
+            {/* 消息区域 - 添加 relative 定位限制覆盖层范围 */}
+            <div className="chat-messages" style={{ position: 'relative' }}>
+                {/* WebLLM 首次使用提示 */}
+                {showWebLLMSetup && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        background: 'var(--bg-primary)',
+                        zIndex: 10,
+                        flexDirection: 'column'
+                    }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            borderRadius: '16px',
+                            background: 'var(--bg-secondary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '24px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}>
+                            <Server size={32} style={{ color: 'var(--accent-color)' }} />
+                        </div>
+
+                        <h3 style={{
+                            fontSize: '20px',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            marginBottom: '12px',
+                            marginTop: 0
+                        }}>首次使用提示</h3>
+
+                        <p style={{
+                            fontSize: '14px',
+                            color: 'var(--text-secondary)',
+                            lineHeight: '1.6',
+                            marginBottom: '32px',
+                            marginTop: 0,
+                            textAlign: 'center',
+                            maxWidth: '300px'
+                        }}>
+                            需要下载 AI 模型（约 {ALL_WEBLLM_MODELS_INFO[0]?.size || '290MB'}）<br />
+                            下载一次，永久离线可用
+                        </p>
+
+                        <button
+                            onClick={() => {
+                                engineStore.completeWebLLMSetup();
+                                engineStore.initWebLLM(engineStore.selectedModel);
+                            }}
+                            style={{
+                                padding: '10px 24px',
+                                background: 'var(--accent-color)',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.opacity = '0.9';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.opacity = '1';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            <Cloud size={16} />
+                            开始下载并加载模型
+                        </button>
+                    </div>
+                )}
+
+                {messages.length === 0 && !showWebLLMSetup ? (
                     <div className="chat-empty">
                         <Sparkles size={32} strokeWidth={1.2} />
                         <p>{t('chat.title')}</p>
@@ -165,8 +256,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* 底部区域 */}
-            <div className="chat-footer">
+            {/* 底部区域 - 提高层级防止被覆盖 */}
+            <div className="chat-footer" style={{ position: 'relative', zIndex: 20 }}>
                 {/* 状态栏 */}
                 <div className="chat-status-bar">
                     <div className="chat-model-info" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -193,7 +284,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.background = 'var(--bg-card)'
-                                        e.currentTarget.style.borderColor = 'var(--accent)'
+                                        e.currentTarget.style.borderColor = 'var(--accent-color)'
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.background = 'var(--bg-hover)'
@@ -235,13 +326,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                             width: 'max-content'
                                         }}
                                     >
-                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', padding: '6px 8px', fontWeight: 600 }}>
-                                            AI 引擎
-                                        </div>
+                                        <div className="model-section-title">AI 引擎</div>
                                         {[
-                                            { type: 'webllm' as const, icon: <Bot size={14} />, label: '内置 WebLLM' },
-                                            { type: 'ollama' as const, icon: <Server size={14} />, label: '外部 Ollama' },
-                                            { type: 'openai' as const, icon: <Cloud size={14} />, label: '云端 Cloud API' }
+                                            { type: 'webllm' as const, icon: <Bot size={14} />, label: '内置 WebLLM', bgColor: 'rgba(16, 185, 129, 0.08)' },
+                                            { type: 'ollama' as const, icon: <Server size={14} />, label: '外部 Ollama', bgColor: 'rgba(245, 158, 11, 0.08)' },
+                                            { type: 'openai' as const, icon: <Cloud size={14} />, label: '云端 Cloud API', bgColor: 'rgba(59, 130, 246, 0.08)' }
                                         ].map((engine) => (
                                             <button
                                                 key={engine.type}
@@ -249,15 +338,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                     e.stopPropagation()
                                                     engineStore.setEngine(engine.type)
 
-                                                    // WebLLM 自动初始化逻辑（与设置页面一致）
+
+                                                    // WebLLM 自动初始化逻辑
+                                                    // 只有在非首次使用时才自动加载
                                                     if (engine.type === 'webllm') {
                                                         const savedModel = localStorage.getItem('zen-selected-webllm-model')
                                                         const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id
 
-                                                        if (!engineStore.webllmReady && !engineStore.webllmLoading && targetModel) {
+                                                        if (!engineStore.webllmReady && !engineStore.webllmLoading && !engineStore.webllmFirstTimeSetup && targetModel) {
                                                             engineStore.initWebLLM(targetModel)
                                                         }
                                                     }
+
 
                                                     setShowEngineMenu(false)
                                                 }}
@@ -266,14 +358,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                     alignItems: 'center',
                                                     gap: '8px',
                                                     width: '100%',
-                                                    padding: '8px',
-                                                    background: engineStore.currentEngine === engine.type ? 'rgba(76, 175, 80, 0.12)' : 'transparent',
+                                                    padding: '10px 12px',
+                                                    background: engineStore.currentEngine === engine.type ? engine.bgColor : 'transparent',
                                                     border: 'none',
                                                     borderRadius: '6px',
+                                                    marginBottom: '4px',
                                                     cursor: 'pointer',
                                                     fontSize: '13px',
-                                                    color: engineStore.currentEngine === engine.type ? 'var(--accent)' : 'var(--text-primary)',
+                                                    fontWeight: 600,
+                                                    color: 'var(--text-primary)',
                                                     transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (engineStore.currentEngine !== engine.type) {
+                                                        e.currentTarget.style.background = 'var(--bg-hover)'
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (engineStore.currentEngine !== engine.type) {
+                                                        e.currentTarget.style.background = 'transparent'
+                                                    }
                                                 }}
                                             >
                                                 {engine.icon}
@@ -375,7 +479,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '6px',
+                                            gap: '8px',
                                             padding: '6px 10px',
                                             background: 'var(--bg-hover)',
                                             border: '1px solid var(--border-color)',
@@ -388,14 +492,45 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                         }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.background = 'var(--bg-card)'
-                                            e.currentTarget.style.borderColor = 'var(--accent)'
+                                            e.currentTarget.style.borderColor = 'var(--accent-color)'
                                         }}
                                         onMouseLeave={(e) => {
                                             e.currentTarget.style.background = 'var(--bg-hover)'
                                             e.currentTarget.style.borderColor = 'var(--border-color)'
                                         }}
                                     >
-                                        {formatModelName(selectedOllamaModel || modelName)}
+                                        <span style={{
+                                            fontSize: '12px',
+                                            fontWeight: 600,
+                                            color: 'var(--text-primary)'
+                                        }}>
+                                            {formatModelName(selectedOllamaModel || modelName)}
+                                        </span>
+                                        {(() => {
+                                            const currentModel = ollamaModels.find(m => m.name === selectedOllamaModel);
+                                            return currentModel?.formattedSize ? (
+                                                <span style={{
+                                                    fontSize: '11px',
+                                                    fontWeight: 500,
+                                                    color: 'var(--text-secondary)',
+                                                    padding: '2px 6px',
+                                                    background: 'var(--bg-card)',
+                                                    borderRadius: '4px'
+                                                }}>
+                                                    {currentModel.formattedSize}
+                                                </span>
+                                            ) : null;
+                                        })()}
+                                        <span style={{
+                                            fontSize: '11px',
+                                            fontWeight: 500,
+                                            color: '#f59e0b',
+                                            padding: '2px 6px',
+                                            background: 'rgba(245, 158, 11, 0.1)',
+                                            borderRadius: '4px'
+                                        }}>
+                                            外部
+                                        </span>
                                     </button>
                                     {showModelMenu && createPortal(
                                         <div className="model-dropdown" ref={menuRef}>
@@ -408,48 +543,71 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                     return bBuiltIn - aBuiltIn
                                                 }).map((model) => {
                                                     const isCurrentModel = model.name === selectedOllamaModel
-                                                    const recommendedModel = RECOMMENDED_MODELS.find(m => m.name === model.name)
-                                                    const isBuiltIn = recommendedModel?.builtIn
-                                                    const isExpanded = expandedModel === model.name
                                                     return (
                                                         <div
                                                             key={model.name}
-                                                            className={`model-item ${isCurrentModel ? 'active' : ''} ${isExpanded ? 'expanded' : ''}`}
+                                                            className={`model-item ${isCurrentModel ? 'active' : ''}`}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                padding: '10px 12px',
+                                                                background: isCurrentModel ? 'rgba(245, 158, 11, 0.08)' : 'transparent',
+                                                                borderRadius: '6px',
+                                                                marginBottom: '4px',
+                                                                cursor: isCurrentModel ? 'default' : 'pointer',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            onClick={() => {
+                                                                if (!isCurrentModel) {
+                                                                    setSelectedOllamaModel(model.name)
+                                                                    setShowModelMenu(false)
+                                                                }
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                if (!isCurrentModel) {
+                                                                    e.currentTarget.style.background = 'var(--bg-hover)'
+                                                                }
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                if (!isCurrentModel) {
+                                                                    e.currentTarget.style.background = 'transparent'
+                                                                }
+                                                            }}
                                                         >
-                                                            <div className="model-item-row">
-                                                                <div
-                                                                    className="model-item-left clickable"
-                                                                    onClick={() => setExpandedModel(isExpanded ? null : model.name)}
-                                                                >
-                                                                    <span className="model-item-name">{formatModelName(model.name)}</span>
-                                                                    {isBuiltIn && <span className="model-badge builtin">{t('chat.builtIn')}</span>}
-                                                                    {model.formattedSize && (
-                                                                        <span className="model-item-size">{model.formattedSize}</span>
-                                                                    )}
-                                                                </div>
-                                                                <div className="model-item-right">
-                                                                    {isCurrentModel ? (
-                                                                        <span className="model-tag active">
-                                                                            <Check size={10} /> {t('chat.inUse')}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <>
-                                                                            <button
-                                                                                className="model-use-btn"
-                                                                                onClick={() => {
-                                                                                    setSelectedOllamaModel(model.name)
-                                                                                    setShowModelMenu(false)
-                                                                                }}
-                                                                            >
-                                                                                {t('settings.useThis')}
-                                                                            </button>
-
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            {isExpanded && recommendedModel && (
-                                                                <div className="model-tagline">{t(recommendedModel.taglineKey)}</div>
+                                                            <span style={{
+                                                                fontSize: '13px',
+                                                                fontWeight: 600,
+                                                                color: 'var(--text-primary)',
+                                                                flex: '0 0 auto'
+                                                            }}>
+                                                                {formatModelName(model.name)}
+                                                            </span>
+                                                            {model.formattedSize && (
+                                                                <span style={{
+                                                                    fontSize: '11px',
+                                                                    fontWeight: 500,
+                                                                    color: 'var(--text-tertiary)',
+                                                                    flex: '0 0 auto'
+                                                                }}>
+                                                                    {model.formattedSize}
+                                                                </span>
+                                                            )}
+                                                            {isCurrentModel && (
+                                                                <span style={{
+                                                                    fontSize: '11px',
+                                                                    fontWeight: 500,
+                                                                    color: '#10b981',
+                                                                    padding: '2px 8px',
+                                                                    background: 'rgba(16, 185, 129, 0.1)',
+                                                                    borderRadius: '4px',
+                                                                    marginLeft: 'auto',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}>
+                                                                    <Check size={10} /> 使用中
+                                                                </span>
                                                             )}
                                                         </div>
                                                     )
@@ -464,44 +622,123 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     )}
                                 </div>
                             ) : engineStore?.currentEngine === 'webllm' ? (
-                                <div className="model-status-btn" style={{
-                                    padding: '6px 10px',
-                                    background: 'var(--bg-hover)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: 500,
-                                    color: 'var(--text-primary)'
-                                }}>
-                                    {engineStore.selectedModel ? formatModelName(engineStore.selectedModel.split('/').pop() || '') : 'WebLLM'}
-                                </div>
+                                (() => {
+                                    const modelInfo = ALL_WEBLLM_MODELS_INFO.find(
+                                        m => m.model_id === engineStore.selectedModel
+                                    ) || ALL_WEBLLM_MODELS_INFO[0];
+
+                                    return (
+                                        <div className="model-display-card" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '6px 10px',
+                                            background: 'var(--bg-hover)',
+                                            border: '1px solid var(--border-color)',
+                                            borderRadius: '6px'
+                                        }}>
+
+                                            <span className="model-display-name" style={{
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                color: 'var(--text-primary)'
+                                            }}>
+                                                {modelInfo.displayName}
+                                            </span>
+                                            <span className="model-display-size" style={{
+                                                fontSize: '11px',
+                                                fontWeight: 500,
+                                                color: 'var(--text-secondary)',
+                                                padding: '2px 6px',
+                                                background: 'var(--bg-card)',
+                                                borderRadius: '4px'
+                                            }}>
+                                                {modelInfo.size}
+                                            </span>
+                                            <span className="model-display-badge" style={{
+                                                fontSize: '11px',
+                                                fontWeight: 500,
+                                                color: '#10b981',
+                                                padding: '2px 6px',
+                                                background: 'rgba(16, 185, 129, 0.1)',
+                                                borderRadius: '4px'
+                                            }}>
+                                                内置
+                                            </span>
+
+                                        </div>
+                                    );
+                                })()
                             ) : engineStore?.currentEngine === 'openai' ? (
-                                <div className="model-status-btn" style={{
+                                <div className="model-display-card" style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
                                     padding: '6px 10px',
                                     background: 'var(--bg-hover)',
                                     border: '1px solid var(--border-color)',
-                                    borderRadius: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: 500,
-                                    color: 'var(--text-primary)'
+                                    borderRadius: '6px'
                                 }}>
-                                    {engineStore.cloudConfig?.modelName || 'Cloud API'}
+                                    <span style={{
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        color: 'var(--text-primary)'
+                                    }}>
+                                        {engineStore.cloudConfig?.modelName || 'Cloud API'}
+                                    </span>
+                                    <span style={{
+                                        fontSize: '11px',
+                                        fontWeight: 500,
+                                        color: '#3b82f6',
+                                        padding: '2px 6px',
+                                        background: 'rgba(59, 130, 246, 0.1)',
+                                        borderRadius: '4px'
+                                    }}>
+                                        云端
+                                    </span>
                                 </div>
                             ) : (
                                 <span className="model-label">{formatModelName(modelName)}</span>
                             )
                         ) : status === 'loading' ? (
-                            <div className="model-loading-status">
-                                <span className="loading-text">
-                                    {loadProgress ? `${t('chat.loading', '正在加载')} ${Math.round(loadProgress.progress * 100)}%` : t('chat.loading')}
-                                </span>
-                                {loadProgress && (
-                                    <div className="loading-progress-bar">
-                                        <div
-                                            className="loading-progress-fill"
-                                            style={{ width: `${Math.round(loadProgress.progress * 100)}%` }}
-                                        />
-                                    </div>
+                            <div className="model-loading-status" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <span className="loading-text">
+                                        {loadProgress ? `${t('chat.loading', '正在加载')} ${Math.round(loadProgress.progress * 100)}%` : t('chat.loading')}
+                                    </span>
+                                    {loadProgress && (
+                                        <div className="loading-progress-bar">
+                                            <div
+                                                className="loading-progress-fill"
+                                                style={{ width: `${Math.round(loadProgress.progress * 100)}%` }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                                {/* 取消按钮 - 仅在 WebLLM 下载时显示 */}
+                                {engineStore?.currentEngine === 'webllm' && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm('确定要取消下载并回到首次使用界面吗？')) {
+                                                engineStore?.resetWebLLMSetup();
+                                            }
+                                        }}
+                                        title="取消下载"
+                                        style={{
+                                            padding: '4px',
+                                            borderRadius: '50%',
+                                            border: 'none',
+                                            background: 'var(--bg-hover)',
+                                            color: 'var(--text-secondary)',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <X size={14} />
+                                    </button>
                                 )}
                             </div>
                         ) : null}

@@ -1,0 +1,262 @@
+/* ============================================
+   确认对话框 - 跨主题统一设计
+   适用于所有系统级提示窗口
+   ============================================ */
+
+/* 覆盖层 */
+.confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.15s ease;
+}
+
+/* 对话框主体 - 浅色主题默认 */
+.confirm-dialog {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 380px;
+    min-width: 320px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    animation: slideUp 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    text-align: center;
+}
+
+/* 深色主题对话框 */
+[data-theme="dark"] .confirm-dialog {
+    background: #2c2c2e;
+}
+
+/* 茶色主题对话框 */
+[data-theme="tea"] .confirm-dialog {
+    background: #faf6f0;
+}
+
+/* 图标容器 */
+.confirm-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 149, 0, 0.12);
+    color: #FF9500;
+}
+
+/* 标题 - 浅色主题 */
+.confirm-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0 0 8px;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+}
+
+/* 深色主题标题 */
+[data-theme="dark"] .confirm-title {
+    color: #f5f5f7;
+}
+
+/* 茶色主题标题 */
+[data-theme="tea"] .confirm-title {
+    color: #2c2418;
+}
+
+/* 消息 - 浅色主题 */
+.confirm-message {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6e6e73;
+    margin: 0 0 8px;
+    line-height: 1.5;
+}
+
+/* 深色主题消息 */
+[data-theme="dark"] .confirm-message {
+    color: #a1a1a6;
+}
+
+/* 茶色主题消息 */
+[data-theme="tea"] .confirm-message {
+    color: #5c4f3d;
+}
+
+/* 详情列表 - 浅色主题 */
+.confirm-details {
+    list-style: none;
+    padding: 12px 16px;
+    margin: 12px 0 20px;
+    background: #f6f6f8;
+    border-radius: 8px;
+    text-align: left;
+}
+
+/* 深色主题详情列表 */
+[data-theme="dark"] .confirm-details {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* 茶色主题详情列表 */
+[data-theme="tea"] .confirm-details {
+    background: rgba(139, 115, 85, 0.06);
+}
+
+/* 列表项 - 浅色主题 */
+.confirm-details li {
+    font-size: 13px;
+    color: #1d1d1f;
+    padding: 4px 0;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 16px;
+}
+
+/* 深色主题列表项 */
+[data-theme="dark"] .confirm-details li {
+    color: #f5f5f7;
+}
+
+/* 茶色主题列表项 */
+[data-theme="tea"] .confirm-details li {
+    color: #2c2418;
+}
+
+/* 列表项符号 - 浅色主题 */
+.confirm-details li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #8e8e93;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+/* 深色主题符号 */
+[data-theme="dark"] .confirm-details li::before {
+    color: #6e6e73;
+}
+
+/* 茶色主题符号 */
+[data-theme="tea"] .confirm-details li::before {
+    color: #a8977f;
+}
+
+/* 按钮容器 */
+.confirm-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+/* 按钮基础样式 */
+.confirm-button {
+    flex: 1;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    letter-spacing: -0.01em;
+}
+
+/* 取消按钮 - 浅色主题 */
+.confirm-button.cancel {
+    background: #f6f6f8;
+    color: #1d1d1f;
+    order: 1;
+}
+
+.confirm-button.cancel:hover {
+    background: #e5e5ea;
+    opacity: 0.9;
+}
+
+.confirm-button.cancel:active {
+    opacity: 0.7;
+}
+
+/* 深色主题取消按钮 */
+[data-theme="dark"] .confirm-button.cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .confirm-button.cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* 茶色主题取消按钮 */
+[data-theme="tea"] .confirm-button.cancel {
+    background: rgba(139, 115, 85, 0.08);
+    color: #2c2418;
+}
+
+[data-theme="tea"] .confirm-button.cancel:hover {
+    background: rgba(139, 115, 85, 0.15);
+}
+
+/* 确认按钮 - 使用主题色 */
+.confirm-button.confirm {
+    background: #007aff;
+    color: white;
+    order: 2;
+}
+
+.confirm-button.confirm:hover {
+    opacity: 0.9;
+}
+
+.confirm-button.confirm:active {
+    opacity: 0.7;
+}
+
+/* 深色主题确认按钮 */
+[data-theme="dark"] .confirm-button.confirm {
+    background: #a1a1a6;
+    color: #1c1c1e;
+}
+
+/* 茶色主题确认按钮 */
+[data-theme="tea"] .confirm-button.confirm {
+    background: #8b7355;
+    color: #faf6f0;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

@@ -59,7 +59,12 @@ export default defineConfig({
     },
     server: {
         port: 5173,
-        strictPort: true
+        strictPort: true,
+        // WebLLM 需要 SharedArrayBuffer，这需要 COOP 和 COEP 响应头
+        headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp'
+        }
     }
 })
 

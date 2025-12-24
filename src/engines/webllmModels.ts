@@ -20,8 +20,8 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
     {
         model_id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC',
         displayName: 'Qwen 2.5 0.5B',
-        size: '397MB',
-        expectedBytes: 397,
+        size: '290MB',
+        expectedBytes: 290,
         description: '轻量模型，适合快速体验',
         isBuiltIn: true
     }

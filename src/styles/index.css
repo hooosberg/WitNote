@@ -36,6 +36,7 @@
   --border-color: rgba(0, 0, 0, 0.08);
 
   --accent-color: #007aff;
+  --accent-rgb: 0, 122, 255;
   --success-color: #30d158;
   --warning-color: #ff9f0a;
   --error-color: #ff453a;
@@ -144,6 +145,7 @@ body.platform-windows .chat-messages {
 
   /* 深色模式使用优雅的浅灰色作为强调色，与茶色模式风格一致 */
   --accent-color: #a1a1a6;
+  --accent-rgb: 161, 161, 166;
   --success-color: #86868b;
 }
 
@@ -167,6 +169,7 @@ body.platform-windows .chat-messages {
 
   --border-color: rgba(139, 115, 85, 0.12);
   --accent-color: #8b7355;
+  --accent-rgb: 139, 115, 85;
 }
 
 /* ============ 基础重置 ============ */
@@ -2024,17 +2027,12 @@ select:focus {
   padding: 6px 0;
 }
 
-.model-section:not(:first-child) {
-  border-top: 1px solid var(--border-color);
-}
-
 .model-section-title {
   padding: 6px 12px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
 }
 
 /* 内置徽章 */
@@ -2141,11 +2139,6 @@ select:focus {
 /* 模型列表项 */
 .model-item {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.model-item:last-child {
-  border-bottom: none;
 }
 
 .model-item.active {
@@ -3095,6 +3088,243 @@ select:focus {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* ============ 角色快捷按钮 ============ */
+.settings-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 16px 0 8px 0;
+}
+
+/* 角色按钮网格 */
+.role-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.role-btn-wrapper {
+  position: relative;
+}
+
+.role-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 80px;
+}
+
+.role-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.role-btn:active {
+  transform: translateY(0);
+}
+
+.role-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 6px;
+  color: var(--accent-color);
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.08);
+  /* Fallback blue */
+  border-radius: 8px;
+}
+
+/* 修正黄色星标颜色 */
+.text-yellow-500 {
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.role-name {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.3;
+  word-break: keep-all;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role-btn:hover .role-name {
+  color: var(--accent-color);
+}
+
+/* 自定义角色按钮样式 */
+.role-btn.custom {
+  border-style: dashed;
+}
+
+.role-btn.custom:hover {
+  border-style: solid;
+}
+
+/* 角色操作按钮容器（悬浮显示） */
+.role-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.role-btn:hover .role-actions {
+  opacity: 1;
+}
+
+.role-action-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: var(--bg-main);
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.role-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-active);
+}
+
+.role-action-btn.delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* 编辑输入框 */
+.role-edit-input-wrapper {
+  width: 100%;
+  height: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-color);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.role-edit-input {
+  width: 100%;
+  font-size: 11px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 4px;
+  outline: none;
+}
+
+/* 保存为自定义角色容器 */
+.save-role-container {
+  margin-top: 16px;
+}
+
+/* 保存按钮 */
+.save-custom-role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  width: 100%;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.save-custom-role-btn:hover {
+  border-color: var(--accent-color);
+  border-style: solid;
+  color: var(--accent-color);
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.05);
+}
+
+/* 保存时的输入组 */
+.save-role-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.save-role-input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid var(--accent-color);
+  border-radius: 8px;
+  background: var(--bg-sidebar);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.save-role-confirm-btn,
+.save-role-cancel-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-role-confirm-btn {
+  background: var(--accent-color);
+  color: white;
+}
+
+.save-role-confirm-btn:hover {
+  opacity: 0.9;
+}
+
+.save-role-cancel-btn {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.save-role-cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
 /* 字体大小控制 */
 .font-size-control {
   display: flex;
@@ -3425,6 +3655,30 @@ select:focus {
   gap: 4px;
   font-size: 11px;
   color: #22c55e;
+}
+
+/* 下载/使用按钮 - 全局样式 */
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.download-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.download-btn:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .model-card .download-btn {
@@ -3781,6 +4035,53 @@ select:focus {
   line-height: 1.5;
   margin: 0;
   font-style: italic;
+}
+
+/* ============ 快捷键说明页面样式 ============ */
+.shortcuts-content {
+  padding-right: 8px;
+}
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.shortcut-item:hover {
+  background: var(--bg-active);
+}
+
+.shortcut-desc {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.shortcut-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  color: var(--text-primary);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 80px;
+  text-align: center;
 }
 
 

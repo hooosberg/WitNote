@@ -73,6 +73,14 @@ interface AppAPI {
     getVersion(): Promise<string>
 }
 
+// 快捷方式 API
+interface ShortcutsAPI {
+    onCreateArticle(callback: () => void): () => void
+    onCreateFolder(callback: () => void): () => void
+    onOpenSettings(callback: () => void): () => void
+    onToggleFocusMode(callback: () => void): () => void
+}
+
 // 全局 Window 接口扩展
 declare global {
     interface Window {
@@ -83,6 +91,7 @@ declare global {
         appWindow: AppWindowAPI
         settings: SettingsAPI
         ollama: OllamaAPI
+        shortcuts: ShortcutsAPI
     }
 }
 
