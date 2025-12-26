@@ -5,6 +5,7 @@ import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X } from 'lucide-rea
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
+import { isWebLLMEnabled, isWindows } from '../utils/platform'
 import { UseEngineStoreReturn } from '../store/engineStore'
 import { marked } from 'marked'
 import katex from 'katex'
@@ -244,6 +245,36 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                     <div className="chat-empty">
                         <Sparkles size={32} strokeWidth={1.2} />
                         <p>{t('chat.title')}</p>
+                        {/* Windows 平台下的 Ollama 提示 */}
+                        {isWindows() && engineStore?.currentEngine === 'ollama' && (
+                            <div style={{
+                                marginTop: '16px',
+                                padding: '12px',
+                                background: 'var(--bg-secondary)',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                color: 'var(--text-secondary)',
+                                maxWidth: '300px',
+                                textAlign: 'center'
+                            }}>
+                                <p style={{ margin: '0 0 8px 0' }}>{t('settings.windowsOllamaTip')}</p>
+                                <a
+                                    href="https://ollama.com/download"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        color: 'var(--accent-color)',
+                                        textDecoration: 'none',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    {t('settings.downloadOllama')} &rarr;
+                                </a>
+                                <p style={{ margin: '8px 0 0 0', fontSize: '12px', opacity: 0.8 }}>
+                                    {t('settings.pleaseEnsureOllamaRunning')}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <>
@@ -336,7 +367,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     >
                                         <div className="model-section-title">{t('chat.aiEngine')}</div>
                                         {[
-                                            { type: 'webllm' as const, icon: <Bot size={14} />, label: t('chat.engineWebLLM'), bgColor: 'rgba(16, 185, 129, 0.08)' },
+                                            ...(isWebLLMEnabled() ? [{ type: 'webllm' as const, icon: <Bot size={14} />, label: t('chat.engineWebLLM'), bgColor: 'rgba(16, 185, 129, 0.08)' }] : []),
                                             { type: 'ollama' as const, icon: <Server size={14} />, label: t('chat.engineOllama'), bgColor: 'rgba(245, 158, 11, 0.08)' },
                                             { type: 'openai' as const, icon: <Cloud size={14} />, label: t('chat.engineCloud'), bgColor: 'rgba(59, 130, 246, 0.08)' }
                                         ].map((engine) => (

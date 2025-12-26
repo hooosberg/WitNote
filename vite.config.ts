@@ -4,7 +4,13 @@ import electron from 'vite-plugin-electron'
 import renderer from 'vite-plugin-electron-renderer'
 import { resolve } from 'path'
 
+// Windows 构建时禁用 WebLLM（通过环境变量 DISABLE_WEBLLM=true）
+const DISABLE_WEBLLM = process.env.DISABLE_WEBLLM === 'true'
+
 export default defineConfig({
+    define: {
+        'import.meta.env.DISABLE_WEBLLM': JSON.stringify(DISABLE_WEBLLM)
+    },
     plugins: [
         react(),
         electron([
@@ -53,9 +59,9 @@ export default defineConfig({
             }
         }
     },
-    // 优化 WebLLM 的大文件加载
+    // 优化 WebLLM 的大文件加载（Windows 构建时不需要此优化）
     optimizeDeps: {
-        exclude: ['@mlc-ai/web-llm']
+        exclude: DISABLE_WEBLLM ? [] : ['@mlc-ai/web-llm']
     },
     server: {
         port: 5173,

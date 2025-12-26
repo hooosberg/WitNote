@@ -225,6 +225,8 @@
         "resetDetail3": "恢复默认提示词",
         "resetDetail4": "您的笔记内容不会受到影响",
         "loading": "加载中...",
+        "windowsOllamaTip": "Windows 版本推荐使用 Ollama。请先安装 Ollama：",
+        "downloadOllama": "下载 Ollama",
         "version": "版本"
     },
     "shortcuts": {
@@ -256,9 +258,11 @@
         "aboutTitle": "关于智简笔记本",
         "tagline": "大智若简，落笔生花",
         "description": "智简笔记本 (WitNote) 是一款本地优先的 AI 写作伴侣。支持 WebLLM / Ollama / 云端 API 三种引擎切换，搭配原生极简卡片界面，开箱即用。无云端依赖，无隐私担忧——让智慧更轻盈。",
+        "descriptionWindows": "智简笔记本 (WitNote) 是一款本地优先的 AI 写作伴侣。支持 Ollama 本地引擎与云端 API，搭配原生极简卡片界面，开箱即用。无云端依赖，无隐私担忧——让智慧更轻盈。",
         "philosophy": "核心理念",
         "philosophySmart": "智 (Smart)",
         "philosophySmartDesc": "— 支持 WebLLM (内置)、Ollama (本地)、云端 API 三种模式，自由切换",
+        "philosophySmartDescWindows": "— 支持 Ollama (本地)、云端 API 双模引擎，自由切换",
         "philosophySimple": "简 (Simple)",
         "philosophySimpleDesc": "— iOS 风格卡片管理，拖拽即整理；窗口变窄即进入专注模式",
         "philosophySecure": "安 (Secure)",

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { isWebLLMEnabled } from '../utils/platform';
 
 // 提示词模板
 export interface PromptTemplate {
@@ -71,8 +72,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     ollamaBaseUrl: 'http://localhost:11434',
     ollamaEnabled: true,
 
-    // AI 策略 - 默认使用内置 WebLLM 引擎
-    preferredEngine: 'webllm',
+    // AI 策略 - 默认引擎根据平台决定（Windows 不支持 WebLLM）
+    preferredEngine: isWebLLMEnabled() ? 'webllm' : 'ollama',
     autoFallback: true,
 
     // 角色设定 - 空字符串表示使用内置默认提示词
