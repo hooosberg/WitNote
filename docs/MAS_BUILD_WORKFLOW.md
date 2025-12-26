@@ -157,7 +157,7 @@ xcrun altool --upload-app \
   -u "huyuanbo412004038@gmail.com"
 ```
 
-> 提示输入 App-specific password: `zire-cdzq-eulv-wlfn`
+> 提示输入 App-specific password: `<your-app-specific-password>`
 
 ---
 
