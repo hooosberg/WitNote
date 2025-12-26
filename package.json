@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:mas": "tsc && vite build && electron-builder --mac mas",
-    "build:win": "tsc && vite build && electron-builder --win",
+    "build:win": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --win",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
   },
@@ -143,6 +143,7 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,

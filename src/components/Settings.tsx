@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     X,
+    Download,
     Palette,
     Bot,
     MessageSquare,
@@ -65,6 +66,7 @@ import {
 } from '../services/types';
 import { UseEngineStoreReturn } from '../store/engineStore';
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels';
+import { isWebLLMEnabled, isWindows } from '../utils/platform';
 
 type TabType = 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about';
 
@@ -359,24 +361,26 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="engine-selector-container">
                                 <div className="engine-selector-line" />
 
-                                {/* WebLLM - 本地内置 */}
-                                <button
-                                    className={`engine-selector-item ${engineStore.currentEngine === 'webllm' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        engineStore.setEngine('webllm')
-                                        // 自动初始化：只有在非首次使用时才自动加载
-                                        const savedModel = localStorage.getItem('zen-selected-webllm-model');
-                                        const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id;
+                                {/* WebLLM - 本地内置 (仅非 Windows 平台显示) */}
+                                {isWebLLMEnabled() && (
+                                    <button
+                                        className={`engine-selector-item ${engineStore.currentEngine === 'webllm' ? 'active' : ''}`}
+                                        onClick={() => {
+                                            engineStore.setEngine('webllm')
+                                            // 自动初始化：只有在非首次使用时才自动加载
+                                            const savedModel = localStorage.getItem('zen-selected-webllm-model');
+                                            const targetModel = savedModel || ALL_WEBLLM_MODELS_INFO[0]?.model_id;
 
-                                        if (!engineStore.webllmReady && !engineStore.webllmLoading && !engineStore.webllmFirstTimeSetup && targetModel) {
-                                            engineStore.initWebLLM(targetModel)
-                                        }
-                                    }}
-                                    title="本地内置模型"
-                                >
-                                    <div className="engine-circle"><Bot size={24} /></div>
-                                    <span className="engine-label">{t('chat.engineWebLLM')}</span>
-                                </button>
+                                            if (!engineStore.webllmReady && !engineStore.webllmLoading && !engineStore.webllmFirstTimeSetup && targetModel) {
+                                                engineStore.initWebLLM(targetModel)
+                                            }
+                                        }}
+                                        title="本地内置模型"
+                                    >
+                                        <div className="engine-circle"><Bot size={24} /></div>
+                                        <span className="engine-label">{t('chat.engineWebLLM')}</span>
+                                    </button>
+                                )}
 
                                 {/* Ollama */}
                                 <button
@@ -411,8 +415,8 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             </div>
                         </div>
 
-                        {/* WebLLM 内容 */}
-                        {engineStore.currentEngine === 'webllm' && (
+                        {/* WebLLM 内容 (仅非 Windows 平台显示) */}
+                        {isWebLLMEnabled() && engineStore.currentEngine === 'webllm' && (
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">{t('chat.builtInWebLLMModels')}</h3>
@@ -667,10 +671,35 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <div className="settings-section fade-in">
                                 <div className="settings-section-header">
                                     <h3 className="settings-section-title">{t('settings.externalOllama')}</h3>
+                                    {/* Windows 版本提示 */}
+                                    {isWindows() && (
+                                        <a
+                                            href="https://ollama.com/download"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="download-link"
+                                            style={{
+                                                fontSize: '12px',
+                                                color: 'var(--accent-color)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                textDecoration: 'none',
+                                                border: '1px solid var(--accent-color)',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                marginLeft: 'auto'
+                                            }}
+                                        >
+                                            <Download size={12} />
+                                            {t('settings.downloadOllama')}
+                                        </a>
+                                    )}
                                     <button
                                         className={`status-btn ${engineStore.ollamaAvailable ? 'connected' : 'error'}`}
                                         onClick={() => engineStore.refreshOllamaStatus()}
                                         title={t('settings.clickToTest')}
+                                        style={isWindows() ? { marginLeft: '8px' } : {}}
                                     >
                                         <span className="status-indicator" />
                                         <span className="status-text">{engineStore.ollamaAvailable ? t('settings.connected') : t('settings.connectionFailed')}</span>
@@ -1228,14 +1257,24 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             <h3 className="settings-section-title">{t('guide.aboutTitle')}</h3>
                             <div className="guide-intro">
                                 <p className="guide-tagline">{t('guide.tagline')}</p>
-                                <p className="guide-description">{t('guide.description')}</p>
+                                <p className="guide-description">
+                                    {isWebLLMEnabled()
+                                        ? t('guide.description')
+                                        : t('guide.descriptionWindows')
+                                    }
+                                </p>
                             </div>
                         </div>
 
                         <div className="settings-section">
                             <h3 className="settings-section-title">{t('guide.philosophy')}</h3>
                             <ul className="guide-list">
-                                <li><strong>{t('guide.philosophySmart')}</strong> {t('guide.philosophySmartDesc')}</li>
+                                <li>
+                                    <strong>{t('guide.philosophySmart')}</strong>
+                                    {isWebLLMEnabled()
+                                        ? ` ${t('guide.philosophySmartDesc')}`
+                                        : ` ${t('guide.philosophySmartDescWindows')}`}
+                                </li>
                                 <li><strong>{t('guide.philosophySimple')}</strong> {t('guide.philosophySimpleDesc')}</li>
                                 <li><strong>{t('guide.philosophySecure')}</strong> {t('guide.philosophySecureDesc')}</li>
                             </ul>
@@ -1288,11 +1327,13 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         <div className="settings-section">
                             <h3 className="settings-section-title">{t('settings.credits.title')}</h3>
                             <div className="guide-credits">
-                                <p className="credit-item">
-                                    <strong>WebLLM</strong> - {t('settings.credits.webllmDesc')}<br />
-                                    <a href="https://github.com/mlc-ai/web-llm" target="_blank" rel="noopener noreferrer">github.com/mlc-ai/web-llm</a><br />
-                                    <span className="license-tag">Apache License 2.0</span>
-                                </p>
+                                {isWebLLMEnabled() && (
+                                    <p className="credit-item">
+                                        <strong>WebLLM</strong> - {t('settings.credits.webllmDesc')}<br />
+                                        <a href="https://github.com/mlc-ai/web-llm" target="_blank" rel="noopener noreferrer">github.com/mlc-ai/web-llm</a><br />
+                                        <span className="license-tag">Apache License 2.0</span>
+                                    </p>
+                                )}
                                 <p className="credit-item">
                                     <strong>Ollama</strong> - {t('settings.credits.ollamaDesc')}<br />
                                     <a href="https://github.com/ollama/ollama" target="_blank" rel="noopener noreferrer">github.com/ollama/ollama</a><br />

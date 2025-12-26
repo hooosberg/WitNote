@@ -1,12 +1,14 @@
 /**
  * Engine Store - 三引擎状态管理
  * 管理 WebLLM, Ollama, Cloud API 三种引擎的状态
+ * 注意：Windows 版本不支持 WebLLM
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { OpenAIEngine, CloudConfig, DEFAULT_CLOUD_CONFIG } from '../engines/OpenAIEngine';
 import { DEFAULT_WEBLLM_MODEL } from '../engines/webllmModels';
 import { OllamaModel } from '../services/types';
+import { isWebLLMEnabled } from '../utils/platform';
 
 export type EngineType = 'webllm' | 'ollama' | 'openai';
 
@@ -77,8 +79,18 @@ const STORAGE_KEYS = {
 };
 
 export function useEngineStore(): UseEngineStoreReturn {
-    // 从 localStorage 恢复配置（默认使用 Ollama，WebLLM 有已知问题）
-    const savedEngine = (localStorage.getItem(STORAGE_KEYS.ENGINE) as EngineType) || 'webllm';
+    // 从 localStorage 恢复配置
+    // 注意：Windows 平台不支持 WebLLM，自动回退到 Ollama
+    const getDefaultEngine = (): EngineType => {
+        const saved = localStorage.getItem(STORAGE_KEYS.ENGINE) as EngineType;
+        // 如果保存的是 webllm 但当前平台不支持，回退到 ollama
+        if (saved === 'webllm' && !isWebLLMEnabled()) {
+            return 'ollama';
+        }
+        // 默认引擎：支持 WebLLM 的平台用 webllm，否则用 ollama
+        return saved || (isWebLLMEnabled() ? 'webllm' : 'ollama');
+    };
+    const savedEngine = getDefaultEngine();
     const savedModel = localStorage.getItem(STORAGE_KEYS.MODEL) || DEFAULT_WEBLLM_MODEL;
     const savedOllamaConfig: OllamaConfig = JSON.parse(
         localStorage.getItem(STORAGE_KEYS.OLLAMA) || '{"host":"127.0.0.1","port":11434}'
@@ -149,6 +161,12 @@ export function useEngineStore(): UseEngineStoreReturn {
 
     // 初始化 WebLLM
     const initWebLLM = useCallback(async (modelId?: string) => {
+        // 平台检测：Windows 平台不支持 WebLLM
+        if (!isWebLLMEnabled()) {
+            console.warn('⚠️ WebLLM 在当前平台不可用（Windows）');
+            return;
+        }
+
         // 使用 ref 作为初始化锁（同步检查），防止 React Strict Mode 下的并发初始化
         if (webllmInitLockRef.current) {
             console.log('⚠️ WebLLM 正在初始化中（锁定），跳过...');

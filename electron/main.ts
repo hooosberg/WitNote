@@ -13,10 +13,13 @@ import { spawn } from 'child_process'
 // 检测是否在 Mac App Store 沙盒环境中运行
 const isMAS = (process as NodeJS.Process & { mas?: boolean }).mas === true
 
-// 禁用 GPU 沙箱以支持 WebGPU (WebLLM 需要)
-app.commandLine.appendSwitch('enable-features', 'Vulkan')
-app.commandLine.appendSwitch('use-vulkan')
-app.commandLine.appendSwitch('enable-unsafe-webgpu')
+// 禁用 GPU 沙箱以支持 WebGPU (WebLLM 需要，仅非 Windows 平台)
+// Windows 版本不支持 WebLLM，无需这些参数
+if (process.platform !== 'win32') {
+    app.commandLine.appendSwitch('enable-features', 'Vulkan')
+    app.commandLine.appendSwitch('use-vulkan')
+    app.commandLine.appendSwitch('enable-unsafe-webgpu')
+}
 
 // 开发服务器 URL (由 vite-plugin-electron 注入)
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']

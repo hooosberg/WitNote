@@ -225,6 +225,8 @@
         "resetDetail3": "Restore default prompts",
         "resetDetail4": "Your notes will not be affected",
         "loading": "Loading...",
+        "windowsOllamaTip": "Ollama is recommended for Windows. Please install Ollama first:",
+        "downloadOllama": "Download Ollama",
         "version": "Version"
     },
     "shortcuts": {
@@ -256,9 +258,11 @@
         "aboutTitle": "About WitNote",
         "tagline": "Smart Core, Simple Form",
         "description": "WitNote is a local-first AI writing companion. Supports switching between WebLLM / Ollama / Cloud API engines, paired with a minimalist native card interface. No cloud dependency, no privacy concerns — intelligence made lightweight.",
+        "descriptionWindows": "WitNote is a local-first AI writing companion. Supports Ollama local engine and Cloud API, paired with a minimalist native card interface. No cloud dependency, no privacy concerns — intelligence made lightweight.",
         "philosophy": "Core Philosophy",
         "philosophySmart": "Smart",
         "philosophySmartDesc": "— WebLLM (Built-in) / Ollama (Local) / Cloud API, three engines to choose freely",
+        "philosophySmartDescWindows": "— Supports Ollama (Local) and Cloud API dual engines, switch freely",
         "philosophySimple": "Simple",
         "philosophySimpleDesc": "— iOS-style card management; Focus Mode activates automatically when window narrows",
         "philosophySecure": "Secure",
