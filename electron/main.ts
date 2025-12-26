@@ -22,9 +22,12 @@ app.commandLine.appendSwitch('enable-unsafe-webgpu')
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 // 持久化存储
-const store = new Store<{ vaultPath: string | null }>({
-    defaults: { vaultPath: null }
+const store = new Store<{ vaultPath: string | null; vaultBookmark: string | null }>({
+    defaults: { vaultPath: null, vaultBookmark: null }
 })
+
+// 全局变量：当前活跃的 security-scoped 资源访问函数 (MAS 沙盒需要)
+let stopAccessingResource: (() => void) | null = null
 
 // 设置存储
 interface AppSettings {
@@ -574,11 +577,28 @@ function setupIpcHandlers() {
     // 获取 Vault 路径（自动检测文件夹是否存在）
     ipcMain.handle('fs:getVaultPath', () => {
         const vaultPath = store.get('vaultPath')
+        const bookmark = store.get('vaultBookmark')
+
         if (vaultPath) {
+            // 尝试恢复 security-scoped 权限 (MAS 沙盒需要)
+            if (bookmark && !stopAccessingResource) {
+                try {
+                    stopAccessingResource = app.startAccessingSecurityScopedResource(bookmark) as () => void
+                    console.log('🔓 已恢复文件夹访问权限')
+                } catch (err) {
+                    console.warn('⚠️ 恢复权限失败，可能需要重新选择文件夹:', err)
+                }
+            }
+
             // 检测文件夹是否存在
             if (!existsSync(vaultPath)) {
                 console.log('⚠️ Vault 文件夹不存在，自动清除配置:', vaultPath)
                 store.set('vaultPath', null)
+                store.set('vaultBookmark', null)
+                if (stopAccessingResource) {
+                    stopAccessingResource()
+                    stopAccessingResource = null
+                }
                 return null
             }
         }
@@ -596,6 +616,7 @@ function setupIpcHandlers() {
     ipcMain.handle('fs:selectDirectory', async () => {
         const result = await dialog.showOpenDialog(mainWindow!, {
             properties: ['openDirectory', 'createDirectory'],
+            securityScopedBookmarks: true,  // 启用 security-scoped bookmarks (MAS 沙盒需要)
             title: '选择笔记存储目录',
             buttonLabel: '选择此文件夹'
         })
@@ -605,6 +626,13 @@ function setupIpcHandlers() {
         }
 
         const selectedPath = result.filePaths[0]
+
+        // 保存 bookmark 数据 (MAS 沙盒需要持久化访问权限)
+        if (result.bookmarks && result.bookmarks.length > 0) {
+            store.set('vaultBookmark', result.bookmarks[0])
+            console.log('📑 已保存 Security-Scoped Bookmark')
+        }
+
         store.set('vaultPath', selectedPath)
         ensureZenNoteDir(selectedPath)
         return selectedPath
@@ -612,7 +640,15 @@ function setupIpcHandlers() {
 
     // 断开连接（清除存储的路径）
     ipcMain.handle('fs:disconnectVault', async () => {
+        // 停止访问 security-scoped 资源
+        if (stopAccessingResource) {
+            stopAccessingResource()
+            stopAccessingResource = null
+            console.log('🔒 已释放文件夹访问权限')
+        }
+
         store.delete('vaultPath')
+        store.delete('vaultBookmark')
         return true
     })
 
@@ -1282,6 +1318,15 @@ app.on('window-all-closed', () => {
     }
     if (process.platform !== 'darwin') {
         app.quit()
+    }
+})
+
+// 应用退出时清理 security-scoped 资源
+app.on('will-quit', () => {
+    if (stopAccessingResource) {
+        stopAccessingResource()
+        stopAccessingResource = null
+        console.log('🔒 应用退出，释放文件夹访问权限')
     }
 })
 
