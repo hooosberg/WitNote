@@ -217,7 +217,7 @@ MIT License
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
-📖 [开发学习日记 (v1.2.4)](docs/dev-diary-1.2.4.md)
+📖 [开发学习日记 (v1.2.4)](dev-diary-1.2.4.md)
 
 ---
 
