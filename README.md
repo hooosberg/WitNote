@@ -24,7 +24,7 @@
 > Fully compliant with Apple's security & privacy standards. Currently under review. Your support and stars ⭐️ keep us going!
 
 **WitNote** is a local-first AI writing companion for macOS and Windows.
-Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired with an ultra-minimalist **native card interface**, it works right out of the box. No cloud dependency, no privacy concerns — intelligence made lightweight.
+Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired with an ultra-minimalist **native card interface**, it works right out of the box. No continuous cloud dependency, no privacy concerns — intelligence made lightweight.
 
 ![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
 
@@ -33,7 +33,7 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 ## 🌟 Core Philosophy
 
 - **Smart**: Three Engines in One, Freedom to Choose
-  - **WebLLM**: Built-in lightweight model in browser, no installation, works out of the box
+  - **WebLLM**: Lightweight model, requires download on first run, then works offline
   - **Ollama**: Powerful local model, strong performance, completely offline
   - **Cloud API**: Connect to cloud intelligence, infinite possibilities
 - **Simple**: No complexity
@@ -44,10 +44,10 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ---
 
-## ✨ Features (v1.2.3)
+## ✨ Features (v1.2.4)
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
-- 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Built-in Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
+- 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
 - 🎭 **Rich Role Library** — Built-in 10+ selected role prompts (Writer, Translator, Polisher, etc.), one-click switch & custom support
 - 🌍 **Global Communication** — **Supports 8 Languages**: 
   - English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch, Español
@@ -123,9 +123,9 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ## 🔧 AI Engine Info
 
-### 1. WebLLM (Built-in Light)
-The app includes a built-in WebLLM engine with `qwen2.5:0.5b` model (requires download on first use, then works fully offline).
-- **Pros**: No extra software installation needed, works right after app download.
+### 1. WebLLM (Light)
+The app includes a built-in WebLLM engine with `qwen2.5:0.5b` model (macOS only, Windows users are recommended to use Ollama).
+- **Pros**: No extra software installation needed, works completely offline after initial model download.
 - **Best for**: Quick Q&A, simple text polishing, low-end devices.
 
 ### 2. Ollama (Local Power)
@@ -204,6 +204,8 @@ MIT License
 📧 [zikedece@proton.me](mailto:zikedece@proton.me)
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
+
+📖 [Development Diary (v1.2.4)](docs/dev-diary-1.2.4.md)
 
 ---
 

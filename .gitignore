@@ -59,3 +59,7 @@ src/pic/智简icon.psd
 src/pic/witnote 宣传截图/海报设计.psd
 src/pic/logo/苹果商店/
 *.psd
+
+# 文档（包含凭据，不上传）
+docs/
+!docs/dev-diary-1.2.4.md

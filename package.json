@@ -85,7 +85,7 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "signIgnore": [],
-      "identity": "***REMOVED*** (***REMOVED***)",
+      "identity": "174FB3335078E0FA2BFDB366AA0C6E4359A7A33F",
       "notarize": false
     },
     "afterSign": "scripts/notarize.js",
