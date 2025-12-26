@@ -34,14 +34,11 @@
    git push origin main --tags
    ```
 
-## 4. GitHub Release 上传
-1. 访问 GitHub 仓库的 Releases 页面。
-2. 点击 "Draft a new release"。
+## 4.终端 GitHub Release 上传
+
 3. 选择标签 `v1.2.4`。
 4. 填写标题 (例如 "WitNote v1.2.4")。
-5. 粘贴版本简介 (Release Notes)。
+5. 编写版本简介 。
 6. 上传构建产物：
    - `release/WitNote-1.2.4.dmg`
-   - `release/WitNote-Setup-1.2.4.exe` (如果有)
-   - `release/WitNote-1.2.4-arm64.dmg` (根据架构)
-7. 点击 "Publish release"。
+   - `release/WitNote-1.2.4-setup.exe` 

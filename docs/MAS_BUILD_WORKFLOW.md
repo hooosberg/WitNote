@@ -157,7 +157,7 @@ xcrun altool --upload-app \
   -u "***REMOVED***"
 ```
 
-> 提示输入 App-specific password: `***REMOVED***`
+> 提示输入 App-specific password: `<your-app-specific-password>`
 
 ---
 
