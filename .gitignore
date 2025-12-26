@@ -62,3 +62,11 @@ src/pic/logo/苹果商店/
 
 # 文档（包含凭据，不上传）
 docs/
+
+# 备份和临时文件
+*.bak
+*.new
+*.tmp
+
+# Apple 配置文件（敏感）
+build/*.provisionprofile
