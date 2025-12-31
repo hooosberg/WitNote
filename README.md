@@ -2,11 +2,10 @@
   <img src="src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
 </p>
 
-<h1 align="center">WitNote (智简笔记本)</h1>
+<h1 align="center">WitNote</h1>
 
 <p align="center">
-  <strong>Smart Core, Simple Form</strong><br>
-  <i>大智若简，落笔生花</i>
+  <strong>Smart Core, Simple Form</strong>
 </p>
 
 <p align="center">
