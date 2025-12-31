@@ -1,7 +1,7 @@
 {
   "name": "witnote",
   "private": true,
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "智简笔记本 - 大智若简的本地化 AI 写作伴侣 (WitNote)",
   "main": "dist-electron/main.js",
   "author": "hooosberg <zikedece@proton.me>",
@@ -128,7 +128,7 @@
       ]
     },
     "pkg": {
-      "identity": "9B1EA827F1F113AB37CF09A9BAFAFA7DD9B13494"
+      "identity": "79D525387C81F7E0CC16A21EDCEFB5CD320E5146"
     },
     "dmg": {
       "title": "${productName}",

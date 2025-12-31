@@ -69,27 +69,41 @@ echo -e "✅ 清理完成"
 # Step 3: 构建 MAS
 # ═══════════════════════════════════════════════════════════════════════════
 echo -e "\n${YELLOW}[Step 3] 构建 MAS 版本...${NC}"
-npm run build:mas
+# 允许 electron-builder 失败（PKG 签名可能失败，但 APP 会被创建）
+npm run build:mas || true
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Step 4: 定位输出文件
+# Step 4: 定位输出文件并手动创建 PKG（如需要）
 # ═══════════════════════════════════════════════════════════════════════════
 echo -e "\n${YELLOW}[Step 4] 定位输出文件...${NC}"
 
-PKG_PATH=$(find release -name "*.pkg" -type f 2>/dev/null | head -1)
 APP_PATH=$(find release -name "*.app" -type d 2>/dev/null | head -1)
+PKG_PATH=$(find release -name "*.pkg" -type f 2>/dev/null | head -1)
 
-if [ -z "$PKG_PATH" ]; then
-    echo -e "${RED}❌ 未找到 PKG 文件${NC}"
+# 检查 APP 是否存在
+if [ -z "$APP_PATH" ]; then
+    echo -e "${RED}❌ 未找到 APP 文件${NC}"
     echo "release/ 目录内容:"
     ls -la release/
     exit 1
 fi
+echo -e "📱 APP: ${GREEN}$APP_PATH${NC}"
+
+# 如果 PKG 不存在，手动创建
+if [ -z "$PKG_PATH" ]; then
+    echo -e "${YELLOW}⚠️ PKG 未由 electron-builder 创建，使用 productbuild 手动创建...${NC}"
+    PKG_PATH="release/WitNote-${VERSION}-mas.pkg"
+    
+    echo -e "正在创建 PKG..."
+    if productbuild --component "$APP_PATH" /Applications --sign "3rd Party Mac Developer Installer: ***REMOVED*** (***REMOVED***)" "$PKG_PATH"; then
+        echo -e "✅ PKG 创建成功"
+    else
+        echo -e "${RED}❌ PKG 创建失败${NC}"
+        exit 1
+    fi
+fi
 
 echo -e "📦 PKG: ${GREEN}$PKG_PATH${NC}"
-if [ -n "$APP_PATH" ]; then
-    echo -e "📱 APP: ${GREEN}$APP_PATH${NC}"
-fi
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Step 5: 签名验证

@@ -68,12 +68,19 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 | Item | Minimum | Recommended |
 |------|---------|-------------|
-| OS Version | macOS 10.15+ | macOS 12.0+ |
-| Chip | Intel Core i5 | Apple Silicon (M1/M2/M3/M4) |
-| RAM | 8GB | 16GB+ |
-| Storage | 2GB free space | SSD, 4GB+ free space |
+| OS Version | macOS 12.0+ | macOS 13.0+ |
+| Chip | **Not Supported (Intel Chips)** | **Apple Silicon (M1/M2/M3/M4)** |
+| RAM | - | 16GB+ |
+| Storage | - | SSD, 4GB+ free space |
 
-> 💡 **Tip**: Apple Silicon devices offer significantly better performance for local AI models!
+> ❌ **Important Note for Intel Macs**: 
+> 
+> This application **does not support** Mac computers with Intel chips. Even if forced to run, the experience will be extremely poor due to the following reasons:
+> 1. **Architectural Incompatibility**: The built-in local inference engines (WebLLM/Ollama) deeply rely on the ARM64 architecture and NPU/Metal hardware acceleration of Apple Silicon.
+> 2. **Lack of Hardware Acceleration**: Intel Macs lack Unified Memory Architecture. Running quantized models is extremely slow (generating a single token may take seconds) and causes severe device heating.
+> 3. **Architectural Trade-off**: To ensure the best experience and minimal package size, we have removed support for the x86_64 architecture.
+> 
+> We strongly recommend using Mac devices equipped with Apple Silicon (M-series) chips.
 
 ### 🪟 Windows
 
@@ -205,7 +212,7 @@ MIT License
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
-📖 [Development Diary (v1.2.4)](public/dev-diaries/dev-diary-1.2.4_en.md)
+📖 [Development Diary](public/dev-diaries/dev-diary_en.md)
 
 ---
 
