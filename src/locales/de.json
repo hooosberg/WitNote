@@ -83,7 +83,7 @@
         "engineOllamaShort": "Extern",
         "engineCloudShort": "Cloud",
         "firstUseTitle": "Erste Schritte",
-        "firstUseDesc": "KI-Modell muss heruntergeladen werden (ca. {size})\nEinmal laden, immer offline nutzen.",
+        "firstUseDesc": "KI-Modell muss heruntergeladen werden (ca. {{size}})\nEinmal laden, immer offline nutzen.",
         "startDownload": "Download & Laden",
         "connectionFailed": "Verbindung fehlgeschlagen",
         "notTested": "Nicht getestet",

@@ -80,7 +80,7 @@
         "engineOllamaShort": "外部",
         "engineCloudShort": "雲端",
         "firstUseTitle": "首次使用提示",
-        "firstUseDesc": "需要下載 AI 模型（約 {size}）\n下載一次，永久離線可用",
+        "firstUseDesc": "需要下載 AI 模型（約 {{size}}）\n下載一次，永久離線可用",
         "startDownload": "開始下載並載入模型",
         "connectionFailed": "連接失敗",
         "notTested": "未測試",

@@ -1,7 +1,7 @@
 {
   "name": "witnote",
   "private": true,
-  "version": "1.2.4",
+  "version": "1.2.7",
   "description": "智简笔记本 - 大智若简的本地化 AI 写作伴侣 (WitNote)",
   "main": "dist-electron/main.js",
   "author": "hooosberg <zikedece@proton.me>",
@@ -86,7 +86,17 @@
       "entitlementsInherit": "build/entitlements.mac.plist",
       "signIgnore": [],
       "identity": "174FB3335078E0FA2BFDB366AA0C6E4359A7A33F",
-      "notarize": false
+      "notarize": false,
+      "extraResources": [
+        {
+          "from": "build/zh_CN.lproj",
+          "to": "zh_CN.lproj"
+        },
+        {
+          "from": "build/en.lproj",
+          "to": "en.lproj"
+        }
+      ]
     },
     "afterSign": "scripts/notarize.js",
     "mas": {
@@ -97,13 +107,28 @@
           "arm64"
         ]
       },
+      "identity": "Apple Distribution: ***REMOVED*** (***REMOVED***)",
       "entitlements": "build/entitlements.mas.plist",
       "entitlementsInherit": "build/entitlements.mas.inherit.plist",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "provisioningProfile": "build/embedded.provisionprofile",
       "category": "public.app-category.productivity",
-      "minimumSystemVersion": "12.0"
+      "minimumSystemVersion": "12.0",
+      "binaries": [],
+      "extraResources": [
+        {
+          "from": "build/zh_CN.lproj",
+          "to": "zh_CN.lproj"
+        },
+        {
+          "from": "build/en.lproj",
+          "to": "en.lproj"
+        }
+      ]
+    },
+    "pkg": {
+      "identity": "9B1EA827F1F113AB37CF09A9BAFAFA7DD9B13494"
     },
     "dmg": {
       "title": "${productName}",

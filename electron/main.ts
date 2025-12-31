@@ -108,7 +108,8 @@ const allMenuTranslations: Record<string, any> = {
         help: '帮助',
         visitGitHub: '访问 GitHub',
         openSettings: '打开设置',
-        toggleFocusMode: '切换专注模式'
+        toggleFocusMode: '切换专注模式',
+        showMainWindow: '显示主窗口'
     },
     'zh-TW': {
         about: '關於 {appName}',
@@ -148,7 +149,8 @@ const allMenuTranslations: Record<string, any> = {
         help: '說明',
         visitGitHub: '造訪 GitHub',
         openSettings: '開啟設定',
-        toggleFocusMode: '切換專注模式'
+        toggleFocusMode: '切換專注模式',
+        showMainWindow: '顯示主視窗'
     },
     en: {
         about: 'About {appName}',
@@ -188,7 +190,8 @@ const allMenuTranslations: Record<string, any> = {
         help: 'Help',
         visitGitHub: 'Visit GitHub',
         openSettings: 'Open Settings',
-        toggleFocusMode: 'Toggle Focus Mode'
+        toggleFocusMode: 'Toggle Focus Mode',
+        showMainWindow: 'Show Main Window'
     },
     ja: {
         about: '{appName} について',
@@ -228,7 +231,8 @@ const allMenuTranslations: Record<string, any> = {
         help: 'ヘルプ',
         visitGitHub: 'GitHub を開く',
         openSettings: '設定を開く',
-        toggleFocusMode: '集中モードを切り替え'
+        toggleFocusMode: '集中モードを切り替え',
+        showMainWindow: 'メインウィンドウを表示'
     },
     ko: {
         about: '{appName} 정보',
@@ -268,7 +272,8 @@ const allMenuTranslations: Record<string, any> = {
         help: '도움말',
         visitGitHub: 'GitHub 방문',
         openSettings: '설정 열기',
-        toggleFocusMode: '집중 모드 전환'
+        toggleFocusMode: '집중 모드 전환',
+        showMainWindow: '메인 윈도우 표시'
     },
     fr: {
         about: 'À propos de {appName}',
@@ -308,7 +313,8 @@ const allMenuTranslations: Record<string, any> = {
         help: 'Aide',
         visitGitHub: 'Visiter GitHub',
         openSettings: 'Ouvrir les Paramètres',
-        toggleFocusMode: 'Basculer Mode Focus'
+        toggleFocusMode: 'Basculer Mode Focus',
+        showMainWindow: 'Afficher la fenêtre principale'
     },
     de: {
         about: 'Über {appName}',
@@ -348,7 +354,8 @@ const allMenuTranslations: Record<string, any> = {
         help: 'Hilfe',
         visitGitHub: 'GitHub besuchen',
         openSettings: 'Einstellungen öffnen',
-        toggleFocusMode: 'Fokus-Modus umschalten'
+        toggleFocusMode: 'Fokus-Modus umschalten',
+        showMainWindow: 'Hauptfenster anzeigen'
     },
     es: {
         about: 'Acerca de {appName}',
@@ -388,7 +395,8 @@ const allMenuTranslations: Record<string, any> = {
         help: 'Ayuda',
         visitGitHub: 'Visitar GitHub',
         openSettings: 'Abrir Ajustes',
-        toggleFocusMode: 'Alternar Modo Enfoque'
+        toggleFocusMode: 'Alternar Modo Enfoque',
+        showMainWindow: 'Mostrar ventana principal'
     }
 }
 
@@ -1167,6 +1175,19 @@ function createApplicationMenu() {
         {
             label: tm('menu.window'),
             submenu: [
+                {
+                    label: tm('menu.showMainWindow'),
+                    accelerator: 'CmdOrCtrl+1',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.show()
+                            mainWindow.focus()
+                        } else {
+                            createWindow()
+                        }
+                    }
+                },
+                { type: 'separator' as const },
                 { role: 'minimize' as const, label: tm('menu.minimize') },
                 { role: 'zoom' as const, label: tm('menu.zoom') },
                 ...(isMac ? [
@@ -1203,6 +1224,18 @@ function createDockMenu() {
     if (process.platform !== 'darwin') return
 
     const dockMenu = Menu.buildFromTemplate([
+        {
+            label: tm('menu.showMainWindow'),
+            click: () => {
+                if (mainWindow) {
+                    mainWindow.show()
+                    mainWindow.focus()
+                } else {
+                    createWindow()
+                }
+            }
+        },
+        { type: 'separator' },
         {
             label: tm('menu.newArticle'),
             click: () => {
@@ -1251,7 +1284,8 @@ function createWindow() {
             contextIsolation: true,
             webSecurity: true,
             experimentalFeatures: true
-        }
+        },
+        title: "WitNote"
     }
 
     // macOS 专用原生视觉效果
@@ -1309,7 +1343,13 @@ app.whenReady().then(async () => {
     createWindow()
 
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
+        // macOS: 点击 Dock 图标时重新显示或创建窗口
+        if (mainWindow) {
+            // 窗口存在但可能被隐藏或最小化
+            mainWindow.show()
+            mainWindow.focus()
+        } else if (BrowserWindow.getAllWindows().length === 0) {
+            // 没有任何窗口，创建新窗口
             createWindow()
         }
     })

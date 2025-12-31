@@ -83,7 +83,7 @@
         "engineOllamaShort": "External",
         "engineCloudShort": "Cloud",
         "firstUseTitle": "First Use Setup",
-        "firstUseDesc": "Need to download AI model (approx {size})\nDownload once, forever offline.",
+        "firstUseDesc": "Need to download AI model (approx {{size}})\nDownload once, forever offline.",
         "startDownload": "Start Download & Load",
         "connectionFailed": "Connection Failed",
         "notTested": "Not Tested",

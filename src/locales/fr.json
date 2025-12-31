@@ -83,7 +83,7 @@
         "engineOllamaShort": "Externe",
         "engineCloudShort": "Cloud",
         "firstUseTitle": "Premier lancement",
-        "firstUseDesc": "Téléchargement du modèle IA requis (apx. {size})\nTéléchargez une fois, utilisez hors ligne pour toujours.",
+        "firstUseDesc": "Téléchargement du modèle IA requis (apx. {{size}})\nTéléchargez une fois, utilisez hors ligne pour toujours.",
         "startDownload": "Télécharger et charger",
         "connectionFailed": "Échec de connexion",
         "notTested": "Non testé",

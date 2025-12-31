@@ -83,7 +83,7 @@
         "engineOllamaShort": "Externo",
         "engineCloudShort": "Nube",
         "firstUseTitle": "Primer Uso",
-        "firstUseDesc": "Descarga de modelo IA requerida (aprox. {size})\nDescargue una vez, use offline siempre.",
+        "firstUseDesc": "Descarga de modelo IA requerida (aprox. {{size}})\nDescargue una vez, use offline siempre.",
         "startDownload": "Descargar y Cargar",
         "connectionFailed": "Fallo de conexión",
         "notTested": "No probado",

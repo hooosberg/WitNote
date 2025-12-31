@@ -83,7 +83,7 @@
         "engineOllamaShort": "外部",
         "engineCloudShort": "クラウド",
         "firstUseTitle": "初回セットアップ",
-        "firstUseDesc": "AIモデルのダウンロードが必要です（約 {size}）\n一度ダウンロードすれば、オフラインで永続的に使用できます",
+        "firstUseDesc": "AIモデルのダウンロードが必要です（約 {{size}}）\n一度ダウンロードすれば、オフラインで永続的に使用できます",
         "startDownload": "ダウンロードとロードを開始",
         "connectionFailed": "接続失敗",
         "notTested": "未テスト",
