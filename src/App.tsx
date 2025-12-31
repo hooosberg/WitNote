@@ -6,10 +6,8 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import ReactDOM from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import {
-    Panel,
-    PanelGroup
-} from 'react-resizable-panels'
+// 使用 CSS Flexbox 布局替代 react-resizable-panels
+// 原 PanelGroup/Panel 组件已移除，改用固定宽度两侧栏目
 import {
     Home,
     Plus,
@@ -661,234 +659,234 @@ const AppContent: React.FC = () => {
             />
 
             {/* 可调整三栏布局 */}
-            <PanelGroup direction="horizontal" className="panel-group">
+            {/* 可调整三栏布局 -> 固定宽度 Flex 布局 */}
+            <div className="app-layout">
                 {/* 左侧边栏 */}
                 {!leftCollapsed && (
-                    <>
-                        <Panel defaultSize={25} minSize={25} maxSize={25} className="panel-sidebar">
-                            <div className="sidebar-inner">
-                                {/* 侧边栏头部 - 只保留占位符对齐 */}
-                                <div className="sidebar-header">
-                                    <span className="sidebar-spacer" />
-                                </div>
+                    <div className="panel-sidebar">
+                        <div className="sidebar-inner">
+                            {/* 侧边栏头部 - 只保留占位符对齐 */}
+                            <div className="sidebar-header">
+                                <span className="sidebar-spacer" />
+                            </div>
 
-                                {/* 侧边栏内容 - 支持拖拽到空白区域移到根目录 */}
-                                <div
-                                    className="sidebar-content"
-                                    onClick={(e) => {
-                                        if (e.target === e.currentTarget) {
-                                            selectFolder(null)
-                                        }
-                                    }}
-                                    onContextMenu={(e) => {
-                                        // 只在空白区域触发（非子元素）
-                                        if (e.target === e.currentTarget) {
-                                            e.preventDefault()
-                                            setSidebarMenu({ show: true, x: e.clientX, y: e.clientY })
-                                        }
-                                    }}
-                                    onDragOver={(e) => {
-                                        // 只在空白区域高亮（非子元素）
-                                        if (e.target === e.currentTarget) {
-                                            e.preventDefault()
-                                            e.currentTarget.classList.add('drag-over-blank')
-                                        }
-                                    }}
-                                    onDragLeave={(e) => {
-                                        if (e.target === e.currentTarget) {
-                                            e.currentTarget.classList.remove('drag-over-blank')
-                                        }
-                                    }}
-                                    onDrop={async (e) => {
-                                        // 只在空白区域处理拖拽
-                                        if (e.target === e.currentTarget) {
-                                            e.preventDefault()
-                                            e.currentTarget.classList.remove('drag-over-blank')
-                                            try {
-                                                const data = JSON.parse(e.dataTransfer.getData('application/json'))
-                                                if (data.path) {
-                                                    // 移动到根目录
-                                                    await moveItem(data.path, '')
-                                                }
-                                            } catch {
-                                                console.error('拖拽数据解析失败')
+                            {/* 侧边栏内容 - 支持拖拽到空白区域移到根目录 */}
+                            <div
+                                className="sidebar-content"
+                                onClick={(e) => {
+                                    if (e.target === e.currentTarget) {
+                                        selectFolder(null)
+                                    }
+                                }}
+                                onContextMenu={(e) => {
+                                    // 只在空白区域触发（非子元素）
+                                    if (e.target === e.currentTarget) {
+                                        e.preventDefault()
+                                        setSidebarMenu({ show: true, x: e.clientX, y: e.clientY })
+                                    }
+                                }}
+                                onDragOver={(e) => {
+                                    // 只在空白区域高亮（非子元素）
+                                    if (e.target === e.currentTarget) {
+                                        e.preventDefault()
+                                        e.currentTarget.classList.add('drag-over-blank')
+                                    }
+                                }}
+                                onDragLeave={(e) => {
+                                    if (e.target === e.currentTarget) {
+                                        e.currentTarget.classList.remove('drag-over-blank')
+                                    }
+                                }}
+                                onDrop={async (e) => {
+                                    // 只在空白区域处理拖拽
+                                    if (e.target === e.currentTarget) {
+                                        e.preventDefault()
+                                        e.currentTarget.classList.remove('drag-over-blank')
+                                        try {
+                                            const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                                            if (data.path) {
+                                                // 移动到根目录
+                                                await moveItem(data.path, '')
                                             }
+                                        } catch {
+                                            console.error('拖拽数据解析失败')
                                         }
-                                    }}
-                                >
-                                    {vaultPath ? (
-                                        <>
-                                            {/* 根目录项 - 始终显示，支持拖拽放入 */}
-                                            <div
-                                                className={`finder-tree-item root-item ${!activeFolder ? 'active' : ''}`}
-                                                onClick={() => selectFolder(null)}
-                                                onContextMenu={(e) => {
-                                                    e.preventDefault()
-                                                    e.stopPropagation()
-                                                    setSidebarMenu({ show: true, x: e.clientX, y: e.clientY })
+                                    }
+                                }}
+                            >
+                                {vaultPath ? (
+                                    <>
+                                        {/* 根目录项 - 始终显示，支持拖拽放入 */}
+                                        <div
+                                            className={`finder-tree-item root-item ${!activeFolder ? 'active' : ''}`}
+                                            onClick={() => selectFolder(null)}
+                                            onContextMenu={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                setSidebarMenu({ show: true, x: e.clientX, y: e.clientY })
+                                            }}
+                                            onDragOver={(e) => {
+                                                e.preventDefault()
+                                                e.currentTarget.classList.add('drag-over-inside')
+                                            }}
+                                            onDragLeave={(e) => {
+                                                e.currentTarget.classList.remove('drag-over-inside')
+                                            }}
+                                            onDrop={async (e) => {
+                                                e.preventDefault()
+                                                e.currentTarget.classList.remove('drag-over-inside')
+                                                try {
+                                                    const data = JSON.parse(e.dataTransfer.getData('application/json'))
+                                                    if (data.path) {
+                                                        // 移动到根目录（空字符串表示根目录）
+                                                        await moveItem(data.path, '')
+                                                    }
+                                                } catch {
+                                                    console.error('拖拽数据解析失败')
+                                                }
+                                            }}
+                                            style={{ paddingLeft: '12px' }}
+                                        >
+                                            <span className="finder-icon">
+                                                <Home size={16} strokeWidth={1.5} />
+                                            </span>
+                                            <span className="finder-name">{vaultPath.split('/').pop()}</span>
+                                            <span className="finder-spacer" />
+                                            {/* 显示总文件数量 */}
+                                            <span className="finder-count">{getAllFiles().length}</span>
+                                        </div>
+
+                                        {/* 子文件夹 */}
+                                        {fileTree.filter(n => n.isDirectory).length > 0 ? (
+                                            <FileTree
+                                                nodes={fileTree}
+                                                activeFilePath={activeFolder?.path || null}
+                                                onFileSelect={openFile}
+                                                onRootSelect={() => selectFolder(null)}
+                                                onRename={(node) => {
+                                                    setRenameTarget(node)
+                                                    setShowRenameDialog(true)
                                                 }}
-                                                onDragOver={(e) => {
-                                                    e.preventDefault()
-                                                    e.currentTarget.classList.add('drag-over-inside')
-                                                }}
-                                                onDragLeave={(e) => {
-                                                    e.currentTarget.classList.remove('drag-over-inside')
-                                                }}
-                                                onDrop={async (e) => {
-                                                    e.preventDefault()
-                                                    e.currentTarget.classList.remove('drag-over-inside')
-                                                    try {
-                                                        const data = JSON.parse(e.dataTransfer.getData('application/json'))
-                                                        if (data.path) {
-                                                            // 移动到根目录（空字符串表示根目录）
-                                                            await moveItem(data.path, '')
-                                                        }
-                                                    } catch {
-                                                        console.error('拖拽数据解析失败')
+                                                onDelete={handleDelete}
+                                                onCreateFolder={async (inDir) => {
+                                                    // 直接创建"未命名文件夹"并进入编辑状态
+                                                    const actualPath = await createNewFolder('未命名文件夹', inDir)
+                                                    if (actualPath) {
+                                                        setEditingFolderPath(actualPath)
                                                     }
                                                 }}
-                                                style={{ paddingLeft: '12px' }}
-                                            >
-                                                <span className="finder-icon">
-                                                    <Home size={16} strokeWidth={1.5} />
-                                                </span>
-                                                <span className="finder-name">{vaultPath.split('/').pop()}</span>
-                                                <span className="finder-spacer" />
-                                                {/* 显示总文件数量 */}
-                                                <span className="finder-count">{getAllFiles().length}</span>
+                                                getColor={getColor}
+                                                onColorChange={setColor}
+                                                isRootSelected={false}
+                                                editingPath={editingFolderPath}
+                                                onEditComplete={async (path, newName) => {
+                                                    setEditingFolderPath(null)
+                                                    // 如果名称变化了，执行重命名
+                                                    const currentName = path.split('/').pop() || ''
+                                                    if (newName !== currentName) {
+                                                        await renameItem(path, newName)
+                                                    }
+                                                }}
+                                                onStartEdit={(path) => setEditingFolderPath(path)}
+                                                onMove={async (sourcePath, targetDir) => {
+                                                    await moveItem(sourcePath, targetDir)
+                                                }}
+                                                orderedPaths={folderOrder.getOrder('__root__')}
+                                                onReorder={(newOrder) => folderOrder.setOrder('__root__', newOrder)}
+                                            />
+                                        ) : (
+                                            <div className="sidebar-empty-hint">
+                                                {t('sidebar.emptyFolderHint')}
                                             </div>
-
-                                            {/* 子文件夹 */}
-                                            {fileTree.filter(n => n.isDirectory).length > 0 ? (
-                                                <FileTree
-                                                    nodes={fileTree}
-                                                    activeFilePath={activeFolder?.path || null}
-                                                    onFileSelect={openFile}
-                                                    onRootSelect={() => selectFolder(null)}
-                                                    onRename={(node) => {
-                                                        setRenameTarget(node)
-                                                        setShowRenameDialog(true)
-                                                    }}
-                                                    onDelete={handleDelete}
-                                                    onCreateFolder={async (inDir) => {
-                                                        // 直接创建"未命名文件夹"并进入编辑状态
-                                                        const actualPath = await createNewFolder('未命名文件夹', inDir)
-                                                        if (actualPath) {
-                                                            setEditingFolderPath(actualPath)
-                                                        }
-                                                    }}
-                                                    getColor={getColor}
-                                                    onColorChange={setColor}
-                                                    isRootSelected={false}
-                                                    editingPath={editingFolderPath}
-                                                    onEditComplete={async (path, newName) => {
-                                                        setEditingFolderPath(null)
-                                                        // 如果名称变化了，执行重命名
-                                                        const currentName = path.split('/').pop() || ''
-                                                        if (newName !== currentName) {
-                                                            await renameItem(path, newName)
-                                                        }
-                                                    }}
-                                                    onStartEdit={(path) => setEditingFolderPath(path)}
-                                                    onMove={async (sourcePath, targetDir) => {
-                                                        await moveItem(sourcePath, targetDir)
-                                                    }}
-                                                    orderedPaths={folderOrder.getOrder('__root__')}
-                                                    onReorder={(newOrder) => folderOrder.setOrder('__root__', newOrder)}
-                                                />
-                                            ) : (
-                                                <div className="sidebar-empty-hint">
-                                                    {t('sidebar.emptyFolderHint')}
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <div className="sidebar-empty-guide">
-                                            <div className="empty-icon">🧘</div>
-                                            <span className="sidebar-hint">
-                                                {t('sidebar.emptyGuide')}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* 侧边栏右键菜单 (使用 Portal 渲染到 body) */}
-                                {sidebarMenu.show && ReactDOM.createPortal(
-                                    <div
-                                        className="sidebar-menu context-menu"
-                                        style={{ left: sidebarMenu.x, top: sidebarMenu.y }}
-                                        onMouseDown={e => e.stopPropagation()}
-                                    >
-                                        <button onClick={async () => {
-                                            // 直接在根目录创建"未命名文件夹"并进入编辑状态
-                                            const actualPath = await createNewFolder('未命名文件夹')
-                                            if (actualPath) {
-                                                setEditingFolderPath(actualPath)
-                                            }
-                                            setSidebarMenu({ show: false, x: 0, y: 0 })
-                                        }}>{t('contextMenu.newFolder')}</button>
-                                    </div>,
-                                    document.body
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="sidebar-empty-guide">
+                                        <div className="empty-icon">🧘</div>
+                                        <span className="sidebar-hint">
+                                            {t('sidebar.emptyGuide')}
+                                        </span>
+                                    </div>
                                 )}
-
-                                {/* 底部操作按钮 */}
-                                <div className="sidebar-footer">
-                                    {vaultPath ? (
-                                        <>
-                                            {/* 设置按钮 + 已链接文件夹按钮 */}
-                                            <div className="sidebar-footer-row">
-                                                <button
-                                                    className="sidebar-footer-btn settings"
-                                                    onClick={() => setShowSettings(true)}
-                                                    title="设置"
-                                                >
-                                                    <Settings size={14} strokeWidth={1.5} />
-                                                </button>
-                                                <button
-                                                    className="sidebar-footer-btn connected flex-1"
-                                                    onClick={() => {
-                                                        // 使用自定义确认对话框
-                                                        setConfirmDialog({
-                                                            isOpen: true,
-                                                            title: t('sidebar.disconnectTitle'),
-                                                            message: t('sidebar.disconnectMessage'),
-                                                            details: [
-                                                                t('sidebar.disconnectDetail')
-                                                            ],
-                                                            onConfirm: async () => {
-                                                                setConfirmDialog(null)
-                                                                // 断开连接：清除存储的路径并重新加载
-                                                                await window.fs.disconnectVault()
-                                                                window.location.reload()
-                                                            }
-                                                        })
-                                                    }}
-                                                    title="断开连接"
-                                                >
-                                                    <Link size={14} strokeWidth={1.5} />
-                                                    <span>{t('sidebar.linkedFolder')}</span>
-                                                </button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <button
-                                            className="sidebar-footer-btn disconnected"
-                                            onClick={selectVault}
-                                            title="连接本地文件夹"
-                                        >
-                                            <Unlink size={14} strokeWidth={1.5} />
-                                            <span>{t('sidebar.linkLocalFolder')}</span>
-                                        </button>
-                                    )}
-                                </div>
                             </div>
-                        </Panel>
-                    </>
+
+                            {/* 侧边栏右键菜单 (使用 Portal 渲染到 body) */}
+                            {sidebarMenu.show && ReactDOM.createPortal(
+                                <div
+                                    className="sidebar-menu context-menu"
+                                    style={{ left: sidebarMenu.x, top: sidebarMenu.y }}
+                                    onMouseDown={e => e.stopPropagation()}
+                                >
+                                    <button onClick={async () => {
+                                        // 直接在根目录创建"未命名文件夹"并进入编辑状态
+                                        const actualPath = await createNewFolder('未命名文件夹')
+                                        if (actualPath) {
+                                            setEditingFolderPath(actualPath)
+                                        }
+                                        setSidebarMenu({ show: false, x: 0, y: 0 })
+                                    }}>{t('contextMenu.newFolder')}</button>
+                                </div>,
+                                document.body
+                            )}
+
+                            {/* 底部操作按钮 */}
+                            <div className="sidebar-footer">
+                                {vaultPath ? (
+                                    <>
+                                        {/* 设置按钮 + 已链接文件夹按钮 */}
+                                        <div className="sidebar-footer-row">
+                                            <button
+                                                className="sidebar-footer-btn settings"
+                                                onClick={() => setShowSettings(true)}
+                                                title="设置"
+                                            >
+                                                <Settings size={14} strokeWidth={1.5} />
+                                            </button>
+                                            <button
+                                                className="sidebar-footer-btn connected flex-1"
+                                                onClick={() => {
+                                                    // 使用自定义确认对话框
+                                                    setConfirmDialog({
+                                                        isOpen: true,
+                                                        title: t('sidebar.disconnectTitle'),
+                                                        message: t('sidebar.disconnectMessage'),
+                                                        details: [
+                                                            t('sidebar.disconnectDetail')
+                                                        ],
+                                                        onConfirm: async () => {
+                                                            setConfirmDialog(null)
+                                                            // 断开连接：清除存储的路径并重新加载
+                                                            await window.fs.disconnectVault()
+                                                            window.location.reload()
+                                                        }
+                                                    })
+                                                }}
+                                                title="断开连接"
+                                            >
+                                                <Link size={14} strokeWidth={1.5} />
+                                                <span>{t('sidebar.linkedFolder')}</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <button
+                                        className="sidebar-footer-btn disconnected"
+                                        onClick={selectVault}
+                                        title="连接本地文件夹"
+                                    >
+                                        <Unlink size={14} strokeWidth={1.5} />
+                                        <span>{t('sidebar.linkLocalFolder')}</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                 )
                 }
 
                 {/* 中间内容区 */}
-                <Panel defaultSize={leftCollapsed && rightCollapsed ? 100 : 50} minSize={30} className="panel-main">
+                <div className="panel-main">
                     <div className="main-inner">
                         {activeFile ? (
                             <Editor
@@ -1023,19 +1021,19 @@ const AppContent: React.FC = () => {
                             </div>
                         )}
                     </div>
-                </Panel>
+                </div>
 
                 {/* 右侧 AI 面板 */}
                 {
                     !rightCollapsed && (
-                        <>
-                            <Panel defaultSize={25} minSize={25} maxSize={25} className="panel-chat">
-                                <ChatPanel llm={llm} engineStore={engineStore} openSettings={() => openSettingsPanel('ai')} />
-                            </Panel>
-                        </>
+
+                        <div className="panel-chat">
+                            <ChatPanel llm={llm} engineStore={engineStore} openSettings={() => openSettingsPanel('ai')} />
+                        </div>
+
                     )
                 }
-            </PanelGroup >
+            </div>
 
             {/* 画廊右键菜单 (使用 Portal 渲染到 body) */}
             {
@@ -1075,15 +1073,17 @@ const AppContent: React.FC = () => {
             }
 
             {/* 自定义确认对话框 */}
-            {confirmDialog?.isOpen && (
-                <ConfirmDialog
-                    title={confirmDialog.title}
-                    message={confirmDialog.message}
-                    details={confirmDialog.details}
-                    onConfirm={confirmDialog.onConfirm}
-                    onCancel={() => setConfirmDialog(null)}
-                />
-            )}
+            {
+                confirmDialog?.isOpen && (
+                    <ConfirmDialog
+                        title={confirmDialog.title}
+                        message={confirmDialog.message}
+                        details={confirmDialog.details}
+                        onConfirm={confirmDialog.onConfirm}
+                        onCancel={() => setConfirmDialog(null)}
+                    />
+                )
+            }
         </div >
     )
 }

@@ -545,21 +545,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                         }}>
                                             {formatModelName(selectedOllamaModel || modelName)}
                                         </span>
-                                        {(() => {
-                                            const currentModel = ollamaModels.find(m => m.name === selectedOllamaModel);
-                                            return currentModel?.formattedSize ? (
-                                                <span style={{
-                                                    fontSize: '11px',
-                                                    fontWeight: 500,
-                                                    color: 'var(--text-secondary)',
-                                                    padding: '2px 6px',
-                                                    background: 'var(--bg-card)',
-                                                    borderRadius: '4px'
-                                                }}>
-                                                    {currentModel.formattedSize}
-                                                </span>
-                                            ) : null;
-                                        })()}
+
                                         <span style={{
                                             fontSize: '11px',
                                             fontWeight: 500,
@@ -684,16 +670,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                             }}>
                                                 {modelInfo.displayName}
                                             </span>
-                                            <span className="model-display-size" style={{
-                                                fontSize: '11px',
-                                                fontWeight: 500,
-                                                color: 'var(--text-secondary)',
-                                                padding: '2px 6px',
-                                                background: 'var(--bg-card)',
-                                                borderRadius: '4px'
-                                            }}>
-                                                {modelInfo.size}
-                                            </span>
+
                                             <span className="model-display-badge" style={{
                                                 fontSize: '11px',
                                                 fontWeight: 500,

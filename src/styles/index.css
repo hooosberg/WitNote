@@ -6,7 +6,7 @@
 /* ============ CSS 变量 ============ */
 :root {
   --titlebar-height: 52px;
-  --sidebar-width: 240px;
+  --sidebar-width: 320px;
   --chat-width: 320px;
   --item-height: 28px;
 
@@ -280,11 +280,22 @@ select:focus {
 }
 
 /* ============ Panel 布局 ============ */
-.panel-group {
+.app-layout {
+  display: flex;
   height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
+.panel-group {
+  height: 100%;
+  /* 兼容旧样式，如果还有引用的地方 */
+}
+
+
 .panel-sidebar {
+  flex: 0 0 var(--sidebar-width);
+  width: var(--sidebar-width);
   background: var(--bg-sidebar);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -296,17 +307,21 @@ select:focus {
 }
 
 .panel-main {
+  flex: 1;
+  min-width: 0;
+  /* 防止 Flex 子项溢出 */
   background: var(--bg-main);
   position: relative;
   z-index: 1;
   overflow: hidden;
-  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .panel-chat {
+  flex: 0 0 var(--chat-width);
+  width: var(--chat-width);
   background: var(--bg-chat);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
