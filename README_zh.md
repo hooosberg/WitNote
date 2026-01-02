@@ -70,8 +70,9 @@
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
 | 🍎 macOS | `WitNote-1.3.0.dmg` | 仅支持 Apple Silicon (M1/M2/M3) |
-| 🪟 Windows | `WitNote-1.3.0-setup.exe` | 自动识别 x64 / ARM64 (二合一) |
-| 🐧 Linux | `WitNote-1.3.0-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
+| 🪟 Windows (x64) | `WitNote-1.3.0-setup-x64.exe` | 普通电脑 (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.0-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.0-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
 | 📦 Linux (Deb) | `WitNote-1.3.0-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
 
 ---

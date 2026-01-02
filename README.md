@@ -73,8 +73,9 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 | Platform | File | Note |
 |----------|------|------|
 | 🍎 macOS | `WitNote-1.3.0.dmg` | Apple Silicon (M1/M2/M3) Only |
-| 🪟 Windows | `WitNote-1.3.0-setup.exe` | Auto-detect x64 / ARM64 (All-in-one) |
-| 🐧 Linux | `WitNote-1.3.0-x86_64.AppImage` | x64 Universal (ARM64 available) |
+| 🪟 Windows (x64) | `WitNote-1.3.0-setup-x64.exe` | Standard PC (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.0-setup-arm64.exe` | Snapdragon PCs (e.g. Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.0-x86_64.AppImage` | x64 Universal (ARM64 available) |
 | 📦 Linux (Deb) | `WitNote-1.3.0-amd64.deb` | Ubuntu/Debian x64 (ARM64 available) |
 
 ---
