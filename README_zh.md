@@ -69,10 +69,10 @@
 
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-| 🍎 macOS | `WitNote-x.x.x.dmg` | 仅支持 Apple Silicon (M1/M2/M3) |
-| 🪟 Windows | `WitNote-x.x.x-setup.exe` | 自动识别 x64 / ARM64 |
-| 🐧 Linux | `WitNote-x.x.x.AppImage` | 通用格式 (x64 / ARM64) |
-| 📦 Linux (Deb) | `WitNote-x.x.x.deb` | Debian/Ubuntu (x64 / ARM64) |
+| 🍎 macOS | `WitNote-1.3.0.dmg` | 仅支持 Apple Silicon (M1/M2/M3) |
+| 🪟 Windows | `WitNote-1.3.0-setup.exe` | 自动识别 x64 / ARM64 (二合一) |
+| 🐧 Linux | `WitNote-1.3.0-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
+| 📦 Linux (Deb) | `WitNote-1.3.0-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
 
 ---
 
@@ -151,15 +151,17 @@
 3. 双击运行
 
 **Deb (Ubuntu/Debian):**
-1. 下载 `.deb` 文件
-2. 双击安装或使用 `sudo dpkg -i WitNote*.deb`
+1. 下载 `.deb` 文件 (如 `WitNote-1.3.0-amd64.deb`)
+2. 在终端运行安装命令 (这将自动处理依赖):
+   ```bash
+   sudo apt install ./WitNote-1.3.0-amd64.deb
+   ```
 
 > 📝 **注意事项 (Windows 用户必读)**:
 > 
 > 由于个人开发者暂时无法申请昂贵的 EV 代码签名证书，安装时可能会遇到以下提示，请按步骤操作：
 > 1. **SmartScreen 拦截**：如果弹出"Windows 已保护你的电脑"（未知名开发者），请点击 **"更多信息"** -> **"仍要运行"**。
 > 2. **杀毒软件提示**：可能会被 Windows Defender 或 360 等误报。请放心，项目完全开源且安全，如遇阻拦建议暂时关闭杀毒软件。
-> 3. **管理员运行**：建议安装时右键选择"以管理员身份运行"。
 
 ---
 

@@ -72,10 +72,10 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 
 | Platform | File | Note |
 |----------|------|------|
-| 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon (M1/M2/M3) Only |
-| 🪟 Windows | `WitNote-x.x.x-setup.exe` | Auto-detect (x64 / ARM64) |
-| 🐧 Linux | `WitNote-x.x.x.AppImage` | Universal (x64 / ARM64) |
-| 📦 Linux (Deb) | `WitNote-x.x.x.deb` | Debian/Ubuntu (x64 / ARM64) |
+| 🍎 macOS | `WitNote-1.3.0.dmg` | Apple Silicon (M1/M2/M3) Only |
+| 🪟 Windows | `WitNote-1.3.0-setup.exe` | Auto-detect x64 / ARM64 (All-in-one) |
+| 🐧 Linux | `WitNote-1.3.0-x86_64.AppImage` | x64 Universal (ARM64 available) |
+| 📦 Linux (Deb) | `WitNote-1.3.0-amd64.deb` | Ubuntu/Debian x64 (ARM64 available) |
 
 ---
 
@@ -164,8 +164,11 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 3. Double-click to run
 
 **Deb (Ubuntu/Debian):**
-1. Download `.deb` file
-2. Double-click to install or use `sudo dpkg -i WitNote*.deb`
+1. Download `.deb` file (e.g., `WitNote-1.3.0-amd64.deb`)
+2. Run installation via terminal (automatically handles dependencies):
+   ```bash
+   sudo apt install ./WitNote-1.3.0-amd64.deb
+   ```
 
 ### 🐧 Linux Installation
 
@@ -183,7 +186,6 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 > As an individual developer without an expensive EV Code Signing Certificate, you might encounter the following:
 > 1. **SmartScreen**: If you see "Windows protected your PC" (Unknown Publisher), please click **"More info"** -> **"Run anyway"**.
 > 2. **Antivirus Warning**: Windows Defender or other AV software might flag the installer. The project is open-source and safe. If blocked, please try disabling AV temporarily.
-> 3. **Run as Admin**: It is recommended to right-click the installer and **"Run as administrator"**.
 
 ---
 
