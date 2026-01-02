@@ -574,6 +574,7 @@ async function readDirectoryTree(dirPath: string, rootPath: string): Promise<Fil
 function ensureZenNoteDir(vaultPath: string): void {
     const zennotePath = join(vaultPath, '.zennote')
     const chatsPath = join(zennotePath, 'chats')
+    const settingsPath = join(zennotePath, 'settings')
 
     if (!existsSync(zennotePath)) {
         mkdirSync(zennotePath, { recursive: true })
@@ -581,7 +582,11 @@ function ensureZenNoteDir(vaultPath: string): void {
     if (!existsSync(chatsPath)) {
         mkdirSync(chatsPath, { recursive: true })
     }
+    if (!existsSync(settingsPath)) {
+        mkdirSync(settingsPath, { recursive: true })
+    }
 }
+
 
 // ============ IPC 处理器 ============
 
@@ -692,6 +697,13 @@ function setupIpcHandlers() {
         if (!vaultPath) throw new Error('未设置 Vault 路径')
 
         const fullPath = join(vaultPath, relativePath)
+
+        // 确保父目录存在（解决 .zennote 等子目录写入问题）
+        const parentDir = dirname(fullPath)
+        if (!existsSync(parentDir)) {
+            mkdirSync(parentDir, { recursive: true })
+        }
+
         await fs.writeFile(fullPath, content, 'utf-8')
         return true
     })
@@ -1080,6 +1092,87 @@ function setupIpcHandlers() {
     ipcMain.handle('settings:reset', () => {
         settingsStore.clear()
         return true
+    })
+
+    // ============ Vault 设置同步 IPC 处理器 ============
+
+    // 同步设置到 Vault（保存应用设置的副本到用户文件夹）
+    ipcMain.handle('vault:syncSettings', async () => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return false
+
+        try {
+            ensureZenNoteDir(vaultPath)
+            // 从 settingsStore 获取需要同步的设置（排除敏感信息如 API Key）
+            const { customSystemPrompt, promptTemplates, theme, fontFamily, fontSize, defaultFormat, smartFormatConversion } = settingsStore.store
+            const settingsToSync = {
+                theme,
+                fontFamily,
+                fontSize,
+                defaultFormat,
+                smartFormatConversion,
+                customSystemPrompt,
+                promptTemplates,
+            }
+            const settingsPath = join(vaultPath, '.zennote', 'settings', 'app_settings.json')
+            await fs.writeFile(settingsPath, JSON.stringify(settingsToSync, null, 2), 'utf-8')
+            console.log('📝 设置已同步到 Vault')
+            return true
+        } catch (error) {
+            console.error('同步设置失败:', error)
+            return false
+        }
+    })
+
+    // 从 Vault 恢复设置
+    ipcMain.handle('vault:loadSettings', async () => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return null
+
+        try {
+            const settingsPath = join(vaultPath, '.zennote', 'settings', 'app_settings.json')
+            const content = await fs.readFile(settingsPath, 'utf-8')
+            const loadedSettings = JSON.parse(content)
+            console.log('📖 从 Vault 加载设置')
+            return loadedSettings
+        } catch {
+            // 文件不存在，返回 null
+            return null
+        }
+    })
+
+    // 保存引擎配置到 Vault
+    ipcMain.handle('vault:saveEngineConfig', async (_event, config: unknown) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return false
+
+        try {
+            ensureZenNoteDir(vaultPath)
+            const configPath = join(vaultPath, '.zennote', 'engine_config.json')
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8')
+            console.log('⚙️ 引擎配置已保存到 Vault')
+            return true
+        } catch (error) {
+            console.error('保存引擎配置失败:', error)
+            return false
+        }
+    })
+
+    // 从 Vault 加载引擎配置
+    ipcMain.handle('vault:loadEngineConfig', async () => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return null
+
+        try {
+            const configPath = join(vaultPath, '.zennote', 'engine_config.json')
+            const content = await fs.readFile(configPath, 'utf-8')
+            const config = JSON.parse(content)
+            console.log('⚙️ 从 Vault 加载引擎配置')
+            return config
+        } catch {
+            // 文件不存在，返回 null
+            return null
+        }
     })
 
     // ============ 快捷方式 IPC 处理器 ============

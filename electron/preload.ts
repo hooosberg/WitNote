@@ -132,6 +132,26 @@ contextBridge.exposeInMainWorld('settings', {
         ipcRenderer.invoke('settings:reset')
 })
 
+// 暴露 Vault 设置同步 API
+contextBridge.exposeInMainWorld('vault', {
+    // 同步设置到 Vault
+    syncSettings: (): Promise<boolean> =>
+        ipcRenderer.invoke('vault:syncSettings'),
+
+    // 从 Vault 加载设置
+    loadSettings: (): Promise<Record<string, unknown> | null> =>
+        ipcRenderer.invoke('vault:loadSettings'),
+
+    // 保存引擎配置到 Vault
+    saveEngineConfig: (config: unknown): Promise<boolean> =>
+        ipcRenderer.invoke('vault:saveEngineConfig', config),
+
+    // 从 Vault 加载引擎配置
+    loadEngineConfig: (): Promise<Record<string, unknown> | null> =>
+        ipcRenderer.invoke('vault:loadEngineConfig'),
+})
+
+
 // 暴露 Ollama API
 contextBridge.exposeInMainWorld('ollama', {
     openModelsFolder: (): Promise<string> =>

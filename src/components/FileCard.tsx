@@ -6,11 +6,11 @@
 import React, { useState } from 'react'
 import { Folder, FileText, FileCode } from 'lucide-react'
 import { FileNode } from '../hooks/useFileSystem'
-import { TAG_COLORS, TagColor } from '../hooks/useColorTags'
+import { TAG_COLORS, ColorKey } from '../hooks/useColorTags'
 
 interface FileCardProps {
     node: FileNode
-    color: TagColor
+    color: ColorKey
     onClick: () => void
     onContextMenu: (e: React.MouseEvent) => void
     onDragStart?: (node: FileNode) => void  // 拖拽开始回调
@@ -23,7 +23,8 @@ export const FileCard: React.FC<FileCardProps> = ({
     onContextMenu,
     onDragStart
 }) => {
-    const colorStyles = TAG_COLORS[color]
+    const colorConfig = TAG_COLORS.find(c => c.key === color)
+    const colorHex = colorConfig?.hex || 'transparent'
     const [isDragging, setIsDragging] = useState(false)
 
     // 格式化日期
@@ -68,9 +69,16 @@ export const FileCard: React.FC<FileCardProps> = ({
         setIsDragging(false)
     }
 
+    // 根据颜色生成边框和背景样式
+    const cardStyle = color !== 'none' ? {
+        borderColor: colorHex,
+        backgroundColor: `${colorHex}10`,
+    } : {}
+
     return (
         <div
-            className={`file-card-glass ${colorStyles.border} ${colorStyles.bg} ${isDragging ? 'dragging' : ''}`}
+            className={`file-card-glass ${isDragging ? 'dragging' : ''}`}
+            style={cardStyle}
             draggable
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
@@ -79,7 +87,7 @@ export const FileCard: React.FC<FileCardProps> = ({
         >
             {/* 图标 + 名称 */}
             <div className="card-center">
-                <div className={`card-icon ${colorStyles.icon}`}>
+                <div className="card-icon" style={color !== 'none' ? { color: colorHex } : undefined}>
                     {getIcon()}
                 </div>
                 <div className="card-name">{displayName}</div>

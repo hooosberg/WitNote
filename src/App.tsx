@@ -16,7 +16,10 @@ import {
     Unlink,
     Glasses,
     Coffee,
-    Settings
+    Settings,
+    Pencil,
+    Eye,
+    Columns2
 } from 'lucide-react'
 import FileTree, { ColorKey } from './components/FileTree'
 import Editor from './components/Editor'
@@ -30,16 +33,11 @@ import { useLLM } from './hooks/useLLM'
 import { useFolderOrder } from './hooks/useFolderOrder'
 import { useSettings } from './hooks/useSettings'
 import { useEngineStore } from './store/engineStore'
+import { useColorTags, TAG_COLORS } from './hooks/useColorTags'
 import './styles/index.css'
 
-// 颜色配置 - 红黄绿蓝
-const COLORS: { key: ColorKey; hex: string; name: string }[] = [
-    { key: 'none', hex: 'transparent', name: '无' },
-    { key: 'red', hex: '#ff453a', name: '红' },
-    { key: 'yellow', hex: '#ffcc00', name: '黄' },
-    { key: 'green', hex: '#30d158', name: '绿' },
-    { key: 'blue', hex: '#007aff', name: '蓝' },
-]
+// 颜色配置已移动到 useColorTags hook
+const COLORS = TAG_COLORS
 
 // 排序选项
 type SortOption = 'name-asc' | 'name-desc' | 'time-asc' | 'time-desc'
@@ -59,6 +57,7 @@ const AppContent: React.FC = () => {
     const { } = useToast()
     const folderOrder = useFolderOrder()
     const { settings } = useSettings()
+    const colorTags = useColorTags()
 
     // 平台检测：为 Windows 添加特殊 class 以调整布局
     useEffect(() => {
@@ -154,15 +153,9 @@ const AppContent: React.FC = () => {
     const [renameTarget, setRenameTarget] = useState<FileNode | null>(null)
     const [editingFolderPath, setEditingFolderPath] = useState<string | null>(null)  // 正在内联编辑的文件夹
 
-    // 颜色系统（从 localStorage 加载持久化）
-    const [colors, setColors] = useState<Record<string, ColorKey>>(() => {
-        try {
-            const saved = localStorage.getItem('zen-note-colors')
-            return saved ? JSON.parse(saved) : {}
-        } catch {
-            return {}
-        }
-    })
+    // 颜色系统 - 使用 useColorTags hook（存储到 .zennote/color_tags.json）
+    const getColor = colorTags.getColorTag
+    const setColor = colorTags.setColorTag
 
     // 排序（默认最新优先 time-desc，点击切换为最早优先 time-asc）
     const [_sortBy, _setSortBy] = useState<SortOption>('time-desc')
@@ -171,6 +164,18 @@ const AppContent: React.FC = () => {
     // 设置面板状态
     const [showSettings, setShowSettings] = useState(false)
     const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'>('appearance')
+
+    // 预览模式状态（从 Editor 提升到 App 以便在右上角显示按钮）
+    const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('edit')
+
+    // 三态切换：编辑 → 预览 → 分屏 → 编辑
+    const togglePreviewMode = () => {
+        setPreviewMode(prev => {
+            if (prev === 'edit') return 'preview'
+            if (prev === 'preview') return 'split'
+            return 'edit'
+        })
+    }
 
     // 打开设置面板的函数
     const openSettingsPanel = (tab: 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about' = 'appearance') => {
@@ -400,22 +405,7 @@ const AppContent: React.FC = () => {
         return () => document.removeEventListener('mousedown', close)
     }, [])
 
-    // 颜色系统
-    const getColor = (path: string): ColorKey => colors[path] || 'none'
-    const setColor = (path: string, color: ColorKey) => {
-        setColors(prev => {
-            const next = { ...prev }
-            if (color === 'none') delete next[path]
-            else next[path] = color
-            // 保存到 localStorage
-            try {
-                localStorage.setItem('zen-note-colors', JSON.stringify(next))
-            } catch (e) {
-                console.error('保存颜色失败:', e)
-            }
-            return next
-        })
-    }
+    // 颜色系统 - getColor/setColor 已在 useColorTags hook 中定义（见第 159-160 行）
 
     // 获取当前文件夹的文件
     const getCurrentFolderFiles = (): FileNode[] => {
@@ -619,18 +609,41 @@ const AppContent: React.FC = () => {
         <div className="app-root">
             <div className="titlebar-drag-region" />
 
-            {/* 专注模式切换按钮 - 右上角 */}
-            <button
-                className="layout-toggle-btn"
-                onClick={toggleFocusMode}
-                title={focusMode ? '恢复边栏' : '专注模式'}
-            >
-                {focusMode ? (
-                    <Glasses size={16} strokeWidth={1.5} />
-                ) : (
-                    <Coffee size={16} strokeWidth={1.5} />
+            {/* 右上角按钮组 */}
+            <div className="layout-toggle-group">
+                {/* 编辑/预览模式切换按钮 */}
+                {activeFile && (activeFile.extension === 'md' || activeFile.extension === '.md') && (
+                    <button
+                        className={`layout-toggle-btn ${previewMode !== 'edit' ? 'active' : ''}`}
+                        onClick={togglePreviewMode}
+                        title={
+                            previewMode === 'edit' ? '预览模式' :
+                                previewMode === 'preview' ? '分屏模式' : '编辑模式'
+                        }
+                    >
+                        {previewMode === 'edit' ? (
+                            <Pencil size={16} strokeWidth={1.5} />
+                        ) : previewMode === 'preview' ? (
+                            <Eye size={16} strokeWidth={1.5} />
+                        ) : (
+                            <Columns2 size={16} strokeWidth={1.5} />
+                        )}
+                    </button>
                 )}
-            </button>
+
+                {/* 专注模式切换按钮 */}
+                <button
+                    className="layout-toggle-btn"
+                    onClick={toggleFocusMode}
+                    title={focusMode ? '恢复边栏' : '专注模式'}
+                >
+                    {focusMode ? (
+                        <Coffee size={16} strokeWidth={1.5} />
+                    ) : (
+                        <Glasses size={16} strokeWidth={1.5} />
+                    )}
+                </button>
+            </div>
 
             {/* 对话框 */}
             <InputDialog
@@ -899,6 +912,7 @@ const AppContent: React.FC = () => {
                                 onTitleChange={handleTitleChange}
                                 onFormatToggle={() => convertFileFormat(settings.smartFormatConversion)}
                                 focusMode={focusMode}
+                                previewMode={previewMode}
                                 createdAt={activeFile.createdAt}
                                 modifiedAt={activeFile.modifiedAt}
                             />

@@ -53,6 +53,16 @@ electron.contextBridge.exposeInMainWorld("settings", {
   set: (key, value) => electron.ipcRenderer.invoke("settings:set", key, value),
   reset: () => electron.ipcRenderer.invoke("settings:reset")
 });
+electron.contextBridge.exposeInMainWorld("vault", {
+  // 同步设置到 Vault
+  syncSettings: () => electron.ipcRenderer.invoke("vault:syncSettings"),
+  // 从 Vault 加载设置
+  loadSettings: () => electron.ipcRenderer.invoke("vault:loadSettings"),
+  // 保存引擎配置到 Vault
+  saveEngineConfig: (config) => electron.ipcRenderer.invoke("vault:saveEngineConfig", config),
+  // 从 Vault 加载引擎配置
+  loadEngineConfig: () => electron.ipcRenderer.invoke("vault:loadEngineConfig")
+});
 electron.contextBridge.exposeInMainWorld("ollama", {
   openModelsFolder: () => electron.ipcRenderer.invoke("ollama:openModelsFolder"),
   listModels: () => electron.ipcRenderer.invoke("ollama:listModels"),

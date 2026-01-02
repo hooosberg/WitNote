@@ -143,6 +143,15 @@ export function useEngineStore(): UseEngineStoreReturn {
             selectedModel: modelToRestore,
             error: null
         }));
+
+        // 同步引擎配置到 Vault（后台执行）
+        if (window.vault) {
+            window.vault.saveEngineConfig({
+                currentEngine: engine,
+                selectedWebllmModel: localStorage.getItem(STORAGE_KEYS.WEBLLM_MODEL) || DEFAULT_WEBLLM_MODEL,
+                selectedOllamaModel: localStorage.getItem(STORAGE_KEYS.OLLAMA_MODEL) || '',
+            }).catch(err => console.debug('Vault 引擎配置同步跳过:', err));
+        }
     }, [state.cloudConfig.modelName]);
 
     // 选择模型
@@ -493,6 +502,38 @@ export function useEngineStore(): UseEngineStoreReturn {
     // 初始化
     useEffect(() => {
         const init = async () => {
+            // 尝试从 Vault 恢复引擎配置
+            if (window.vault) {
+                try {
+                    const vaultConfig = await window.vault.loadEngineConfig();
+                    if (vaultConfig && typeof vaultConfig === 'object') {
+                        console.log('📂 从 Vault 恢复引擎配置');
+                        const config = vaultConfig as { currentEngine?: EngineType; selectedWebllmModel?: string; selectedOllamaModel?: string };
+                        // 恢复到 localStorage（作为缓存）
+                        if (config.currentEngine) {
+                            localStorage.setItem(STORAGE_KEYS.ENGINE, config.currentEngine);
+                        }
+                        if (config.selectedWebllmModel) {
+                            localStorage.setItem(STORAGE_KEYS.WEBLLM_MODEL, config.selectedWebllmModel);
+                        }
+                        if (config.selectedOllamaModel) {
+                            localStorage.setItem(STORAGE_KEYS.OLLAMA_MODEL, config.selectedOllamaModel);
+                        }
+                        // 更新状态
+                        setState(prev => ({
+                            ...prev,
+                            currentEngine: config.currentEngine || prev.currentEngine,
+                            selectedModel: config.currentEngine === 'webllm'
+                                ? (config.selectedWebllmModel || prev.selectedModel)
+                                : config.currentEngine === 'ollama'
+                                    ? (config.selectedOllamaModel || prev.selectedModel)
+                                    : prev.selectedModel
+                        }));
+                    }
+                } catch (err) {
+                    console.debug('从 Vault 加载引擎配置失败:', err);
+                }
+            }
             await refreshOllamaStatus();
             await refreshWebLLMCache();
             setState(prev => ({ ...prev, isLoading: false }));

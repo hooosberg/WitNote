@@ -365,11 +365,19 @@ select:focus {
   background: var(--accent-color);
 }
 
-/* 布局切换按钮 - 右上角与标题栏齐平 */
-.layout-toggle-btn {
+/* 布局切换按钮组 - 右上角与标题栏齐平 */
+.layout-toggle-group {
   position: fixed;
   top: calc((var(--titlebar-height) - 28px) / 2);
   right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10000;
+  -webkit-app-region: no-drag;
+}
+
+.layout-toggle-btn {
   width: 28px;
   height: 28px;
   display: flex;
@@ -380,14 +388,16 @@ select:focus {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  z-index: 10000;
-  -webkit-app-region: no-drag;
   transition: all var(--transition-fast);
 }
 
 .layout-toggle-btn:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
+}
+
+.layout-toggle-btn.active {
+  color: var(--accent-color);
 }
 
 /* ============ 侧边栏 ============ */
@@ -1807,6 +1817,27 @@ select:focus {
   }
 }
 
+/* 向上弹出的子菜单（当菜单在页面底部时） */
+.block-insert-more.above {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 8px;
+  animation: more-fade-in-above 0.15s ease;
+}
+
+@keyframes more-fade-in-above {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .block-insert-more-item {
   display: flex;
   align-items: center;
@@ -1833,6 +1864,13 @@ select:focus {
 /* ============ 编辑器分屏模式 ============ */
 .editor-scroll.split-mode {
   overflow: hidden;
+  /* 分屏模式下不需要外层 padding，由分屏 pane 自己控制 */
+  padding: 0;
+}
+
+/* 专注模式下的分屏也不需要额外 padding */
+.editor-scroll.split-mode.focus-mode-content {
+  padding: 0;
 }
 
 .editor-split-container {
@@ -1845,22 +1883,39 @@ select:focus {
   flex: 1;
   overflow-y: auto;
   background: var(--bg-main);
-  padding: 20px;
+  /* 紧凑的内边距，两栏之间间距最小化 */
+  padding: 0 20px 48px;
 }
 
-/* 左侧编辑区 */
+/* 左侧编辑区 - 右边有分割线 */
 .editor-split-left {
   border-right: 1px solid var(--border-color);
+  padding-left: 40px;
+  /* 外侧边距与普通模式一致 */
+  padding-right: 20px;
+  /* 靠近中线侧边距小 */
 }
 
-/* 右侧预览区 - 与左侧背景相同 */
+/* 右侧预览区 */
 .editor-split-right {
   background: var(--bg-main);
+  padding-left: 20px;
+  /* 靠近中线侧边距小 */
+  padding-right: 40px;
+  /* 外侧边距与普通模式一致 */
+}
+
+/* 专注模式下分屏的外侧边距增大 */
+.editor-scroll.split-mode.focus-mode-content .editor-split-left {
+  padding-left: 15%;
+}
+
+.editor-scroll.split-mode.focus-mode-content .editor-split-right {
+  padding-right: 15%;
 }
 
 .editor-split-pane .editor-content {
   max-width: 100%;
-  padding: 0 20px;
 }
 
 /* 分屏预览区标题样式 */
@@ -1870,6 +1925,10 @@ select:focus {
   line-height: 1.3;
   margin-bottom: 16px;
   color: var(--text-primary);
+  /* 允许长标题换行，保持完整显示 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
 }
 
 /* ============ ChatPanel ============ */

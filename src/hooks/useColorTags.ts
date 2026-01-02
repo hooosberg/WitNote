@@ -1,26 +1,26 @@
 /**
  * 颜色标签系统
- * 使用相对路径存储 (fs API 会自动添加 vaultPath)
+ * 使用 .zennote/color_tags.json 存储到用户文件夹
+ * 统一颜色定义，使用 FileTree 的 ColorKey 类型
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import type { ColorKey } from '../components/FileTree'
 
-// 颜色定义
-export const TAG_COLORS = {
-    none: { name: '无', border: 'border-white/10', bg: 'bg-white/5', icon: '' },
-    red: { name: '红色', border: 'border-red-400', bg: 'bg-red-500/5', icon: 'text-red-400' },
-    orange: { name: '橙色', border: 'border-orange-400', bg: 'bg-orange-500/5', icon: 'text-orange-400' },
-    yellow: { name: '黄色', border: 'border-yellow-400', bg: 'bg-yellow-500/5', icon: 'text-yellow-400' },
-    green: { name: '绿色', border: 'border-green-400', bg: 'bg-green-500/5', icon: 'text-green-400' },
-    blue: { name: '蓝色', border: 'border-blue-400', bg: 'bg-blue-500/5', icon: 'text-blue-400' },
-    purple: { name: '紫色', border: 'border-purple-400', bg: 'bg-purple-500/5', icon: 'text-purple-400' },
-    gray: { name: '灰色', border: 'border-gray-400', bg: 'bg-gray-500/5', icon: 'text-gray-400' },
-} as const
+// 重新导出 ColorKey 类型方便使用
+export type { ColorKey } from '../components/FileTree'
 
-export type TagColor = keyof typeof TAG_COLORS
+// 颜色配置 - 红黄绿蓝（与 FileTree.tsx 保持一致）
+export const TAG_COLORS: { key: ColorKey; hex: string; name: string }[] = [
+    { key: 'none', hex: 'transparent', name: '无' },
+    { key: 'red', hex: '#ff453a', name: '红' },
+    { key: 'yellow', hex: '#ffcc00', name: '黄' },
+    { key: 'green', hex: '#30d158', name: '绿' },
+    { key: 'blue', hex: '#007aff', name: '蓝' },
+]
 
 interface ColorTagsState {
-    [path: string]: TagColor
+    [path: string]: ColorKey
 }
 
 // 相对路径 (fs API 会自动加上 vaultPath)
@@ -38,7 +38,6 @@ export function useColorTags() {
                     const vaultPath = await window.fs.getVaultPath()
                     if (vaultPath) {
                         try {
-                            // 使用相对路径
                             const content = await window.fs.readFile(TAGS_FILE)
                             setColorTags(JSON.parse(content))
                         } catch {
@@ -60,7 +59,6 @@ export function useColorTags() {
     const saveTags = useCallback(async (tags: ColorTagsState) => {
         try {
             if (window.fs) {
-                // 使用相对路径
                 await window.fs.writeFile(TAGS_FILE, JSON.stringify(tags, null, 2))
             }
         } catch (error) {
@@ -69,7 +67,7 @@ export function useColorTags() {
     }, [])
 
     // 设置颜色标签
-    const setColorTag = useCallback((path: string, color: TagColor) => {
+    const setColorTag = useCallback((path: string, color: ColorKey) => {
         setColorTags(prev => {
             const newTags = { ...prev }
             if (color === 'none') {
@@ -83,14 +81,14 @@ export function useColorTags() {
     }, [saveTags])
 
     // 获取颜色标签
-    const getColorTag = useCallback((path: string): TagColor => {
+    const getColorTag = useCallback((path: string): ColorKey => {
         return colorTags[path] || 'none'
     }, [colorTags])
 
-    // 获取颜色样式
-    const getColorStyles = useCallback((path: string) => {
+    // 获取颜色 hex 值
+    const getColorHex = useCallback((path: string): string => {
         const color = getColorTag(path)
-        return TAG_COLORS[color]
+        return TAG_COLORS.find(c => c.key === color)?.hex || 'transparent'
     }, [getColorTag])
 
     return {
@@ -98,7 +96,7 @@ export function useColorTags() {
         isLoaded,
         setColorTag,
         getColorTag,
-        getColorStyles,
+        getColorHex,
     }
 }
 

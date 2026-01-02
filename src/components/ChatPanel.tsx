@@ -241,56 +241,59 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                     </div>
                 )}
 
-                {messages.length === 0 && !showWebLLMSetup ? (
-                    <div className="chat-empty">
-                        <Sparkles size={32} strokeWidth={1.2} />
-                        <p>{t('chat.title')}</p>
-                        {/* Windows 平台下的 Ollama 提示 */}
-                        {isWindows() && engineStore?.currentEngine === 'ollama' && (
-                            <div style={{
-                                marginTop: '16px',
-                                padding: '12px',
-                                background: 'var(--bg-secondary)',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                color: 'var(--text-secondary)',
-                                maxWidth: '300px',
-                                textAlign: 'center'
-                            }}>
-                                <p style={{ margin: '0 0 8px 0' }}>{t('settings.windowsOllamaTip')}</p>
-                                <a
-                                    href="https://ollama.com/download"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        color: 'var(--accent-color)',
-                                        textDecoration: 'none',
-                                        fontWeight: 500
-                                    }}
-                                >
-                                    {t('settings.downloadOllama')} &rarr;
-                                </a>
-                                <p style={{ margin: '8px 0 0 0', fontSize: '12px', opacity: 0.8 }}>
-                                    {t('settings.pleaseEnsureOllamaRunning')}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <>
-                        {messages.map((msg) => (
-                            <ChatBubble key={msg.id} message={msg} />
-                        ))}
-                        {isGenerating && !messages.some(m => m.isStreaming) && (
-                            <div className="chat-bubble assistant">
-                                <div className="bubble-content typing-indicator">
-                                    <span className="typing-dot"></span>
-                                    <span className="typing-dot"></span>
-                                    <span className="typing-dot"></span>
+                {/* 当显示 WebLLM 首次设置提示时，不渲染消息列表，避免重合 */}
+                {!showWebLLMSetup && (
+                    messages.length === 0 ? (
+                        <div className="chat-empty">
+                            <Sparkles size={32} strokeWidth={1.2} />
+                            <p>{t('chat.title')}</p>
+                            {/* Windows 平台下的 Ollama 提示 */}
+                            {isWindows() && engineStore?.currentEngine === 'ollama' && (
+                                <div style={{
+                                    marginTop: '16px',
+                                    padding: '12px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
+                                    color: 'var(--text-secondary)',
+                                    maxWidth: '300px',
+                                    textAlign: 'center'
+                                }}>
+                                    <p style={{ margin: '0 0 8px 0' }}>{t('settings.windowsOllamaTip')}</p>
+                                    <a
+                                        href="https://ollama.com/download"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            color: 'var(--accent-color)',
+                                            textDecoration: 'none',
+                                            fontWeight: 500
+                                        }}
+                                    >
+                                        {t('settings.downloadOllama')} &rarr;
+                                    </a>
+                                    <p style={{ margin: '8px 0 0 0', fontSize: '12px', opacity: 0.8 }}>
+                                        {t('settings.pleaseEnsureOllamaRunning')}
+                                    </p>
                                 </div>
-                            </div>
-                        )}
-                    </>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            {messages.map((msg) => (
+                                <ChatBubble key={msg.id} message={msg} />
+                            ))}
+                            {isGenerating && !messages.some(m => m.isStreaming) && (
+                                <div className="chat-bubble assistant">
+                                    <div className="bubble-content typing-indicator">
+                                        <span className="typing-dot"></span>
+                                        <span className="typing-dot"></span>
+                                        <span className="typing-dot"></span>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )
                 )}
                 <div ref={messagesEndRef} />
             </div>

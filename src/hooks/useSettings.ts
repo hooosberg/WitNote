@@ -200,6 +200,12 @@ export function useSettings(): UseSettingsReturn {
             if (window.settings) {
                 await window.settings.set(key, value);
             }
+            // 同步设置到 Vault（后台执行，不阻塞）
+            if (window.vault) {
+                window.vault.syncSettings().catch(err =>
+                    console.debug('Vault 同步跳过:', err)
+                );
+            }
         } catch (error) {
             console.error('保存设置失败:', error);
         }

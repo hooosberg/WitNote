@@ -49,9 +49,11 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
     const [isVisible, setIsVisible] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [showMore, setShowMore] = useState(false)
+    const [showMoreAbove, setShowMoreAbove] = useState(false)  // 菜单是否向上弹出
     const [position, setPosition] = useState<MenuPosition>({ top: 0, left: 0 })
     const [cursorPosition, setCursorPosition] = useState(0)
     const menuRef = useRef<HTMLDivElement>(null)
+    const moreButtonRef = useRef<HTMLButtonElement>(null)
 
     // 检查当前行是否为空
     const isCurrentLineEmpty = useCallback((pos: number): boolean => {
@@ -184,6 +186,10 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
         const textarea = textareaRef.current
         if (!textarea) return
 
+        // 保存当前滚动位置
+        const scrollContainer = editorScrollRef.current
+        const savedScrollTop = scrollContainer?.scrollTop || 0
+
         const beforeCursor = content.substring(0, cursorPosition)
         const afterCursor = content.substring(cursorPosition)
 
@@ -193,14 +199,20 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
         // 关闭菜单
         setIsExpanded(false)
         setShowMore(false)
+        setIsVisible(false)  // 插入后隐藏加号按钮
 
-        // 恢复焦点并移动光标
+        // 恢复焦点、光标位置和滚动位置
         setTimeout(() => {
             textarea.focus()
             const newPos = cursorPosition + insertText.length
             textarea.setSelectionRange(newPos, newPos)
-        }, 0)
-    }, [textareaRef, content, cursorPosition, onChange])
+
+            // 恢复滚动位置
+            if (scrollContainer) {
+                scrollContainer.scrollTop = savedScrollTop
+            }
+        }, 10)
+    }, [textareaRef, content, cursorPosition, onChange, editorScrollRef])
 
     // 处理图片插入
     const handleImageInsert = useCallback(async () => {
@@ -240,6 +252,20 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
     const toggleMore = (e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
+
+        if (!showMore) {
+            // 判断菜单应该向上还是向下弹出
+            if (moreButtonRef.current) {
+                const rect = moreButtonRef.current.getBoundingClientRect()
+                const moreMenuHeight = 220  // 菜单预估高度
+                const spaceBelow = window.innerHeight - rect.bottom
+                const spaceAbove = rect.top
+
+                // 如果下方空间不足且上方空间足够，则向上弹出
+                setShowMoreAbove(spaceBelow < moreMenuHeight && spaceAbove > moreMenuHeight)
+            }
+        }
+
         setShowMore(!showMore)
     }
 
@@ -277,6 +303,7 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
                         </button>
                     ))}
                     <button
+                        ref={moreButtonRef}
                         className={`block-insert-option ${showMore ? 'active' : ''}`}
                         onClick={toggleMore}
                         title="更多"
@@ -286,9 +313,9 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
                 </div>
             )}
 
-            {/* 更多选项子菜单 */}
+            {/* 更多选项子菜单 - 智能位置 */}
             {showMore && (
-                <div className="block-insert-more">
+                <div className={`block-insert-more ${showMoreAbove ? 'above' : ''}`}>
                     {moreMenuItems.map((item) => (
                         <button
                             key={item.id}

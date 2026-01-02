@@ -28,6 +28,9 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     const [isVisible, setIsVisible] = useState(false)
     const [position, setPosition] = useState<ToolbarPosition>({ top: 0, left: 0 })
     const [selection, setSelection] = useState({ start: 0, end: 0 })
+    // 链接输入状态
+    const [showLinkInput, setShowLinkInput] = useState(false)
+    const [linkUrl, setLinkUrl] = useState('https://')
 
     // 使用 textarea-caret 库获取光标坐标
     // 返回相对于 textarea 的 { top, left, height } 坐标
@@ -174,7 +177,7 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [textareaRef])
 
-    // 应用格式化
+    // 应用格式化（支持 toggle：已有格式则移除）
     const applyFormat = useCallback((prefix: string, suffix: string, isBlock: boolean = false) => {
         const textarea = textareaRef.current
         if (!textarea) return
@@ -212,11 +215,21 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             const beforeSelection = content.substring(0, start)
             const afterSelection = content.substring(end)
 
-            // 检查是否已有该格式
-            if (beforeSelection.endsWith(prefix) && afterSelection.startsWith(suffix)) {
-                // 移除格式
+            // 检查方式1：选区外部是否有格式标记（如：选中 text，实际是 **text**）
+            const hasOuterFormat = beforeSelection.endsWith(prefix) && afterSelection.startsWith(suffix)
+
+            // 检查方式2：选区内部是否包含格式标记（如：选中 **text**）
+            const hasInnerFormat = selectedText.startsWith(prefix) && selectedText.endsWith(suffix) && selectedText.length > prefix.length + suffix.length
+
+            if (hasOuterFormat) {
+                // 移除外部格式
                 newContent = beforeSelection.slice(0, -prefix.length) + selectedText + afterSelection.slice(suffix.length)
                 newCursorPos = start - prefix.length
+            } else if (hasInnerFormat) {
+                // 移除内部格式（选中了 **text**，移除成 text）
+                const innerText = selectedText.slice(prefix.length, -suffix.length)
+                newContent = beforeSelection + innerText + afterSelection
+                newCursorPos = start + innerText.length
             } else {
                 // 添加格式
                 newContent = beforeSelection + prefix + selectedText + suffix + afterSelection
@@ -234,28 +247,50 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         }, 0)
     }, [textareaRef, content, selection, onChange])
 
-    // 添加链接
+    // 显示链接输入框
     const addLink = useCallback(() => {
+        setShowLinkInput(true)
+        setLinkUrl('https://')
+    }, [])
+
+    // 确认添加链接
+    const confirmLink = useCallback(() => {
         const textarea = textareaRef.current
         if (!textarea) return
 
         const { start, end } = selection
         const selectedText = content.substring(start, end)
 
-        const url = prompt('请输入链接地址:', 'https://')
-        if (url === null) return
+        if (linkUrl && linkUrl !== 'https://') {
+            const linkText = `[${selectedText}](${linkUrl})`
+            const newContent = content.substring(0, start) + linkText + content.substring(end)
 
-        const linkText = `[${selectedText}](${url})`
-        const newContent = content.substring(0, start) + linkText + content.substring(end)
+            onChange(newContent)
+            setIsVisible(false)
+            setShowLinkInput(false)
 
-        onChange(newContent)
-        setIsVisible(false)
+            setTimeout(() => {
+                textarea.focus()
+                textarea.setSelectionRange(start + linkText.length, start + linkText.length)
+            }, 0)
+        }
+    }, [textareaRef, content, selection, onChange, linkUrl])
 
-        setTimeout(() => {
-            textarea.focus()
-            textarea.setSelectionRange(start + linkText.length, start + linkText.length)
-        }, 0)
-    }, [textareaRef, content, selection, onChange])
+    // 取消链接输入
+    const cancelLink = useCallback(() => {
+        setShowLinkInput(false)
+        setLinkUrl('https://')
+    }, [])
+
+    // 链接输入框键盘事件
+    const handleLinkKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            confirmLink()
+        } else if (e.key === 'Escape') {
+            cancelLink()
+        }
+    }, [confirmLink, cancelLink])
 
     if (!isVisible) return null
 
@@ -268,52 +303,96 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 left: `${position.left}px`
             }}
         >
-            <button
-                className="floating-toolbar-btn"
-                onClick={() => applyFormat('**', '**')}
-                title="粗体"
-            >
-                <Bold size={14} strokeWidth={2.5} />
-            </button>
-            <button
-                className="floating-toolbar-btn"
-                onClick={() => applyFormat('*', '*')}
-                title="斜体"
-            >
-                <Italic size={14} strokeWidth={2} />
-            </button>
-            <button
-                className="floating-toolbar-btn"
-                onClick={addLink}
-                title="链接"
-            >
-                <Link size={14} strokeWidth={2} />
-            </button>
-            <div className="floating-toolbar-divider" />
-            <button
-                className="floating-toolbar-btn"
-                onClick={() => applyFormat('# ', '', true)}
-                title="大标题"
-            >
-                <Heading1 size={14} strokeWidth={2} />
-            </button>
-            <button
-                className="floating-toolbar-btn"
-                onClick={() => applyFormat('## ', '', true)}
-                title="小标题"
-            >
-                <Heading2 size={14} strokeWidth={2} />
-            </button>
-            <button
-                className="floating-toolbar-btn"
-                onClick={() => applyFormat('> ', '', true)}
-                title="引用"
-            >
-                <Quote size={14} strokeWidth={2} />
-            </button>
+            {showLinkInput ? (
+                // 链接输入模式
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input
+                        type="text"
+                        value={linkUrl}
+                        onChange={(e) => setLinkUrl(e.target.value)}
+                        onKeyDown={handleLinkKeyDown}
+                        placeholder="https://"
+                        autoFocus
+                        style={{
+                            width: '180px',
+                            padding: '4px 8px',
+                            fontSize: '12px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#fff',
+                            outline: 'none'
+                        }}
+                    />
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={confirmLink}
+                        title="确认"
+                        style={{ color: '#30d158' }}
+                    >
+                        ✓
+                    </button>
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={cancelLink}
+                        title="取消"
+                        style={{ color: '#ff453a' }}
+                    >
+                        ✕
+                    </button>
+                </div>
+            ) : (
+                // 正常工具栏模式
+                <>
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={() => applyFormat('**', '**')}
+                        title="粗体"
+                    >
+                        <Bold size={14} strokeWidth={2.5} />
+                    </button>
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={() => applyFormat('*', '*')}
+                        title="斜体"
+                    >
+                        <Italic size={14} strokeWidth={2} />
+                    </button>
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={addLink}
+                        title="链接"
+                    >
+                        <Link size={14} strokeWidth={2} />
+                    </button>
+                    <div className="floating-toolbar-divider" />
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={() => applyFormat('# ', '', true)}
+                        title="大标题"
+                    >
+                        <Heading1 size={14} strokeWidth={2} />
+                    </button>
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={() => applyFormat('## ', '', true)}
+                        title="小标题"
+                    >
+                        <Heading2 size={14} strokeWidth={2} />
+                    </button>
+                    <button
+                        className="floating-toolbar-btn"
+                        onClick={() => applyFormat('> ', '', true)}
+                        title="引用"
+                    >
+                        <Quote size={14} strokeWidth={2} />
+                    </button>
+                </>
+            )}
         </div>,
         document.body
     )
 }
 
 export default FloatingToolbar
+

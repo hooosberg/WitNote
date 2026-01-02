@@ -87,6 +87,14 @@ interface ShortcutsAPI {
     onToggleFocusMode(callback: () => void): () => void
 }
 
+// Vault 设置同步 API
+interface VaultAPI {
+    syncSettings(): Promise<boolean>
+    loadSettings(): Promise<Record<string, unknown> | null>
+    saveEngineConfig(config: unknown): Promise<boolean>
+    loadEngineConfig(): Promise<Record<string, unknown> | null>
+}
+
 // 全局 Window 接口扩展
 declare global {
     interface Window {
@@ -98,6 +106,7 @@ declare global {
         settings: SettingsAPI
         ollama: OllamaAPI
         shortcuts: ShortcutsAPI
+        vault: VaultAPI
     }
 }
 

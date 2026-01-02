@@ -6,7 +6,7 @@
 
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff, Columns2 } from 'lucide-react'
+
 import { marked } from 'marked'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
@@ -25,6 +25,7 @@ interface EditorProps {
     focusMode?: boolean
     createdAt?: number
     modifiedAt?: number
+    previewMode: 'edit' | 'preview' | 'split'
 }
 
 // 配置 marked 使用 GitHub 风格
@@ -150,7 +151,8 @@ export const Editor: React.FC<EditorProps> = ({
     onFormatToggle,
     focusMode = false,
     createdAt,
-    modifiedAt
+    modifiedAt,
+    previewMode
 }) => {
     const { t, i18n } = useTranslation()
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -162,8 +164,6 @@ export const Editor: React.FC<EditorProps> = ({
     const isScrollingSyncRef = useRef(false) // 防止循环触发
 
     const [title, setTitle] = useState('')
-    // 三态预览模式: 'edit' | 'preview' | 'split'
-    const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('edit')
     const showPreview = previewMode !== 'edit' // 兼容现有代码
 
     // 分屏滚动联动处理
@@ -220,41 +220,14 @@ export const Editor: React.FC<EditorProps> = ({
         }
     }, [fileName, isUntitled])
 
-    // 切换文件类型时关闭预览
-    useEffect(() => {
-        if (!isMarkdown) {
-            setPreviewMode('edit')
-        }
-    }, [isMarkdown])
+    // 切换文件类型时关闭预览（父组件处理）
+    // useEffect(() => {
+    //     if (!isMarkdown) {
+    //         setPreviewMode('edit')
+    //     }
+    // }, [isMarkdown])
 
-    // 三态切换：编辑 → 预览 → 分屏 → 编辑
-    const togglePreview = () => {
-        const scrollContainer = scrollRef.current
-        if (scrollContainer) {
-            // 计算当前滚动位置的百分比
-            const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight
-            const scrollRatio = scrollHeight > 0 ? scrollContainer.scrollTop / scrollHeight : 0
 
-            // 三态切换
-            setPreviewMode(prev => {
-                if (prev === 'edit') return 'preview'
-                if (prev === 'preview') return 'split'
-                return 'edit'
-            })
-
-            // 在下一帧应用相同的滚动比例
-            requestAnimationFrame(() => {
-                const newScrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight
-                scrollContainer.scrollTop = newScrollHeight * scrollRatio
-            })
-        } else {
-            setPreviewMode(prev => {
-                if (prev === 'edit') return 'preview'
-                if (prev === 'preview') return 'split'
-                return 'edit'
-            })
-        }
-    }
 
     // 图片粘贴处理
     useEffect(() => {
@@ -315,21 +288,33 @@ export const Editor: React.FC<EditorProps> = ({
         return () => textarea.removeEventListener('paste', handlePaste)
     }, [textareaRef, isMarkdown, filePath, content, onChange])
 
-    // 自动调整文本域高度（避免布局抖动）
+    // 自动调整标题高度（避免布局抖动）
+    // 添加 previewMode 依赖：分屏模式宽度变化需要重新计算高度
     useEffect(() => {
-        if (titleRef.current) {
-            const el = titleRef.current
-            // 保存当前滚动位置
-            const scrollTop = scrollRef.current?.scrollTop || 0
-            // 临时设置高度来测量
-            el.style.height = '0'
-            el.style.height = `${el.scrollHeight}px`
-            // 恢复滚动位置
-            if (scrollRef.current) {
-                scrollRef.current.scrollTop = scrollTop
+        const adjustTitleHeight = () => {
+            if (titleRef.current) {
+                const el = titleRef.current
+                // 保存当前滚动位置
+                const scrollTop = scrollRef.current?.scrollTop || 0
+                // 临时设置高度来测量
+                el.style.height = '0'
+                el.style.height = `${el.scrollHeight}px`
+                // 恢复滚动位置
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTop = scrollTop
+                }
             }
         }
-    }, [title])
+
+        // 立即执行一次
+        adjustTitleHeight()
+
+        // 模式切换时延迟再执行一次，确保布局完成
+        if (previewMode === 'split') {
+            const timer = setTimeout(adjustTitleHeight, 50)
+            return () => clearTimeout(timer)
+        }
+    }, [title, previewMode])
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -406,25 +391,7 @@ export const Editor: React.FC<EditorProps> = ({
                 {/* 专注模式下隐藏格式按钮 */}
                 {!focusMode && (
                     <div className="toolbar-group">
-                        {/* MD 预览按钮 - 仅 Markdown 文件显示，放在左侧 */}
-                        {isMarkdown && (
-                            <button
-                                className={`preview-btn ${previewMode !== 'edit' ? 'active' : ''}`}
-                                onClick={togglePreview}
-                                title={
-                                    previewMode === 'edit' ? '预览效果' :
-                                        previewMode === 'preview' ? '分屏模式' : '关闭预览'
-                                }
-                            >
-                                {previewMode === 'edit' ? (
-                                    <Eye size={14} strokeWidth={1.5} />
-                                ) : previewMode === 'preview' ? (
-                                    <Columns2 size={14} strokeWidth={1.5} />
-                                ) : (
-                                    <EyeOff size={14} strokeWidth={1.5} />
-                                )}
-                            </button>
-                        )}
+
 
                         {/* 格式切换拨片 - 一体式设计 */}
                         <div className="format-toggle-switch">
