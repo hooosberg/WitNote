@@ -745,6 +745,80 @@ function setupIpcHandlers() {
         return true
     })
 
+    // ============ 图片相关操作 ============
+
+    // 保存 Base64 图片到本地 (用于粘贴图片)
+    ipcMain.handle('fs:saveImage', async (_event, relativeDirPath: string, base64Data: string, fileName?: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) throw new Error('未设置 Vault 路径')
+
+        // 确保图片目录存在
+        const imageDir = join(vaultPath, relativeDirPath, '.images')
+        if (!existsSync(imageDir)) {
+            mkdirSync(imageDir, { recursive: true })
+        }
+
+        // 解析 Base64 数据
+        const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/)
+        if (!matches) throw new Error('无效的图片数据')
+
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1]
+        const buffer = Buffer.from(matches[2], 'base64')
+
+        // 生成文件名
+        const timestamp = Date.now()
+        const imageName = fileName || `image_${timestamp}.${ext}`
+        const imagePath = join(imageDir, imageName)
+
+        // 写入文件
+        await fs.writeFile(imagePath, buffer)
+
+        // 返回相对路径（用于 Markdown）
+        return `.images/${imageName}`
+    })
+
+    // 选择图片文件并复制到本地
+    ipcMain.handle('fs:selectAndCopyImage', async (_event, relativeDirPath: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) throw new Error('未设置 Vault 路径')
+
+        // 打开文件选择对话框
+        const result = await dialog.showOpenDialog(mainWindow!, {
+            properties: ['openFile'],
+            filters: [
+                { name: '图片', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] }
+            ],
+            title: '选择图片',
+            buttonLabel: '插入图片'
+        })
+
+        if (result.canceled || result.filePaths.length === 0) {
+            return null
+        }
+
+        const sourcePath = result.filePaths[0]
+        const sourceFileName = basename(sourcePath)
+
+        // 确保图片目录存在
+        const imageDir = join(vaultPath, relativeDirPath, '.images')
+        if (!existsSync(imageDir)) {
+            mkdirSync(imageDir, { recursive: true })
+        }
+
+        // 生成唯一文件名（避免覆盖）
+        const timestamp = Date.now()
+        const ext = extname(sourceFileName)
+        const baseName = basename(sourceFileName, ext)
+        const newFileName = `${baseName}_${timestamp}${ext}`
+        const destPath = join(imageDir, newFileName)
+
+        // 复制文件
+        await fs.copyFile(sourcePath, destPath)
+
+        // 返回相对路径（用于 Markdown）
+        return `.images/${newFileName}`
+    })
+
     // 读取聊天记录
     ipcMain.handle('chat:load', async (_event, filePath: string) => {
         const vaultPath = store.get('vaultPath')

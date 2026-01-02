@@ -1329,6 +1329,8 @@ select:focus {
 }
 
 .editor-content {
+  position: relative;
+  /* 定位上下文，使子元素 absolute 定位正确 */
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box;
@@ -1604,6 +1606,265 @@ select:focus {
 
 .editor-preview li {
   margin: 4px 0;
+}
+
+/* ============ Medium 风格：浮动工具栏 ============ */
+.floating-toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: #1c1c1e;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: toolbar-fade-in 0.15s ease;
+}
+
+@keyframes toolbar-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 工具栏箭头 */
+.floating-toolbar::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #1c1c1e;
+}
+
+.floating-toolbar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5f5f7;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.floating-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.floating-toolbar-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.floating-toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+/* ============ Medium 风格：空白行加号菜单 ============ */
+.block-insert-menu {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 100;
+  animation: menu-fade-in 0.15s ease;
+}
+
+@keyframes menu-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 加号触发按钮 */
+.block-insert-trigger {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: 1.5px solid var(--border-color);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.block-insert-trigger:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  transform: scale(1.05);
+}
+
+.block-insert-trigger.active {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  transform: rotate(45deg);
+}
+
+/* 展开的选项菜单 */
+.block-insert-options {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  animation: options-slide-in 0.2s ease;
+}
+
+@keyframes options-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.block-insert-option {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+  background: transparent;
+  border: 1.5px solid var(--accent-color);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.block-insert-option:hover {
+  background: rgba(var(--accent-rgb), 0.1);
+  transform: scale(1.08);
+}
+
+.block-insert-option.active {
+  background: rgba(var(--accent-rgb), 0.15);
+}
+
+/* 更多选项子菜单 */
+.block-insert-more {
+  position: absolute;
+  top: 100%;
+  left: 32px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
+  animation: more-fade-in 0.15s ease;
+}
+
+@keyframes more-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.block-insert-more-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  text-align: left;
+}
+
+.block-insert-more-item:hover {
+  background: var(--bg-hover);
+}
+
+.block-insert-more-item svg {
+  color: var(--text-secondary);
+}
+
+/* ============ 编辑器分屏模式 ============ */
+.editor-scroll.split-mode {
+  overflow: hidden;
+}
+
+.editor-split-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.editor-split-pane {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-main);
+  padding: 20px;
+}
+
+/* 左侧编辑区 */
+.editor-split-left {
+  border-right: 1px solid var(--border-color);
+}
+
+/* 右侧预览区 - 与左侧背景相同 */
+.editor-split-right {
+  background: var(--bg-main);
+}
+
+.editor-split-pane .editor-content {
+  max-width: 100%;
+  padding: 0 20px;
+}
+
+/* 分屏预览区标题样式 */
+.editor-title-preview {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 16px;
+  color: var(--text-primary);
 }
 
 /* ============ ChatPanel ============ */

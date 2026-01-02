@@ -4,18 +4,21 @@
  * 新增：MD 预览功能、回车自动缩进
  */
 
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Columns2 } from 'lucide-react'
 import { marked } from 'marked'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
+import { FloatingToolbar } from './FloatingToolbar'
+import { BlockInsertMenu } from './BlockInsertMenu'
 
 interface EditorProps {
     content: string
     onChange: (content: string) => void
     fileName: string
     fileExtension: string
+    filePath?: string  // 当前文件路径，用于图片保存
     onTitleChange?: (newName: string) => void
     onFormatToggle?: () => void
     focusMode?: boolean
@@ -95,6 +98,7 @@ export const Editor: React.FC<EditorProps> = ({
     onChange,
     fileName,
     fileExtension,
+    filePath,
     onTitleChange,
     onFormatToggle,
     focusMode = false,
@@ -105,8 +109,36 @@ export const Editor: React.FC<EditorProps> = ({
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const titleRef = useRef<HTMLTextAreaElement>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
+    // 分屏模式滚动联动 ref
+    const splitLeftRef = useRef<HTMLDivElement>(null)
+    const splitRightRef = useRef<HTMLDivElement>(null)
+    const isScrollingSyncRef = useRef(false) // 防止循环触发
+
     const [title, setTitle] = useState('')
-    const [showPreview, setShowPreview] = useState(false)
+    // 三态预览模式: 'edit' | 'preview' | 'split'
+    const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('edit')
+    const showPreview = previewMode !== 'edit' // 兼容现有代码
+
+    // 分屏滚动联动处理
+    const handleSplitScroll = useCallback((source: 'left' | 'right') => {
+        if (isScrollingSyncRef.current) return
+
+        isScrollingSyncRef.current = true
+        const sourceRef = source === 'left' ? splitLeftRef : splitRightRef
+        const targetRef = source === 'left' ? splitRightRef : splitLeftRef
+
+        if (sourceRef.current && targetRef.current) {
+            const sourceScrollHeight = sourceRef.current.scrollHeight - sourceRef.current.clientHeight
+            const scrollRatio = sourceScrollHeight > 0 ? sourceRef.current.scrollTop / sourceScrollHeight : 0
+            const targetScrollHeight = targetRef.current.scrollHeight - targetRef.current.clientHeight
+            targetRef.current.scrollTop = targetScrollHeight * scrollRatio
+        }
+
+        // 延迟重置标志，防止连续触发
+        requestAnimationFrame(() => {
+            isScrollingSyncRef.current = false
+        })
+    }, [])
 
     // 判断是否为新建的未命名文件
     const isUntitled = fileName.startsWith('Untitled_')
@@ -139,11 +171,11 @@ export const Editor: React.FC<EditorProps> = ({
     // 切换文件类型时关闭预览
     useEffect(() => {
         if (!isMarkdown) {
-            setShowPreview(false)
+            setPreviewMode('edit')
         }
     }, [isMarkdown])
 
-    // 切换预览/编辑模式时同步滚动位置
+    // 三态切换：编辑 → 预览 → 分屏 → 编辑
     const togglePreview = () => {
         const scrollContainer = scrollRef.current
         if (scrollContainer) {
@@ -151,8 +183,12 @@ export const Editor: React.FC<EditorProps> = ({
             const scrollHeight = scrollContainer.scrollHeight - scrollContainer.clientHeight
             const scrollRatio = scrollHeight > 0 ? scrollContainer.scrollTop / scrollHeight : 0
 
-            // 切换预览状态
-            setShowPreview(prev => !prev)
+            // 三态切换
+            setPreviewMode(prev => {
+                if (prev === 'edit') return 'preview'
+                if (prev === 'preview') return 'split'
+                return 'edit'
+            })
 
             // 在下一帧应用相同的滚动比例
             requestAnimationFrame(() => {
@@ -160,9 +196,72 @@ export const Editor: React.FC<EditorProps> = ({
                 scrollContainer.scrollTop = newScrollHeight * scrollRatio
             })
         } else {
-            setShowPreview(prev => !prev)
+            setPreviewMode(prev => {
+                if (prev === 'edit') return 'preview'
+                if (prev === 'preview') return 'split'
+                return 'edit'
+            })
         }
     }
+
+    // 图片粘贴处理
+    useEffect(() => {
+        const textarea = textareaRef.current
+        if (!textarea || !isMarkdown || !filePath) return
+
+        const handlePaste = async (e: ClipboardEvent) => {
+            const items = e.clipboardData?.items
+            if (!items) return
+
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault()
+
+                    const file = item.getAsFile()
+                    if (!file) continue
+
+                    try {
+                        // 读取图片为 base64
+                        const reader = new FileReader()
+                        reader.onload = async (event) => {
+                            const base64Data = event.target?.result as string
+                            if (!base64Data) return
+
+                            // 获取文件所在目录
+                            const dirPath = filePath.includes('/')
+                                ? filePath.substring(0, filePath.lastIndexOf('/'))
+                                : ''
+
+                            // 保存图片到本地
+                            const imagePath = await window.fs.saveImage(dirPath, base64Data)
+
+                            // 插入 Markdown 图片语法
+                            const pos = textarea.selectionStart
+                            const beforeCursor = content.substring(0, pos)
+                            const afterCursor = content.substring(pos)
+                            const imageMarkdown = `![](${imagePath})`
+
+                            onChange(beforeCursor + imageMarkdown + afterCursor)
+
+                            // 移动光标到图片后
+                            setTimeout(() => {
+                                const newPos = pos + imageMarkdown.length
+                                textarea.setSelectionRange(newPos, newPos)
+                                textarea.focus()
+                            }, 0)
+                        }
+                        reader.readAsDataURL(file)
+                    } catch (error) {
+                        console.error('粘贴图片失败:', error)
+                    }
+                    break
+                }
+            }
+        }
+
+        textarea.addEventListener('paste', handlePaste)
+        return () => textarea.removeEventListener('paste', handlePaste)
+    }, [textareaRef, isMarkdown, filePath, content, onChange])
 
     // 自动调整文本域高度（避免布局抖动）
     useEffect(() => {
@@ -223,37 +322,12 @@ export const Editor: React.FC<EditorProps> = ({
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault()
             titleRef.current?.blur()
-
-            // 如果正文为空，自动添加两个全角空格作为首行缩进
-            const indent = '　　'  // 两个全角空格（每个相当于一个汉字宽度）
-            if (!content.trim() && textareaRef.current) {
-                onChange(indent)
-                // 将光标移动到末尾
-                setTimeout(() => {
-                    if (textareaRef.current) {
-                        textareaRef.current.focus()
-                        textareaRef.current.selectionStart = indent.length
-                        textareaRef.current.selectionEnd = indent.length
-                    }
-                }, 0)
-            } else {
-                textareaRef.current?.focus()
-            }
+            textareaRef.current?.focus()
         }
     }
 
-    // 点击正文区域时，如果为空则自动添加首行缩进
+    // 点击正文区域时，不再自动添加首行缩进
     const handleBodyFocus = () => {
-        const indent = '　　'  // 两个全角空格
-        if (!content.trim() && textareaRef.current) {
-            onChange(indent)
-            setTimeout(() => {
-                if (textareaRef.current) {
-                    textareaRef.current.selectionStart = indent.length
-                    textareaRef.current.selectionEnd = indent.length
-                }
-            }, 0)
-        }
     }
 
     return (
@@ -266,14 +340,19 @@ export const Editor: React.FC<EditorProps> = ({
                         {/* MD 预览按钮 - 仅 Markdown 文件显示，放在左侧 */}
                         {isMarkdown && (
                             <button
-                                className={`preview-btn ${showPreview ? 'active' : ''}`}
+                                className={`preview-btn ${previewMode !== 'edit' ? 'active' : ''}`}
                                 onClick={togglePreview}
-                                title={showPreview ? '关闭预览' : '预览效果'}
+                                title={
+                                    previewMode === 'edit' ? '预览效果' :
+                                        previewMode === 'preview' ? '分屏模式' : '关闭预览'
+                                }
                             >
-                                {showPreview ? (
-                                    <EyeOff size={14} strokeWidth={1.5} />
-                                ) : (
+                                {previewMode === 'edit' ? (
                                     <Eye size={14} strokeWidth={1.5} />
+                                ) : previewMode === 'preview' ? (
+                                    <Columns2 size={14} strokeWidth={1.5} />
+                                ) : (
+                                    <EyeOff size={14} strokeWidth={1.5} />
                                 )}
                             </button>
                         )}
@@ -299,122 +378,177 @@ export const Editor: React.FC<EditorProps> = ({
                 )}
             </div>
 
-            {/* 编辑区域 - 可滚动 */}
-            <div className={`editor-scroll ${focusMode ? 'focus-mode-content' : ''}`} ref={scrollRef}>
-                <div className="editor-content">
-                    {/* 标题 - 自动换行 */}
-                    <textarea
-                        ref={titleRef}
-                        className="editor-title"
-                        value={title}
-                        onChange={handleTitleChange}
-                        onBlur={handleTitleBlur}
-                        onKeyDown={handleTitleKeyDown}
-                        placeholder={t('editor.titlePlaceholder')}
-                        rows={1}
-                        spellCheck={false}
-                        readOnly={showPreview}
-                    />
+            {/* 编辑区域 - 可滚动，支持分屏模式 */}
+            <div className={`editor-scroll ${focusMode ? 'focus-mode-content' : ''} ${previewMode === 'split' ? 'split-mode' : ''}`} ref={scrollRef}>
+                {/* 分屏模式：左编辑右预览 */}
+                {previewMode === 'split' ? (
+                    <div className="editor-split-container">
+                        {/* 左侧编辑区 */}
+                        <div
+                            ref={splitLeftRef}
+                            className="editor-split-pane editor-split-left"
+                            onScroll={() => handleSplitScroll('left')}
+                        >
+                            <div className="editor-content">
+                                <textarea
+                                    ref={titleRef}
+                                    className="editor-title"
+                                    value={title}
+                                    onChange={handleTitleChange}
+                                    onBlur={handleTitleBlur}
+                                    onKeyDown={handleTitleKeyDown}
+                                    placeholder={t('editor.titlePlaceholder')}
+                                    rows={1}
+                                    spellCheck={false}
+                                />
 
-                    {/* 标题与正文分隔线 - 三个圆点装饰 */}
-                    <div className="editor-divider">
-                        <span className="divider-dot"></span>
-                        <span className="divider-dot"></span>
-                        <span className="divider-dot"></span>
+                                <div className="editor-divider">
+                                    <span className="divider-dot"></span>
+                                    <span className="divider-dot"></span>
+                                    <span className="divider-dot"></span>
+                                </div>
+
+                                {/* Medium 风格：空白行加号菜单 */}
+                                <BlockInsertMenu
+                                    textareaRef={textareaRef}
+                                    content={content}
+                                    onChange={onChange}
+                                    editorScrollRef={scrollRef}
+                                    isMarkdown={isMarkdown}
+                                    filePath={filePath}
+                                />
+
+                                {/* Medium 风格：选中文字浮动工具栏 */}
+                                {isMarkdown && (
+                                    <FloatingToolbar
+                                        textareaRef={textareaRef}
+                                        content={content}
+                                        onChange={onChange}
+                                        editorScrollRef={scrollRef}
+                                    />
+                                )}
+
+                                <textarea
+                                    ref={textareaRef}
+                                    className="editor-body"
+                                    value={content}
+                                    onChange={(e) => onChange(e.target.value)}
+                                    onFocus={handleBodyFocus}
+
+                                    placeholder={t('editor.bodyPlaceholder')}
+                                    spellCheck={false}
+                                />
+                            </div>
+                        </div>
+
+                        {/* 右侧预览区 */}
+                        <div
+                            ref={splitRightRef}
+                            className="editor-split-pane editor-split-right"
+                            onScroll={() => handleSplitScroll('right')}
+                        >
+                            <div className="editor-content">
+                                <h1 className="editor-title-preview">{title || t('editor.titlePlaceholder')}</h1>
+                                <div className="editor-divider">
+                                    <span className="divider-dot"></span>
+                                    <span className="divider-dot"></span>
+                                    <span className="divider-dot"></span>
+                                </div>
+                                <div
+                                    className="editor-preview"
+                                    dangerouslySetInnerHTML={{ __html: previewHtml }}
+                                    style={{ display: 'block' }}
+                                />
+                            </div>
+                        </div>
                     </div>
+                ) : (
+                    /* 普通模式：编辑或预览 */
+                    <div className="editor-content">
+                        <textarea
+                            ref={titleRef}
+                            className="editor-title"
+                            value={title}
+                            onChange={handleTitleChange}
+                            onBlur={handleTitleBlur}
+                            onKeyDown={handleTitleKeyDown}
+                            placeholder={t('editor.titlePlaceholder')}
+                            rows={1}
+                            spellCheck={false}
+                            readOnly={showPreview}
+                        />
 
-                    {/* 正文编辑器 - 隐藏但不销毁 */}
-                    <textarea
-                        ref={textareaRef}
-                        className="editor-body"
-                        value={content}
-                        onChange={(e) => onChange(e.target.value)}
-                        onFocus={handleBodyFocus}
-                        onKeyDown={(e) => {
-                            const textarea = textareaRef.current
-                            if (!textarea) return
+                        <div className="editor-divider">
+                            <span className="divider-dot"></span>
+                            <span className="divider-dot"></span>
+                            <span className="divider-dot"></span>
+                        </div>
 
-                            // 回车自动缩进：插入换行 + 两个全角空格
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault()
-                                const start = textarea.selectionStart
-                                const end = textarea.selectionEnd
-                                const indent = '　　' // 两个全角空格（每个相当于一个汉字宽度）
-                                const newContent = content.substring(0, start) + '\n' + indent + content.substring(end)
-                                onChange(newContent)
-                                // 需要在下一个事件循环设置光标位置
-                                setTimeout(() => {
-                                    textarea.selectionStart = textarea.selectionEnd = start + 1 + indent.length
-                                }, 0)
-                            }
-
-                            // Backspace 取消缩进：如果光标前是换行+缩进，先删除缩进
-                            if (e.key === 'Backspace') {
-                                const start = textarea.selectionStart
-                                const end = textarea.selectionEnd
-                                // 只有在没有选中文本时处理
-                                if (start === end && start > 0) {
-                                    const textBefore = content.substring(0, start)
-                                    // 检查是否在缩进空格后面
-                                    if (textBefore.endsWith('　　')) {
-                                        // 删除两个全角空格
-                                        e.preventDefault()
-                                        const newContent = content.substring(0, start - 2) + content.substring(end)
-                                        onChange(newContent)
-                                        setTimeout(() => {
-                                            textarea.selectionStart = textarea.selectionEnd = start - 2
-                                        }, 0)
-                                    } else if (textBefore.endsWith('　')) {
-                                        // 只有一个全角空格
-                                        e.preventDefault()
-                                        const newContent = content.substring(0, start - 1) + content.substring(end)
-                                        onChange(newContent)
-                                        setTimeout(() => {
-                                            textarea.selectionStart = textarea.selectionEnd = start - 1
-                                        }, 0)
-                                    }
-                                }
-                            }
-                        }}
-                        placeholder={t('editor.bodyPlaceholder')}
-                        spellCheck={false}
-                        style={{ display: showPreview ? 'none' : 'block' }}
-                    />
-
-                    {/* 预览区域 - 隐藏但不销毁 */}
-                    <div
-                        className="editor-preview"
-                        dangerouslySetInnerHTML={{ __html: previewHtml }}
-                        style={{ display: showPreview ? 'block' : 'none' }}
-                    />
-
-                    {/* 底部分隔线 */}
-                    <div className="editor-divider editor-divider-bottom">
-                        <span className="divider-dot"></span>
-                        <span className="divider-dot"></span>
-                        <span className="divider-dot"></span>
-                    </div>
-
-                    {/* 文章统计信息 */}
-                    <div className="editor-stats">
-                        <span className="stat-item">{wordCount} {t('editor.wordCount')}</span>
-                        {createdAt && (
-                            <span className="stat-item">
-                                {t('editor.created')}: {new Date(createdAt).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
-                            </span>
+                        {/* Medium 风格：空白行加号菜单 */}
+                        {!showPreview && (
+                            <BlockInsertMenu
+                                textareaRef={textareaRef}
+                                content={content}
+                                onChange={onChange}
+                                editorScrollRef={scrollRef}
+                                isMarkdown={isMarkdown}
+                                filePath={filePath}
+                            />
                         )}
-                        {modifiedAt && (
-                            <span className="stat-item">
-                                {t('editor.modified')}: {new Date(modifiedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
-                                    month: 'numeric',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </span>
+
+                        {/* Medium 风格：选中文字浮动工具栏 */}
+                        {!showPreview && isMarkdown && (
+                            <FloatingToolbar
+                                textareaRef={textareaRef}
+                                content={content}
+                                onChange={onChange}
+                                editorScrollRef={scrollRef}
+                            />
                         )}
+
+                        <textarea
+                            ref={textareaRef}
+                            className="editor-body"
+                            value={content}
+                            onChange={(e) => onChange(e.target.value)}
+
+                            placeholder={t('editor.bodyPlaceholder')}
+                            spellCheck={false}
+                            style={{ display: showPreview ? 'none' : 'block' }}
+                        />
+
+                        <div
+                            className="editor-preview"
+                            dangerouslySetInnerHTML={{ __html: previewHtml }}
+                            style={{ display: showPreview ? 'block' : 'none' }}
+                        />
+
+                        <div className="editor-divider editor-divider-bottom">
+                            <span className="divider-dot"></span>
+                            <span className="divider-dot"></span>
+                            <span className="divider-dot"></span>
+                        </div>
+
+                        <div className="editor-stats">
+                            <span className="stat-item">{wordCount} {t('editor.wordCount')}</span>
+                            {createdAt && (
+                                <span className="stat-item">
+                                    {t('editor.created')}: {new Date(createdAt).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
+                                </span>
+                            )}
+                            {modifiedAt && (
+                                <span className="stat-item">
+                                    {t('editor.modified')}: {new Date(modifiedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
+                                        month: 'numeric',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     )

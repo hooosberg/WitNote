@@ -28,6 +28,9 @@ interface FileSystemAPI {
     createDirectory(path: string): Promise<boolean>
     deleteFile(path: string): Promise<boolean>
     renameFile(oldPath: string, newPath: string): Promise<boolean>
+    // 图片操作
+    saveImage(relativeDirPath: string, base64Data: string, fileName?: string): Promise<string>
+    selectAndCopyImage(relativeDirPath: string): Promise<string | null>
     watch(path?: string): Promise<boolean>
     unwatch(): Promise<boolean>
     onFileChange(callback: (event: FileChangeEvent) => void): () => void

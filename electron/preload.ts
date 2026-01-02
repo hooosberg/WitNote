@@ -58,6 +58,13 @@ contextBridge.exposeInMainWorld('fs', {
     renameFile: (oldPath: string, newPath: string): Promise<boolean> =>
         ipcRenderer.invoke('fs:renameFile', oldPath, newPath),
 
+    // 图片操作
+    saveImage: (relativeDirPath: string, base64Data: string, fileName?: string): Promise<string> =>
+        ipcRenderer.invoke('fs:saveImage', relativeDirPath, base64Data, fileName),
+
+    selectAndCopyImage: (relativeDirPath: string): Promise<string | null> =>
+        ipcRenderer.invoke('fs:selectAndCopyImage', relativeDirPath),
+
     // 文件监听
     watch: (path?: string): Promise<boolean> =>
         ipcRenderer.invoke('fs:watch', path),
