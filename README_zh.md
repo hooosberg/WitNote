@@ -15,7 +15,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/arch-x64%20|%20ARM64-blue.svg" alt="Architecture">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
 </p>
 
 > **🎉 即将登陆 Mac App Store！**
@@ -69,7 +69,7 @@
 
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-| 🍎 macOS | `WitNote-1.3.0.dmg` | 仅支持 Apple Silicon (M1/M2/M3) |
+| 🍎 macOS | `WitNote-1.3.0.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
 | 🪟 Windows (x64) | `WitNote-1.3.0-setup-x64.exe` | 普通电脑 (Intel/AMD) |
 | 🪟 Windows (ARM64) | `WitNote-1.3.0-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
 | 🐧 Linux (AppImage) | `WitNote-1.3.0-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
@@ -84,7 +84,7 @@
 | 项目 | 最低配置 | 推荐配置 |
 |------|----------|----------|
 | 系统版本 | macOS 12.0+ | macOS 13.0+ |
-| 芯片 | **不予支持 (Intel 芯片)** | **Apple Silicon (M1/M2/M3/M4)** |
+| 芯片 | **不予支持 (Intel 芯片)** | **Apple Silicon (M1/M2/M3/M4/M5)** |
 | 内存 | - | 16GB+ |
 | 硬盘 | - | SSD, 4GB+ 可用空间 |
 

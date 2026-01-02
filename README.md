@@ -15,7 +15,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/arch-x64%20|%20ARM64-blue.svg" alt="Architecture">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
 </p>
 
 > **🎉 Coming Soon to Mac App Store!**
@@ -72,7 +72,7 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 
 | Platform | File | Note |
 |----------|------|------|
-| 🍎 macOS | `WitNote-1.3.0.dmg` | Apple Silicon (M1/M2/M3) Only |
+| 🍎 macOS | `WitNote-1.3.0.dmg` | Apple Silicon (M1/M2/M3/M4/M5) Only |
 | 🪟 Windows (x64) | `WitNote-1.3.0-setup-x64.exe` | Standard PC (Intel/AMD) |
 | 🪟 Windows (ARM64) | `WitNote-1.3.0-setup-arm64.exe` | Snapdragon PCs (e.g. Surface Pro X) |
 | 🐧 Linux (AppImage) | `WitNote-1.3.0-x86_64.AppImage` | x64 Universal (ARM64 available) |
@@ -87,7 +87,7 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 | Item | Minimum | Recommended |
 |------|---------|-------------|
 | OS Version | macOS 12.0+ | macOS 13.0+ |
-| Chip | **Not Supported (Intel Chips)** | **Apple Silicon (M1/M2/M3/M4)** |
+| Chip | **Not Supported (Intel Chips)** | **Apple Silicon (M1/M2/M3/M4/M5)** |
 | RAM | - | 16GB+ |
 | Storage | - | SSD, 4GB+ free space |
 
