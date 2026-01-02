@@ -14,15 +14,15 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3-green.svg" alt="Apple Silicon">
+  <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/arch-x64%20|%20ARM64-blue.svg" alt="Architecture">
 </p>
 
 > **🎉 Coming Soon to Mac App Store!**
 > 
 > Fully compliant with Apple's security & privacy standards. Currently under review. Your support and stars ⭐️ keep us going!
 
-**WitNote** is a local-first AI writing companion for macOS and Windows.
+**WitNote** is a local-first AI writing companion for macOS, Windows, and Linux.
 Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired with an ultra-minimalist **native card interface**, it works right out of the box. No continuous cloud dependency, no privacy concerns — intelligence made lightweight.
 
 ![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
@@ -43,7 +43,7 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ---
 
-## ✨ Features (v1.2.4)
+## ✨ Features (v1.3.0)
 
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
 - 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
@@ -57,9 +57,27 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 - 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting, polished context menus
 - 🔍 **Context Aware** — AI can directly read your current article or folder contents
 - 🎯 **Focus Mode** — Auto-switches to distraction-free editing when window narrows
+- 🌓 **Dual-Pane Preview** — WYSIWYG, edit on the left, real-time preview on the right
+- 🖼️ **Image Insertion** — Support paste, drag-and-drop, and menu insertion
+- ⚡️ **Quick Edit** — Enhanced floating menu for styling selected text
 
 ---
 
+
+## 🚀 Quick Start
+
+### Download
+
+Download the latest installer from [Releases](https://github.com/hooosberg/WitNote/releases):
+
+| Platform | File | Note |
+|----------|------|------|
+| 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon (M1/M2/M3) Only |
+| 🪟 Windows | `WitNote-x.x.x-setup.exe` | Auto-detect (x64 / ARM64) |
+| 🐧 Linux | `WitNote-x.x.x.AppImage` | Universal (x64 / ARM64) |
+| 📦 Linux (Deb) | `WitNote-x.x.x.deb` | Debian/Ubuntu (x64 / ARM64) |
+
+---
 
 ## 💻 System Requirements
 
@@ -91,6 +109,26 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 | Storage | 2GB free space | SSD, 4GB+ free space |
 | GPU | Integrated graphics | Discrete GPU with Vulkan support |
 
+> ⚠️ **Note**: Windows ARM64 devices (e.g. Surface Pro X) are now natively supported!
+
+### 🐧 Linux
+
+| Item | Minimum | Recommended |
+|------|---------|-------------|
+| OS Version | Ubuntu 20.04+ / Debian 11+ | Latest Mainstream Distro |
+| Arch | x64 / ARM64 | x64 / ARM64 |
+| RAM | 8GB | 16GB+ |
+
+> ⚠️ **Note**: Windows ARM64 devices (e.g. Surface Pro X) are now natively supported!
+
+### 🐧 Linux
+
+| Item | Minimum | Recommended |
+|------|---------|-------------|
+| OS Version | Ubuntu 20.04+ / Debian 11+ | Latest Mainstream Distro |
+| Arch | x64 / ARM64 | x64 / ARM64 |
+| RAM | 8GB | 16GB+ |
+
 > ⚠️ **Note**: Windows version is newly released. Feedback welcome!
 
 ---
@@ -117,6 +155,28 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 2. Run the setup wizard
 3. Choose installation path (customizable)
 4. Complete installation, launch from Desktop or Start Menu
+
+### 🐧 Linux Installation
+
+**AppImage (Universal):**
+1. Download `.AppImage` file
+2. Right-click Properties -> Allow executing file as program (or `chmod +x WitNote*.AppImage`)
+3. Double-click to run
+
+**Deb (Ubuntu/Debian):**
+1. Download `.deb` file
+2. Double-click to install or use `sudo dpkg -i WitNote*.deb`
+
+### 🐧 Linux Installation
+
+**AppImage (Universal):**
+1. Download `.AppImage` file
+2. Right-click Properties -> Allow executing file as program (or `chmod +x WitNote*.AppImage`)
+3. Double-click to run
+
+**Deb (Ubuntu/Debian):**
+1. Download `.deb` file
+2. Double-click to install or use `sudo dpkg -i WitNote*.deb`
 
 > 📝 **Important Notes for Windows Users**:
 > 
@@ -172,6 +232,15 @@ Supports connecting to OpenAI-compatible Cloud APIs.
 
 ### ⌨️ Shortcuts
 ![Shortcuts](src/pic/witnote%20宣传截图/英文版设计/SHORTCUT%20KEY.jpg)
+
+### 🌓 Dual-Pane Preview
+![Dual-Pane Preview](src/pic/witnote%20宣传截图/英文版设计/双栏实时预览.jpg)
+
+### 🖼️ Image Insertion
+![Image Insertion](src/pic/witnote%20宣传截图/英文版设计/插入图片.jpg)
+
+### ⚡️ Quick Edit
+![Quick Edit](src/pic/witnote%20宣传截图/英文版设计/快捷编辑.jpg)
 
 ---
 

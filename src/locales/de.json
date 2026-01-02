@@ -373,5 +373,29 @@
         "healthPrompt": "Du bist ein Assistent für gesundes Leben. Gib Ratschläge zu Bewegung, Ernährung und Lebensstil. Wissenschaftlich fundiert, praxisorientiert.",
         "chef": "Kochassistent",
         "chefPrompt": "Du bist ein Kochassistent. Teile Rezepte, Kochtechniken und Vorschläge für Zutatenkombinationen. Klare Schritte, leicht zu befolgen."
+    },
+    "toolbar": {
+        "bold": "Fett",
+        "italic": "Kursiv",
+        "link": "Link",
+        "heading1": "Überschrift 1",
+        "heading2": "Überschrift 2",
+        "quote": "Zitat",
+        "insertContent": "Inhalt einfügen",
+        "image": "Bild",
+        "divider": "Trennlinie",
+        "codeBlock": "Code-Block",
+        "inlineCode": "Inline-Code",
+        "more": "Mehr",
+        "unorderedList": "Aufzählungsliste",
+        "orderedList": "Nummerierte Liste",
+        "linkPlaceholder": "https://",
+        "confirm": "Bestätigen",
+        "cancel": "Abbrechen",
+        "editMode": "Bearbeitungsmodus",
+        "previewMode": "Vorschaumodus",
+        "splitMode": "Geteilter Modus",
+        "focusMode": "Fokus-Modus",
+        "exitFocusMode": "Fokus-Modus beenden"
     }
 }

@@ -373,5 +373,29 @@
         "healthPrompt": "Vous êtes un assistant de vie saine. Fournissez des conseils sur l'exercice, l'alimentation et le mode de vie. Basé sur la science, axé sur la praticité.",
         "chef": "Assistant cuisine",
         "chefPrompt": "Vous êtes un assistant de cuisine. Partagez des recettes, des techniques de cuisine et des suggestions d'association d'ingrédients. Étapes claires, faciles à suivre."
+    },
+    "toolbar": {
+        "bold": "Gras",
+        "italic": "Italique",
+        "link": "Lien",
+        "heading1": "Titre 1",
+        "heading2": "Titre 2",
+        "quote": "Citation",
+        "insertContent": "Insérer du contenu",
+        "image": "Image",
+        "divider": "Séparateur",
+        "codeBlock": "Bloc de code",
+        "inlineCode": "Code en ligne",
+        "more": "Plus",
+        "unorderedList": "Liste à puces",
+        "orderedList": "Liste numérotée",
+        "linkPlaceholder": "https://",
+        "confirm": "Confirmer",
+        "cancel": "Annuler",
+        "editMode": "Mode Édition",
+        "previewMode": "Mode Aperçu",
+        "splitMode": "Mode Divisé",
+        "focusMode": "Mode Focus",
+        "exitFocusMode": "Quitter le Mode Focus"
     }
 }

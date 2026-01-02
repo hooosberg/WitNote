@@ -14,15 +14,15 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3-green.svg" alt="Apple Silicon">
+  <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/arch-x64%20|%20ARM64-blue.svg" alt="Architecture">
 </p>
 
 > **🎉 即将登陆 Mac App Store！**
 > 
 > 本应用完全符合 Apple 安全与隐私标准，目前正在审核中。请大家多多支持，您的 Star ⭐️ 是我们最大的动力！
 
-**智简笔记本** 是一款本地优先的 AI 写作伴侣，支持 macOS 和 Windows 平台。
+**智简笔记本** 是一款本地优先的 AI 写作伴侣，支持 macOS、Windows 和 Linux 平台。
 支持 **Ollama / WebLLM / 云端 API** 三种引擎自由切换，搭配极简**原生卡片界面**，开箱即用。除模型下载外无云端依赖，无隐私焦虑，让智能回归轻盈。
 
 ![本地 AI](src/pic/witnote%20宣传截图/中文版设计/本地离线ai.jpg)
@@ -43,7 +43,7 @@
 
 ---
 
-## ✨ 功能亮点 (v1.2.4)
+## ✨ 功能亮点 (v1.3.0)
 
 - 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
 - 🤖 **三擎合一** — 自由切换 **WebLLM** (轻量)、**Ollama** (本地强力) 或 **云端 API** (自定连接)
@@ -57,6 +57,9 @@
 - 🗂️ **卡片网格视图** — iOS 风格，拖拽排序，上下文菜单完善
 - 🔍 **上下文感知** — AI 可直接读取当前文章或文件夹内容
 - 🎯 **专注模式** — 窗口变窄自动切换纯文本编辑体验
+- 🌓 **双栏预览** — 所见即所得，左侧编辑右侧实时预览
+- 🖼️ **图片插入** — 支持粘贴、拖拽、菜单插入图片
+- ⚡️ **快捷编辑** — 悬浮菜单增强，选中文字快速修改格式
 
 ---
 
@@ -66,10 +69,10 @@
 
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-| 平台 | 文件 | 说明 |
-|------|------|----------|
-| 🍎 macOS | `WitNote-x.x.x.dmg` | Apple Silicon 优化 |
-| 🪟 Windows | `WitNote-x.x.x-setup.exe` | 64 位 Windows 10/11 |
+| 🍎 macOS | `WitNote-x.x.x.dmg` | 仅支持 Apple Silicon (M1/M2/M3) |
+| 🪟 Windows | `WitNote-x.x.x-setup.exe` | 自动识别 x64 / ARM64 |
+| 🐧 Linux | `WitNote-x.x.x.AppImage` | 通用格式 (x64 / ARM64) |
+| 📦 Linux (Deb) | `WitNote-x.x.x.deb` | Debian/Ubuntu (x64 / ARM64) |
 
 ---
 
@@ -103,6 +106,16 @@
 | 硬盘 | 2GB 可用空间 | SSD, 4GB+ 可用空间 |
 | 显卡 | 集成显卡 | 支持 Vulkan 的独立显卡 |
 
+> ⚠️ **注意**: Windows ARM64 设备 (如 Surface Pro X) 现已原生支持！
+
+### 🐧 Linux
+
+| 项目 | 最低配置 | 推荐配置 |
+|------|----------|----------|
+| 系统版本 | Ubuntu 20.04+ / Debian 11+ | 最新版主流发行版 |
+| 架构 | x64 / ARM64 | x64 / ARM64 |
+| 内存 | 8GB | 16GB+ |
+
 > ⚠️ **注意**: Windows 版本为首次发布，欢迎反馈问题！
 
 ---
@@ -129,6 +142,17 @@
 2. 双击运行安装向导
 3. 选择安装路径（可自定义）
 4. 完成安装，从桌面或开始菜单启动
+
+### 🐧 Linux 安装
+
+**AppImage (通用):**
+1. 下载 `.AppImage` 文件
+2. 右键属性 -> 允许作为程序执行 (或 `chmod +x WitNote*.AppImage`)
+3. 双击运行
+
+**Deb (Ubuntu/Debian):**
+1. 下载 `.deb` 文件
+2. 双击安装或使用 `sudo dpkg -i WitNote*.deb`
 
 > 📝 **注意事项 (Windows 用户必读)**:
 > 
@@ -184,6 +208,15 @@
 
 ### ⌨️ 快捷键
 ![快捷键](src/pic/witnote%20宣传截图/中文版设计/快捷键.jpg)
+
+### 🌓 双栏实时预览
+![双栏实时预览](src/pic/witnote%20宣传截图/中文版设计/双栏实时预览.jpg)
+
+### 🖼️ 插入图片
+![插入图片](src/pic/witnote%20宣传截图/中文版设计/插入图片.jpg)
+
+### ⚡️ 快捷编辑
+![快捷编辑](src/pic/witnote%20宣传截图/中文版设计/快捷编辑.jpg)
 
 ---
 

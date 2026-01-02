@@ -373,5 +373,29 @@
         "healthPrompt": "Eres un asistente de vida saludable. Proporciona consejos sobre ejercicio, dieta y estilo de vida. Basado en la ciencia, centrado en la practicidad.",
         "chef": "Asistente de cocina",
         "chefPrompt": "Eres un asistente de cocina. Comparte recetas, técnicas de cocina y sugerencias de combinación de ingredientes. Pasos claros, fáciles de seguir."
+    },
+    "toolbar": {
+        "bold": "Negrita",
+        "italic": "Cursiva",
+        "link": "Enlace",
+        "heading1": "Encabezado 1",
+        "heading2": "Encabezado 2",
+        "quote": "Cita",
+        "insertContent": "Insertar contenido",
+        "image": "Imagen",
+        "divider": "Divisor",
+        "codeBlock": "Bloque de código",
+        "inlineCode": "Código en línea",
+        "more": "Más",
+        "unorderedList": "Lista con viñetas",
+        "orderedList": "Lista numerada",
+        "linkPlaceholder": "https://",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar",
+        "editMode": "Modo Edición",
+        "previewMode": "Modo Vista Previa",
+        "splitMode": "Modo Dividido",
+        "focusMode": "Modo Enfoque",
+        "exitFocusMode": "Salir del Modo Enfoque"
     }
 }

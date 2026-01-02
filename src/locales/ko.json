@@ -374,5 +374,29 @@
         "healthPrompt": "당신은 건강 라이프스타일 코치입니다. 운동, 식단, 생활 습관에 대한 과학적인 조언을 해주세요.",
         "chef": "요리사",
         "chefPrompt": "당신은 숙련된 셰프입니다. 맛있는 레시피와 요리 팁, 식재료 손질법을 알려주세요."
+    },
+    "toolbar": {
+        "bold": "굵게",
+        "italic": "기울임",
+        "link": "링크",
+        "heading1": "제목 1",
+        "heading2": "제목 2",
+        "quote": "인용",
+        "insertContent": "내용 삽입",
+        "image": "이미지",
+        "divider": "구분선",
+        "codeBlock": "코드 블록",
+        "inlineCode": "인라인 코드",
+        "more": "더 보기",
+        "unorderedList": "글머리 기호 목록",
+        "orderedList": "번호 매기기 목록",
+        "linkPlaceholder": "https://",
+        "confirm": "확인",
+        "cancel": "취소",
+        "editMode": "편집 모드",
+        "previewMode": "미리보기 모드",
+        "splitMode": "분할 모드",
+        "focusMode": "집중 모드",
+        "exitFocusMode": "집중 모드 종료"
     }
 }

@@ -374,5 +374,29 @@
         "healthPrompt": "あなたは健康的なライフスタイルコーチです。運動、食事、生活習慣に関するアドバイスを提供します。科学に基づき、実用性を重視してください。",
         "chef": "料理アシスタント",
         "chefPrompt": "あなたは料理のアシスタントです。レシピ、調理技術、食材の組み合わせの提案を共有します。手順は明確で、実行しやすいものにしてください。"
+    },
+    "toolbar": {
+        "bold": "太字",
+        "italic": "斜体",
+        "link": "リンク",
+        "heading1": "見出し 1",
+        "heading2": "見出し 2",
+        "quote": "引用",
+        "insertContent": "内容を挿入",
+        "image": "画像",
+        "divider": "区切り線",
+        "codeBlock": "コードブロック",
+        "inlineCode": "インラインコード",
+        "more": "もっと見る",
+        "unorderedList": "箇条書き",
+        "orderedList": "番号付きリスト",
+        "linkPlaceholder": "https://",
+        "confirm": "確認",
+        "cancel": "キャンセル",
+        "editMode": "編集モード",
+        "previewMode": "プレビューモード",
+        "splitMode": "分割モード",
+        "focusMode": "集中モード",
+        "exitFocusMode": "集中モード終了"
     }
 }
