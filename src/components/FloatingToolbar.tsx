@@ -4,7 +4,9 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Bold, Italic, Link, Heading1, Heading2, Quote } from 'lucide-react'
+import getCaretCoordinates from 'textarea-caret'
 
 interface FloatingToolbarProps {
     textareaRef: React.RefObject<HTMLTextAreaElement>
@@ -21,14 +23,28 @@ interface ToolbarPosition {
 export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     textareaRef,
     content,
-    onChange,
-    editorScrollRef
+    onChange
 }) => {
     const [isVisible, setIsVisible] = useState(false)
     const [position, setPosition] = useState<ToolbarPosition>({ top: 0, left: 0 })
     const [selection, setSelection] = useState({ start: 0, end: 0 })
 
-    // 计算工具栏位置（简化版：使用行号计算）
+    // 使用 textarea-caret 库获取光标坐标
+    // 返回相对于 textarea 的 { top, left, height } 坐标
+    const getCaretPosition = useCallback((pos: number): { top: number; left: number; height: number } | null => {
+        const textarea = textareaRef.current
+        if (!textarea) return null
+
+        // textarea-caret 返回相对于 textarea 内容区域的坐标
+        const coords = getCaretCoordinates(textarea, pos)
+        return {
+            top: coords.top - textarea.scrollTop,  // 减去滚动偏移
+            left: coords.left,
+            height: coords.height
+        }
+    }, [textareaRef])
+
+    // 计算工具栏位置（使用视口坐标，因为通过 Portal 渲染到 body）
     const calculatePosition = useCallback(() => {
         const textarea = textareaRef.current
         if (!textarea) return null
@@ -39,37 +55,64 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         // 没有选中文字时不显示
         if (start === end) return null
 
-        // 获取选区起始位置所在行号
-        const textBeforeStart = content.substring(0, start)
-        const lineNumber = textBeforeStart.split('\n').length - 1
+        // 使用 textarea-caret 获取选区起始和结束位置的坐标
+        const startPos = getCaretPosition(start)
+        const endPos = getCaretPosition(end)
+        if (!startPos || !endPos) return null
 
-        // 获取选中文字在当前行的位置
-        const currentLineStart = textBeforeStart.lastIndexOf('\n') + 1
-        const charInLine = start - currentLineStart
-        const selectedText = content.substring(start, end)
-        const selectionLength = selectedText.split('\n')[0].length // 只考虑第一行
-
-        // 获取样式信息
-        const computedStyle = getComputedStyle(textarea)
-        const lineHeight = parseFloat(computedStyle.lineHeight) || 30
-        const fontSize = parseFloat(computedStyle.fontSize) || 17
-        const charWidth = fontSize * 0.55 // 估算字符宽度
+        const textareaRect = textarea.getBoundingClientRect()
 
         // 工具栏尺寸
         const toolbarWidth = 280
         const toolbarHeight = 44
 
-        // 垂直位置：选区所在行的上方
-        const top = textarea.offsetTop + (lineNumber * lineHeight) - toolbarHeight - 8
-        // 水平位置：选中文字的中心位置
-        const selectionCenterX = (charInLine + selectionLength / 2) * charWidth
-        const left = textarea.offsetLeft + selectionCenterX - (toolbarWidth / 2)
+        // 🎯 ===== 手动微调偏移量 =====
+        // horizontalOffset: 正值向右移动，负值向左移动
+        // verticalOffset: 正值向下移动，负值向上移动
+        const horizontalOffset = 37  // 调整水平对齐
+        const verticalOffset = 0    // 调整垂直对齐
+        // ============================
+
+        // 获取 textarea 的 padding 和 border，因为 textarea-caret 返回的是相对于内容区域的坐标
+        const textareaStyle = window.getComputedStyle(textarea)
+        const paddingLeft = parseFloat(textareaStyle.paddingLeft) || 0
+        const paddingTop = parseFloat(textareaStyle.paddingTop) || 0
+        const borderLeft = parseFloat(textareaStyle.borderLeftWidth) || 0
+        const borderTop = parseFloat(textareaStyle.borderTopWidth) || 0
+
+        // 垂直位置：直接使用视口坐标
+        // textareaRect.top 是 textarea 边框在视口中的位置
+        // 加上 padding + border + startPos.top（相对内容区域）得到选区在视口中的位置
+        const selectionTop = textareaRect.top + paddingTop + borderTop + startPos.top
+        const top = selectionTop - toolbarHeight - 8 + verticalOffset
+
+        // 水平位置：需要考虑选区是否跨行
+        let selectionCenterX: number
+
+        if (startPos.top === endPos.top) {
+            // 同一行：取选区起始和结束位置的水平中点
+            const startX = textareaRect.left + paddingLeft + borderLeft + startPos.left
+            const endX = textareaRect.left + paddingLeft + borderLeft + endPos.left
+            selectionCenterX = (startX + endX) / 2
+        } else {
+            // 跨多行：工具栏显示在第一行上方
+            // 水平居中于第一行 - 从起始位置到该行末尾的中点
+            const startX = textareaRect.left + paddingLeft + borderLeft + startPos.left
+            const lineEndX = textareaRect.right - parseFloat(textareaStyle.paddingRight || '0') - 20
+            selectionCenterX = (startX + lineEndX) / 2
+        }
+
+        let left = selectionCenterX - (toolbarWidth / 2) + horizontalOffset
+
+        // 边界检查：使用视口宽度
+        const maxLeft = window.innerWidth - toolbarWidth - 10
+        left = Math.max(10, Math.min(left, maxLeft))
 
         return {
-            top: Math.max(10, top),
-            left: Math.max(10, left)
+            top: Math.max(10, top),  // 垂直方向保留最小值防止超出顶部
+            left
         }
-    }, [textareaRef, content])
+    }, [textareaRef, content, getCaretPosition])
 
     // 监听选区变化
     useEffect(() => {
@@ -81,6 +124,14 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             const end = textarea.selectionEnd
 
             if (start !== end) {
+                // 检查选中内容是否只是空白字符（空格、换行、制表符等）
+                const selectedText = content.substring(start, end)
+                if (selectedText.trim() === '') {
+                    // 选中的只是空白字符，不显示工具栏
+                    setIsVisible(false)
+                    return
+                }
+
                 const pos = calculatePosition()
                 if (pos) {
                     setPosition(pos)
@@ -208,7 +259,8 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
     if (!isVisible) return null
 
-    return (
+    // 使用 Portal 渲染到 body，确保 z-index 能全局生效，不被父容器的层叠上下文限制
+    return createPortal(
         <div
             className="floating-toolbar"
             style={{
@@ -259,7 +311,8 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             >
                 <Quote size={14} strokeWidth={2} />
             </button>
-        </div>
+        </div>,
+        document.body
     )
 }
 

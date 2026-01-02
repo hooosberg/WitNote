@@ -3,12 +3,13 @@
  * 包含 IPC 通信、文件系统操作、chokidar 监听
  */
 
-import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from 'electron'
-import { join, basename, extname, relative } from 'path'
+import { app, BrowserWindow, ipcMain, dialog, shell, Menu, protocol, net } from 'electron'
+import { join, basename, extname, relative, dirname } from 'path'
 import { promises as fs, existsSync, mkdirSync, readFileSync } from 'fs'
 import Store from 'electron-store'
 import * as chokidar from 'chokidar'
 import { spawn } from 'child_process'
+import { createHash } from 'crypto'
 
 // 检测是否在 Mac App Store 沙盒环境中运行
 const isMAS = (process as NodeJS.Process & { mas?: boolean }).mas === true
@@ -799,24 +800,160 @@ function setupIpcHandlers() {
         const sourcePath = result.filePaths[0]
         const sourceFileName = basename(sourcePath)
 
+        // 检查图片是否已经在 vault 目录内
+        const normalizedSourcePath = sourcePath.replace(/\\/g, '/')
+        const normalizedVaultPath = vaultPath.replace(/\\/g, '/')
+
+        console.log('📷 图片选择调试:')
+        console.log('  - 源文件路径:', sourcePath)
+        console.log('  - 规范化源路径:', normalizedSourcePath)
+        console.log('  - Vault 路径:', vaultPath)
+        console.log('  - 规范化 Vault 路径:', normalizedVaultPath)
+        console.log('  - 相对目录路径:', relativeDirPath)
+        console.log('  - 是否在 Vault 内:', normalizedSourcePath.startsWith(normalizedVaultPath + '/'))
+
+        if (normalizedSourcePath.startsWith(normalizedVaultPath + '/')) {
+            // 图片已在 vault 内，计算相对于当前笔记目录的相对路径
+            const imageRelativeToVault = relative(vaultPath, sourcePath)
+            const noteDir = relativeDirPath ? join(vaultPath, relativeDirPath) : vaultPath
+            const imageRelativeToNote = relative(noteDir, sourcePath)
+
+            console.log('  - 图片在 Vault 内，使用相对路径:', imageRelativeToNote)
+            // 返回相对路径（用于 Markdown）
+            // 如果是子目录中的图片，路径可能包含 ../
+            return imageRelativeToNote.replace(/\\/g, '/')
+        }
+
+        console.log('  - 图片在 Vault 外，复制到 .images 目录')
+        // 图片在 vault 外，需要复制到 .images 目录
         // 确保图片目录存在
         const imageDir = join(vaultPath, relativeDirPath, '.images')
+        console.log('  - 目标目录:', imageDir)
+
         if (!existsSync(imageDir)) {
+            console.log('  - 创建目录:', imageDir)
             mkdirSync(imageDir, { recursive: true })
         }
 
-        // 生成唯一文件名（避免覆盖）
-        const timestamp = Date.now()
+        // 计算源文件的内容 hash（用于去重）
+        const sourceBuffer = await fs.readFile(sourcePath)
+        const sourceHash = createHash('md5').update(sourceBuffer).digest('hex').substring(0, 8)
+        console.log('  - 源文件 hash:', sourceHash)
+
+        // 检查 .images 目录中是否已存在相同 hash 的图片
+        try {
+            const existingImages = await fs.readdir(imageDir)
+            for (const img of existingImages) {
+                const imgPath = join(imageDir, img)
+                const imgBuffer = await fs.readFile(imgPath)
+                const imgHash = createHash('md5').update(imgBuffer).digest('hex').substring(0, 8)
+                if (sourceHash === imgHash) {
+                    console.log('  - ✨ 找到相同内容图片，复用:', img)
+                    return `.images/${img}`
+                }
+            }
+        } catch (e) {
+            // 目录为空或读取失败，继续复制
+            console.log('  - 检查现有图片失败，继续复制:', e)
+        }
+
+        // 生成基于 hash 的文件名（避免覆盖且易于去重识别）
         const ext = extname(sourceFileName)
         const baseName = basename(sourceFileName, ext)
-        const newFileName = `${baseName}_${timestamp}${ext}`
+        const newFileName = `${baseName}_${sourceHash}${ext}`
         const destPath = join(imageDir, newFileName)
 
+        // 检查目标文件是否已存在（防止重复复制相同名称的文件）
+        if (existsSync(destPath)) {
+            console.log('  - ✨ 目标文件已存在，直接复用:', newFileName)
+            return `.images/${newFileName}`
+        }
+
+        console.log('  - 目标文件路径:', destPath)
+
         // 复制文件
-        await fs.copyFile(sourcePath, destPath)
+        try {
+            await fs.copyFile(sourcePath, destPath)
+            console.log('  - ✅ 复制成功!')
+        } catch (copyError) {
+            console.error('  - ❌ 复制失败:', copyError)
+            throw copyError
+        }
 
         // 返回相对路径（用于 Markdown）
-        return `.images/${newFileName}`
+        const imagePath = `.images/${newFileName}`
+        console.log('  - 返回路径:', imagePath)
+        return imagePath
+    })
+
+    // ============ 图片引用检查与清理 ============
+
+    // 检查图片是否被其他文件引用
+    ipcMain.handle('fs:isImageReferenced', async (_event, imageRelativePath: string, excludeFilePath?: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return false
+
+        // 从 .images/xxx.jpg 提取图片文件名
+        const imageName = basename(imageRelativePath)
+
+        // 获取图片所在目录的父目录（即笔记所在目录）
+        // imageRelativePath 格式如: "Diary/.images/photo.jpg" 或 ".images/photo.jpg"
+        const imageDir = dirname(imageRelativePath)  // "Diary/.images" 或 ".images"
+        const searchDir = dirname(imageDir)          // "Diary" 或 "."
+        const searchPath = searchDir === '.' ? vaultPath : join(vaultPath, searchDir)
+
+        console.log(`🔍 检查图片引用: ${imageName}`)
+        console.log(`  - 搜索目录: ${searchPath}`)
+
+        try {
+            const files = await fs.readdir(searchPath)
+            for (const file of files) {
+                // 跳过排除的文件（正在保存的文件）
+                if (excludeFilePath && file === basename(excludeFilePath)) {
+                    console.log(`  - 跳过排除文件: ${file}`)
+                    continue
+                }
+
+                // 只检查 .md 和 .txt 文件
+                if (!file.endsWith('.md') && !file.endsWith('.txt')) continue
+
+                const filePath = join(searchPath, file)
+                const stat = await fs.stat(filePath)
+                if (stat.isDirectory()) continue
+
+                const content = await fs.readFile(filePath, 'utf-8')
+                if (content.includes(imageName)) {
+                    console.log(`  - ✓ 图片被引用: ${file}`)
+                    return true
+                }
+            }
+        } catch (e) {
+            console.error('检查图片引用失败:', e)
+        }
+
+        console.log(`  - ✗ 图片未被引用`)
+        return false
+    })
+
+    // 删除未引用的图片
+    ipcMain.handle('fs:deleteUnreferencedImage', async (_event, imageRelativePath: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return false
+
+        const imagePath = join(vaultPath, imageRelativePath)
+
+        if (existsSync(imagePath)) {
+            try {
+                await fs.unlink(imagePath)
+                console.log('🗑️ 删除未引用图片:', imageRelativePath)
+                return true
+            } catch (e) {
+                console.error('删除图片失败:', e)
+                return false
+            }
+        }
+
+        return false
     })
 
     // 读取聊天记录
@@ -1406,6 +1543,15 @@ function createWindow() {
 // ============ 应用启动 ============
 
 app.whenReady().then(async () => {
+    // 注册自定义协议 local-file:// 用于加载本地图片
+    protocol.handle('local-file', (request) => {
+        // 将 local-file:// URL 转换为 file:// URL
+        const url = request.url.replace('local-file://', 'file://')
+        console.log('🖼️ 加载本地图片:', url)
+        return net.fetch(url)
+    })
+    console.log('✅ 注册 local-file:// 协议')
+
     // 检测系统语言并加载菜单翻译
     const systemLang = detectSystemLanguage()
     loadMenuLanguage(systemLang)

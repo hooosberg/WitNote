@@ -19,6 +19,7 @@ interface EditorProps {
     fileName: string
     fileExtension: string
     filePath?: string  // 当前文件路径，用于图片保存
+    vaultPath?: string  // Vault 根目录路径，用于图片预览
     onTitleChange?: (newName: string) => void
     onFormatToggle?: () => void
     focusMode?: boolean
@@ -93,12 +94,58 @@ const renderMarkdown = (md: string): string => {
     }
 }
 
+/**
+ * 将预览 HTML 中的相对路径图片转换为 file:// URL
+ * @param html - 渲染后的 HTML
+ * @param vaultPath - vault 根目录绝对路径
+ * @param filePath - 当前文件的相对路径
+ */
+const resolveImagePaths = (html: string, vaultPath: string, filePath: string): string => {
+    if (!vaultPath || !filePath) {
+        console.log('resolveImagePaths: 跳过 - vaultPath 或 filePath 为空')
+        return html
+    }
+
+    // 获取当前文件所在目录的绝对路径
+    const fileDir = filePath.includes('/')
+        ? filePath.substring(0, filePath.lastIndexOf('/'))
+        : ''
+    const basePath = fileDir ? `${vaultPath}/${fileDir}` : vaultPath
+
+    console.log('resolveImagePaths 调试:')
+    console.log('  - vaultPath:', vaultPath)
+    console.log('  - filePath:', filePath)
+    console.log('  - fileDir:', fileDir)
+    console.log('  - basePath:', basePath)
+
+    // 替换 img 标签中的相对路径 src
+    // 匹配 <img src="相对路径" 形式
+    return html.replace(
+        /<img\s+([^>]*)src="([^"]+)"([^>]*)>/gi,
+        (_match, before, src, after) => {
+            console.log('  - 找到图片:', src)
+            // 跳过已经是绝对路径或 URL 的情况
+            if (src.startsWith('http://') || src.startsWith('https://') ||
+                src.startsWith('file://') || src.startsWith('local-file://') || src.startsWith('data:')) {
+                console.log('    - 跳过（已是绝对路径）')
+                return _match
+            }
+            // 将相对路径转换为 local-file:// URL（使用 Electron 注册的自定义协议）
+            const absolutePath = `${basePath}/${src}`.replace(/\/+/g, '/')
+            const fileUrl = `local-file://${absolutePath}`
+            console.log('    - 转换为:', fileUrl)
+            return `<img ${before}src="${fileUrl}"${after}>`
+        }
+    )
+}
+
 export const Editor: React.FC<EditorProps> = ({
     content,
     onChange,
     fileName,
     fileExtension,
     filePath,
+    vaultPath,
     onTitleChange,
     onFormatToggle,
     focusMode = false,
@@ -155,8 +202,13 @@ export const Editor: React.FC<EditorProps> = ({
     // 预览 HTML
     const previewHtml = useMemo(() => {
         if (!showPreview || !isMarkdown) return ''
-        return renderMarkdown(content)
-    }, [content, showPreview, isMarkdown])
+        let html = renderMarkdown(content)
+        // 将相对路径图片转换为 file:// URL 以便在预览中显示
+        if (vaultPath && filePath) {
+            html = resolveImagePaths(html, vaultPath, filePath)
+        }
+        return html
+    }, [content, showPreview, isMarkdown, vaultPath, filePath])
 
     useEffect(() => {
         // 如果是未命名文件，显示空白让用户输入
@@ -282,6 +334,9 @@ export const Editor: React.FC<EditorProps> = ({
     useEffect(() => {
         if (textareaRef.current) {
             const el = textareaRef.current
+            // 只在元素可见时调整高度
+            if (el.offsetParent === null) return  // 元素不可见
+
             // 保存当前滚动位置
             const scrollTop = scrollRef.current?.scrollTop || 0
             // 临时设置高度来测量
@@ -292,7 +347,21 @@ export const Editor: React.FC<EditorProps> = ({
                 scrollRef.current.scrollTop = scrollTop
             }
         }
-    }, [content])
+    }, [content, previewMode])  // 添加 previewMode 依赖，模式切换时重新计算高度
+
+    // 模式切换后延迟重新计算高度（确保 DOM 完全更新）
+    useEffect(() => {
+        if (previewMode === 'edit' || previewMode === 'split') {
+            const timer = setTimeout(() => {
+                if (textareaRef.current && textareaRef.current.offsetParent !== null) {
+                    const el = textareaRef.current
+                    el.style.height = '0'
+                    el.style.height = `${Math.max(el.scrollHeight, 400)}px`
+                }
+            }, 50)  // 延迟 50ms 确保 DOM 更新完成
+            return () => clearTimeout(timer)
+        }
+    }, [previewMode])
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setTitle(e.target.value)

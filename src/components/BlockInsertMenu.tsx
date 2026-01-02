@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Plus, Image, Minus, Code, Braces, MoreHorizontal, Heading1, Heading2, Quote, List, ListOrdered } from 'lucide-react'
+import getCaretCoordinates from 'textarea-caret'
 
 interface BlockInsertMenuProps {
     textareaRef: React.RefObject<HTMLTextAreaElement>
@@ -68,27 +69,59 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
         return currentLine === ''
     }, [content])
 
-    // 计算菜单位置（简化版：水平固定，垂直按行号计算）
-    const calculatePosition = useCallback((pos: number) => {
+    // 使用 textarea-caret 库获取光标坐标
+    // 返回相对于 textarea 的 { top, left, height } 坐标
+    const getCaretPosition = (pos: number): { top: number; left: number; height: number } | null => {
         const textarea = textareaRef.current
         if (!textarea) return null
 
-        // 获取光标所在行号（从0开始）
-        const textBefore = content.substring(0, pos)
-        const lineNumber = textBefore.split('\n').length - 1
+        // textarea-caret 返回相对于 textarea 内容区域的坐标
+        const coords = getCaretCoordinates(textarea, pos)
+        return {
+            top: coords.top - textarea.scrollTop,  // 减去滚动偏移
+            left: coords.left,
+            height: coords.height
+        }
+    }
 
-        // 获取样式信息
-        const computedStyle = getComputedStyle(textarea)
-        const lineHeight = parseFloat(computedStyle.lineHeight) || 30
+    // 计算菜单位置
+    const calculatePosition = useCallback((_pos: number) => {
+        const textarea = textareaRef.current
+        const editorContent = textarea?.closest('.editor-content') as HTMLElement
+        if (!textarea || !editorContent) return null
 
-        // 按钮尺寸
+        // 使用 textarea-caret 获取光标相对于 textarea 的坐标
+        const caretPos = getCaretPosition(_pos)
+        if (!caretPos) return null
+
+        const textareaRect = textarea.getBoundingClientRect()
+        const containerRect = editorContent.getBoundingClientRect()
+
+        // 获取真实的行高（从 computed style）
+        const style = window.getComputedStyle(textarea)
+        const fontSize = parseFloat(style.fontSize)
+        const lineHeightStr = style.lineHeight
+        let lineHeight: number
+        if (lineHeightStr === 'normal') {
+            lineHeight = fontSize * 1.2
+        } else if (lineHeightStr.endsWith('px')) {
+            lineHeight = parseFloat(lineHeightStr)
+        } else {
+            // 数字形式的 line-height（如 1.8）
+            lineHeight = fontSize * parseFloat(lineHeightStr)
+        }
+
         const buttonSize = 28
-        const buttonGap = 6 // 按钮与文字边缘的间距
+        const buttonGap = 6
 
-        // 垂直位置：textarea 顶部 + 行号 * 行高 + 行高一半（垂直居中）- 按钮高度一半
-        const top = textarea.offsetTop + (lineNumber * lineHeight) + (lineHeight / 2) - (buttonSize / 2)
-        // 水平位置：textarea 左边缘的左侧（负值，在内容区外面）
-        const left = textarea.offsetLeft - buttonSize - buttonGap
+        // 垂直位置：caretPos.top 是光标行顶部，加上行高一半实现居中
+        // 手动微调偏移量（正值向下，负值向上）
+        const verticalOffset = -5  // 🎯 调整这个值来微调垂直对齐
+        const lineCenterY = caretPos.top + (lineHeight / 2)
+        const top = (textareaRect.top - containerRect.top) + lineCenterY - (buttonSize / 2) + verticalOffset
+
+        // 水平位置：textarea 左边界 - 容器左边界 - 按钮宽度 - 间距
+        const left = textareaRect.left - containerRect.left - buttonSize - buttonGap
 
         return { top, left }
     }, [textareaRef, content])

@@ -31,6 +31,9 @@ interface FileSystemAPI {
     // 图片操作
     saveImage(relativeDirPath: string, base64Data: string, fileName?: string): Promise<string>
     selectAndCopyImage(relativeDirPath: string): Promise<string | null>
+    // 图片引用检查与清理
+    isImageReferenced(imageRelativePath: string, excludeFilePath?: string): Promise<boolean>
+    deleteUnreferencedImage(imageRelativePath: string): Promise<boolean>
     watch(path?: string): Promise<boolean>
     unwatch(): Promise<boolean>
     onFileChange(callback: (event: FileChangeEvent) => void): () => void

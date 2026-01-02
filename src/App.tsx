@@ -895,6 +895,7 @@ const AppContent: React.FC = () => {
                                 fileName={activeFile.name}
                                 fileExtension={activeFile.extension || 'txt'}
                                 filePath={activeFile.path}
+                                vaultPath={vaultPath || undefined}
                                 onTitleChange={handleTitleChange}
                                 onFormatToggle={() => convertFileFormat(settings.smartFormatConversion)}
                                 focusMode={focusMode}

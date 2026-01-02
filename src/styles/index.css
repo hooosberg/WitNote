@@ -1610,7 +1610,8 @@ select:focus {
 
 /* ============ Medium 风格：浮动工具栏 ============ */
 .floating-toolbar {
-  position: absolute;
+  position: fixed;
+  /* 配合 Portal 使用视口坐标 */
   display: flex;
   align-items: center;
   gap: 2px;
@@ -1618,7 +1619,8 @@ select:focus {
   background: #1c1c1e;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  z-index: 9999;
+  /* 高于侧边栏，但低于设置面板(10000) */
   animation: toolbar-fade-in 0.15s ease;
 }
 
@@ -1682,13 +1684,14 @@ select:focus {
   align-items: center;
   gap: 4px;
   z-index: 100;
+  /* 移除 transform: translateY(-50%)，垂直居中在 JS 中计算 */
   animation: menu-fade-in 0.15s ease;
 }
 
 @keyframes menu-fade-in {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
 
   to {
@@ -1729,8 +1732,10 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 6px;
-  background: var(--bg-card);
+  padding: 2px 4px;
+  background: rgba(var(--bg-main-rgb), 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-radius: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -1750,8 +1755,8 @@ select:focus {
 }
 
 .block-insert-option {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;

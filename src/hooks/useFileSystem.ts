@@ -22,6 +22,17 @@ interface FileChangeEvent {
     path: string
 }
 
+/**
+ * 从 Markdown 内容中提取 .images/ 目录下的图片路径
+ */
+function extractImagePaths(content: string): string[] {
+    const regex = /!\[.*?\]\(([^)]+)\)/g
+    const matches = [...content.matchAll(regex)]
+    return matches
+        .map(m => m[1])
+        .filter(p => p.startsWith('.images/'))
+}
+
 // Hook 返回类型
 export interface UseFileSystemReturn {
     // 状态
@@ -290,9 +301,10 @@ export function useFileSystem(): UseFileSystemReturn {
     }, [activeFile, fileContent])
 
     /**
-     * 自动保存（防抖）
+     * 自动保存（防抖）+ 图片清理
      */
     const handleContentChange = useCallback((content: string) => {
+        const oldContent = fileContent
         setFileContent(content)
 
         // 防抖保存
@@ -305,9 +317,33 @@ export function useFileSystem(): UseFileSystemReturn {
                 await window.fs.writeFile(activeFile.path, content)
                 lastContentRef.current = content
                 console.log('💾 自动保存:', activeFile.path)
+
+                // 检测被移除的图片引用并清理孤儿图片
+                const oldImages = extractImagePaths(oldContent)
+                const newImages = extractImagePaths(content)
+                const removedImages = oldImages.filter(img => !newImages.includes(img))
+
+                if (removedImages.length > 0) {
+                    console.log('🖼️ 检测到移除的图片引用:', removedImages)
+                    // 获取笔记目录路径
+                    const fileDir = activeFile.path.includes('/')
+                        ? activeFile.path.substring(0, activeFile.path.lastIndexOf('/'))
+                        : ''
+
+                    for (const imgPath of removedImages) {
+                        // 构建完整的相对路径（相对于 vault）
+                        const fullImgPath = fileDir ? `${fileDir}/${imgPath}` : imgPath
+
+                        // 检查图片是否被其他文件引用
+                        const isReferenced = await window.fs.isImageReferenced(fullImgPath, activeFile.path)
+                        if (!isReferenced) {
+                            await window.fs.deleteUnreferencedImage(fullImgPath)
+                        }
+                    }
+                }
             }
         }, 1000)
-    }, [activeFile])
+    }, [activeFile, fileContent])
 
     /**
      * 创建新文件
@@ -401,10 +437,20 @@ export function useFileSystem(): UseFileSystemReturn {
     }, [vaultPath, activeFolder, fileTree, refreshTree, selectFolder])
 
     /**
-     * 删除文件
+     * 删除文件（同时清理孤儿图片）
      */
     const deleteFile = useCallback(async (path: string) => {
         try {
+            // 先读取文件内容获取图片引用
+            let imagePathsToCheck: string[] = []
+            try {
+                const content = await window.fs.readFile(path)
+                imagePathsToCheck = extractImagePaths(content)
+            } catch {
+                // 文件可能已不存在，忽略
+            }
+
+            // 删除文件
             await window.fs.deleteFile(path)
 
             // 立即刷新文件树以显示删除效果
@@ -415,6 +461,26 @@ export function useFileSystem(): UseFileSystemReturn {
             if (activeFile?.path === path) {
                 setActiveFile(null)
                 setFileContent('')
+            }
+
+            // 清理孤儿图片
+            if (imagePathsToCheck.length > 0) {
+                console.log('🖼️ 检查删除笔记后的孤儿图片:', imagePathsToCheck)
+                // 获取笔记目录路径
+                const fileDir = path.includes('/')
+                    ? path.substring(0, path.lastIndexOf('/'))
+                    : ''
+
+                for (const imgPath of imagePathsToCheck) {
+                    // 构建完整的相对路径（相对于 vault）
+                    const fullImgPath = fileDir ? `${fileDir}/${imgPath}` : imgPath
+
+                    // 检查图片是否被其他文件引用（不排除任何文件，因为这个文件已删除）
+                    const isReferenced = await window.fs.isImageReferenced(fullImgPath)
+                    if (!isReferenced) {
+                        await window.fs.deleteUnreferencedImage(fullImgPath)
+                    }
+                }
             }
         } catch (error) {
             console.error('删除文件失败:', error)

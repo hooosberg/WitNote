@@ -65,6 +65,13 @@ contextBridge.exposeInMainWorld('fs', {
     selectAndCopyImage: (relativeDirPath: string): Promise<string | null> =>
         ipcRenderer.invoke('fs:selectAndCopyImage', relativeDirPath),
 
+    // 图片引用检查与清理
+    isImageReferenced: (imageRelativePath: string, excludeFilePath?: string): Promise<boolean> =>
+        ipcRenderer.invoke('fs:isImageReferenced', imageRelativePath, excludeFilePath),
+
+    deleteUnreferencedImage: (imageRelativePath: string): Promise<boolean> =>
+        ipcRenderer.invoke('fs:deleteUnreferencedImage', imageRelativePath),
+
     // 文件监听
     watch: (path?: string): Promise<boolean> =>
         ipcRenderer.invoke('fs:watch', path),

@@ -17,6 +17,9 @@ electron.contextBridge.exposeInMainWorld("fs", {
   // 图片操作
   saveImage: (relativeDirPath, base64Data, fileName) => electron.ipcRenderer.invoke("fs:saveImage", relativeDirPath, base64Data, fileName),
   selectAndCopyImage: (relativeDirPath) => electron.ipcRenderer.invoke("fs:selectAndCopyImage", relativeDirPath),
+  // 图片引用检查与清理
+  isImageReferenced: (imageRelativePath, excludeFilePath) => electron.ipcRenderer.invoke("fs:isImageReferenced", imageRelativePath, excludeFilePath),
+  deleteUnreferencedImage: (imageRelativePath) => electron.ipcRenderer.invoke("fs:deleteUnreferencedImage", imageRelativePath),
   // 文件监听
   watch: (path) => electron.ipcRenderer.invoke("fs:watch", path),
   unwatch: () => electron.ipcRenderer.invoke("fs:unwatch"),
