@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { Plus, Image, Minus, Code, Braces, MoreHorizontal, Heading1, Heading2, Quote, List, ListOrdered } from 'lucide-react'
 import getCaretCoordinates from 'textarea-caret'
+import { useTranslation } from 'react-i18next'
 
 interface BlockInsertMenuProps {
     textareaRef: React.RefObject<HTMLTextAreaElement>
@@ -23,19 +24,19 @@ interface MenuPosition {
 
 // 主菜单项（图片特殊处理）
 const mainMenuItems = [
-    { id: 'image', icon: Image, label: '图片', insert: '', isSpecial: true },
-    { id: 'divider', icon: Minus, label: '分隔线', insert: '\n---\n' },
-    { id: 'code', icon: Code, label: '代码块', insert: '\n```\n代码\n```\n' },
-    { id: 'inline-code', icon: Braces, label: '行内代码', insert: '`代码`' },
+    { id: 'image', icon: Image, labelKey: 'toolbar.image', insert: '', isSpecial: true },
+    { id: 'divider', icon: Minus, labelKey: 'toolbar.divider', insert: '\n---\n' },
+    { id: 'code', icon: Code, labelKey: 'toolbar.codeBlock', insert: '\n```\n代码\n```\n' },
+    { id: 'inline-code', icon: Braces, labelKey: 'toolbar.inlineCode', insert: '`代码`' },
 ]
 
 // 更多菜单项
 const moreMenuItems = [
-    { id: 'h1', icon: Heading1, label: '一级标题', insert: '# ' },
-    { id: 'h2', icon: Heading2, label: '二级标题', insert: '## ' },
-    { id: 'quote', icon: Quote, label: '引用', insert: '> ' },
-    { id: 'ul', icon: List, label: '无序列表', insert: '- ' },
-    { id: 'ol', icon: ListOrdered, label: '有序列表', insert: '1. ' },
+    { id: 'h1', icon: Heading1, labelKey: 'toolbar.heading1', insert: '# ' },
+    { id: 'h2', icon: Heading2, labelKey: 'toolbar.heading2', insert: '## ' },
+    { id: 'quote', icon: Quote, labelKey: 'toolbar.quote', insert: '> ' },
+    { id: 'ul', icon: List, labelKey: 'toolbar.unorderedList', insert: '- ' },
+    { id: 'ol', icon: ListOrdered, labelKey: 'toolbar.orderedList', insert: '1. ' },
 ]
 
 export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
@@ -46,6 +47,7 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
     isMarkdown,
     filePath
 }) => {
+    const { t } = useTranslation()
     const [isVisible, setIsVisible] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [showMore, setShowMore] = useState(false)
@@ -284,7 +286,7 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
             <button
                 className={`block-insert-trigger ${isExpanded ? 'active' : ''}`}
                 onClick={toggleExpand}
-                title="插入内容"
+                title={t('toolbar.insertContent')}
             >
                 <Plus size={18} strokeWidth={1.5} />
             </button>
@@ -297,7 +299,7 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
                             key={item.id}
                             className="block-insert-option"
                             onClick={() => item.id === 'image' ? handleImageInsert() : insertContent(item.insert)}
-                            title={item.label}
+                            title={t(item.labelKey)}
                         >
                             <item.icon size={18} strokeWidth={1.5} />
                         </button>
@@ -306,7 +308,7 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
                         ref={moreButtonRef}
                         className={`block-insert-option ${showMore ? 'active' : ''}`}
                         onClick={toggleMore}
-                        title="更多"
+                        title={t('toolbar.more')}
                     >
                         <MoreHorizontal size={18} strokeWidth={1.5} />
                     </button>
@@ -323,7 +325,7 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
                             onClick={() => insertContent(item.insert)}
                         >
                             <item.icon size={14} strokeWidth={1.5} />
-                            <span>{item.label}</span>
+                            <span>{t(item.labelKey)}</span>
                         </button>
                     ))}
                 </div>

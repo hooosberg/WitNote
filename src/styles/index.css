@@ -1743,12 +1743,11 @@ select:focus {
   align-items: center;
   gap: 4px;
   padding: 2px 4px;
-  background: rgba(var(--bg-main-rgb), 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-card);
+  /* 不透明背景，提高可读性 */
   border: 1px solid var(--border-color);
   border-radius: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   animation: options-slide-in 0.2s ease;
 }
 
@@ -1797,10 +1796,11 @@ select:focus {
   flex-direction: column;
   gap: 2px;
   padding: 6px;
-  background: var(--bg-card);
+  background: var(--bg-main);
+  /* 使用主背景色确保不透明 */
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   min-width: 120px;
   animation: more-fade-in 0.15s ease;
 }

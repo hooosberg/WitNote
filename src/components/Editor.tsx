@@ -166,8 +166,9 @@ export const Editor: React.FC<EditorProps> = ({
     const [title, setTitle] = useState('')
     const showPreview = previewMode !== 'edit' // 兼容现有代码
 
-    // 分屏滚动联动处理
+    // 分屏滚动联动处理 - 按比例同步滚动位置
     const handleSplitScroll = useCallback((source: 'left' | 'right') => {
+        // 防止循环触发
         if (isScrollingSyncRef.current) return
 
         isScrollingSyncRef.current = true
@@ -175,16 +176,26 @@ export const Editor: React.FC<EditorProps> = ({
         const targetRef = source === 'left' ? splitRightRef : splitLeftRef
 
         if (sourceRef.current && targetRef.current) {
-            const sourceScrollHeight = sourceRef.current.scrollHeight - sourceRef.current.clientHeight
-            const scrollRatio = sourceScrollHeight > 0 ? sourceRef.current.scrollTop / sourceScrollHeight : 0
-            const targetScrollHeight = targetRef.current.scrollHeight - targetRef.current.clientHeight
-            targetRef.current.scrollTop = targetScrollHeight * scrollRatio
+            // 计算源容器的滚动比例（0-1）
+            const sourceScrollableHeight = sourceRef.current.scrollHeight - sourceRef.current.clientHeight
+            const scrollRatio = sourceScrollableHeight > 0
+                ? sourceRef.current.scrollTop / sourceScrollableHeight
+                : 0
+
+            // 应用相同比例到目标容器
+            const targetScrollableHeight = targetRef.current.scrollHeight - targetRef.current.clientHeight
+            const targetScrollTop = targetScrollableHeight * scrollRatio
+
+            // 只在目标位置有明显差异时才同步，避免微小抖动
+            if (Math.abs(targetRef.current.scrollTop - targetScrollTop) > 1) {
+                targetRef.current.scrollTop = targetScrollTop
+            }
         }
 
-        // 延迟重置标志，防止连续触发
-        requestAnimationFrame(() => {
+        // 延迟重置标志（使用 setTimeout 比 requestAnimationFrame 更稳定）
+        setTimeout(() => {
             isScrollingSyncRef.current = false
-        })
+        }, 16) // 约一帧的时间
     }, [])
 
     // 判断是否为新建的未命名文件

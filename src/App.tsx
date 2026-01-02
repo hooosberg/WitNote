@@ -380,11 +380,21 @@ const AppContent: React.FC = () => {
             }
         })
 
+        // 监听编辑模式切换快捷方式 (Cmd+E)
+        const unsubCycleEditorMode = window.shortcuts.onCycleEditorMode(() => {
+            setPreviewMode(prev => {
+                if (prev === 'edit') return 'preview'
+                if (prev === 'preview') return 'split'
+                return 'edit'
+            })
+        })
+
         return () => {
             unsubCreateArticle()
             unsubCreateFolder()
             unsubOpenSettings()
             unsubToggleFocusMode()
+            unsubCycleEditorMode()
         }
     }, [activeFolder, settings.defaultFormat, createNewFile, autoHideLeft, autoHideRight, manualFocusMode])
 

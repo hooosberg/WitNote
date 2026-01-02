@@ -85,6 +85,7 @@ interface ShortcutsAPI {
     onCreateFolder(callback: () => void): () => void
     onOpenSettings(callback: () => void): () => void
     onToggleFocusMode(callback: () => void): () => void
+    onCycleEditorMode(callback: () => void): () => void
 }
 
 // Vault 设置同步 API

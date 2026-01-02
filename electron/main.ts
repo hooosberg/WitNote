@@ -94,6 +94,7 @@ const allMenuTranslations: Record<string, any> = {
         selectAll: '全选',
         view: '视图',
         focusMode: '专注模式',
+        cycleEditorMode: '切换编辑模式',
         reload: '刷新',
         forceReload: '强制刷新',
         devTools: '开发者工具',
@@ -176,6 +177,7 @@ const allMenuTranslations: Record<string, any> = {
         selectAll: 'Select All',
         view: 'View',
         focusMode: 'Focus Mode',
+        cycleEditorMode: 'Cycle Editor Mode',
         reload: 'Reload',
         forceReload: 'Force Reload',
         devTools: 'Developer Tools',
@@ -1461,6 +1463,13 @@ function createApplicationMenu() {
                     accelerator: 'CmdOrCtrl+Shift+F',
                     click: () => {
                         mainWindow?.webContents.send('shortcuts:toggleFocusMode')
+                    }
+                },
+                {
+                    label: tm('menu.cycleEditorMode'),
+                    accelerator: 'CmdOrCtrl+E',
+                    click: () => {
+                        mainWindow?.webContents.send('shortcuts:cycleEditorMode')
                     }
                 },
                 { type: 'separator' as const },

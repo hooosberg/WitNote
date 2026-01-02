@@ -7,6 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Bold, Italic, Link, Heading1, Heading2, Quote } from 'lucide-react'
 import getCaretCoordinates from 'textarea-caret'
+import { useTranslation } from 'react-i18next'
 
 interface FloatingToolbarProps {
     textareaRef: React.RefObject<HTMLTextAreaElement>
@@ -25,6 +26,7 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     content,
     onChange
 }) => {
+    const { t } = useTranslation()
     const [isVisible, setIsVisible] = useState(false)
     const [position, setPosition] = useState<ToolbarPosition>({ top: 0, left: 0 })
     const [selection, setSelection] = useState({ start: 0, end: 0 })
@@ -327,7 +329,7 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     <button
                         className="floating-toolbar-btn"
                         onClick={confirmLink}
-                        title="确认"
+                        title={t('toolbar.confirm')}
                         style={{ color: '#30d158' }}
                     >
                         ✓
@@ -335,7 +337,7 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     <button
                         className="floating-toolbar-btn"
                         onClick={cancelLink}
-                        title="取消"
+                        title={t('toolbar.cancel')}
                         style={{ color: '#ff453a' }}
                     >
                         ✕
@@ -347,21 +349,21 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     <button
                         className="floating-toolbar-btn"
                         onClick={() => applyFormat('**', '**')}
-                        title="粗体"
+                        title={t('toolbar.bold')}
                     >
                         <Bold size={14} strokeWidth={2.5} />
                     </button>
                     <button
                         className="floating-toolbar-btn"
                         onClick={() => applyFormat('*', '*')}
-                        title="斜体"
+                        title={t('toolbar.italic')}
                     >
                         <Italic size={14} strokeWidth={2} />
                     </button>
                     <button
                         className="floating-toolbar-btn"
                         onClick={addLink}
-                        title="链接"
+                        title={t('toolbar.link')}
                     >
                         <Link size={14} strokeWidth={2} />
                     </button>
@@ -369,21 +371,21 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     <button
                         className="floating-toolbar-btn"
                         onClick={() => applyFormat('# ', '', true)}
-                        title="大标题"
+                        title={t('toolbar.heading1')}
                     >
                         <Heading1 size={14} strokeWidth={2} />
                     </button>
                     <button
                         className="floating-toolbar-btn"
                         onClick={() => applyFormat('## ', '', true)}
-                        title="小标题"
+                        title={t('toolbar.heading2')}
                     >
                         <Heading2 size={14} strokeWidth={2} />
                     </button>
                     <button
                         className="floating-toolbar-btn"
                         onClick={() => applyFormat('> ', '', true)}
-                        title="引用"
+                        title={t('toolbar.quote')}
                     >
                         <Quote size={14} strokeWidth={2} />
                     </button>

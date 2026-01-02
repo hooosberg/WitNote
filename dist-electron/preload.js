@@ -95,6 +95,11 @@ electron.contextBridge.exposeInMainWorld("shortcuts", {
     const handler = () => callback();
     electron.ipcRenderer.on("shortcuts:toggleFocusMode", handler);
     return () => electron.ipcRenderer.removeListener("shortcuts:toggleFocusMode", handler);
+  },
+  onCycleEditorMode: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:cycleEditorMode", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:cycleEditorMode", handler);
   }
 });
 console.log("🔗 Preload 脚本已加载");

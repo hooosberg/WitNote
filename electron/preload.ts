@@ -200,6 +200,12 @@ contextBridge.exposeInMainWorld('shortcuts', {
         const handler = () => callback()
         ipcRenderer.on('shortcuts:toggleFocusMode', handler)
         return () => ipcRenderer.removeListener('shortcuts:toggleFocusMode', handler)
+    },
+
+    onCycleEditorMode: (callback: () => void): (() => void) => {
+        const handler = () => callback()
+        ipcRenderer.on('shortcuts:cycleEditorMode', handler)
+        return () => ipcRenderer.removeListener('shortcuts:cycleEditorMode', handler)
     }
 })
 
