@@ -41,14 +41,20 @@ KEYWORDS=("***REMOVED***" "-----BEGIN PRIVATE KEY-----" "ghp_" "sk_live_")
 FOUND_SENSITIVE=0
 
 for KEYWORD in "${KEYWORDS[@]}"; do
-    if grep -r --exclude-dir={node_modules,dist,dist-electron,release,.git,.gemini} --exclude={check-security.sh,.env,.env.local,.env.notarize,.env.notarize.example} -- "$KEYWORD" .; then
+    # 使用 git grep 扫描受版本控制的文件以及暂存区
+    # --line-number 显示行号
+    # -I 忽略二进制文件
+    if git grep -I --line-number "$KEYWORD" -- . ":(exclude)scripts/check-security.sh" ":(exclude).env*" > /dev/null 2>&1; then
         echo -e "${RED}❌ 发现潜在敏感信息: $KEYWORD${NC}"
+        # 显示具体匹配
+        git grep -I --line-number --color=always "$KEYWORD" -- . ":(exclude)scripts/check-security.sh" ":(exclude).env*"
         FOUND_SENSITIVE=1
     fi
 done
 
 # 特别检查 Apple ID 密码格式 (xxxx-xxxx-xxxx-xxxx)
-if grep -r --exclude-dir={node_modules,dist,dist-electron,release,.git,.gemini} --exclude={check-security.sh,.env,.env.local,.env.notarize,.env.notarize.example} -E "[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}" . | grep "APPLE" | grep -v "xxxx-xxxx-xxxx-xxxx"; then
+# 排除 docs 里的占位符
+if git grep -I --line-number -E "[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}" -- . ":(exclude)scripts/check-security.sh" ":(exclude).env*" | grep "APPLE" | grep -v "xxxx-xxxx-xxxx-xxxx"; then
     echo -e "${RED}❌ 发现疑似 Apple App-Specific Password${NC}"
     FOUND_SENSITIVE=1
 fi
