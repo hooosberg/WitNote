@@ -11,7 +11,7 @@
     "build": "tsc && vite build && electron-builder",
     "build:mas": "tsc && vite build && electron-builder --mac mas",
     "build:win": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --win",
-    "build:linux": "tsc && vite build && electron-builder --linux",
+    "build:linux": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --linux",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
   },
@@ -109,7 +109,6 @@
           "arm64"
         ]
       },
-      "identity": "Apple Distribution: ***REMOVED*** (***REMOVED***)",
       "entitlements": "build/entitlements.mas.plist",
       "entitlementsInherit": "build/entitlements.mas.inherit.plist",
       "hardenedRuntime": false,

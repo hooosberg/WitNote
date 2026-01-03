@@ -13,9 +13,19 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 配置
-APPLE_ID="***REMOVED***"
-APPLE_TEAM_ID="***REMOVED***"
+# 加载环境变量
+if [ -f ".env.local" ]; then
+    source .env.local
+elif [ -f ".env" ]; then
+    source .env
+fi
+
+# 检查配置
+if [ -z "$APPLE_ID" ] || [ -z "$APPLE_TEAM_ID" ]; then
+    echo -e "${RED}❌ 错误: 未配置 Apple 凭据${NC}"
+    echo -e "请在 .env 或环境变量中设置 APPLE_ID 和 APPLE_TEAM_ID"
+    exit 1
+fi
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}       WitNote Mac App Store 构建工具                          ${NC}"
@@ -95,7 +105,17 @@ if [ -z "$PKG_PATH" ]; then
     PKG_PATH="release/WitNote-${VERSION}-mas.pkg"
     
     echo -e "正在创建 PKG..."
-    if productbuild --component "$APP_PATH" /Applications --sign "3rd Party Mac Developer Installer: ***REMOVED*** (***REMOVED***)" "$PKG_PATH"; then
+    # 动态查找安装程序证书
+    INSTALLER_CERT=$(security find-identity -v -p codesigning | grep "3rd Party Mac Developer Installer" | grep "$APPLE_TEAM_ID" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+    
+    if [ -z "$INSTALLER_CERT" ]; then
+        echo -e "${RED}❌ 错误: 未找到匹配 Team ID ($APPLE_TEAM_ID) 的安装程序证书${NC}"
+        exit 1
+    fi
+
+    echo -e "使用证书: ${BLUE}$INSTALLER_CERT${NC}"
+
+    if productbuild --component "$APP_PATH" /Applications --sign "$INSTALLER_CERT" "$PKG_PATH"; then
         echo -e "✅ PKG 创建成功"
     else
         echo -e "${RED}❌ PKG 创建失败${NC}"
