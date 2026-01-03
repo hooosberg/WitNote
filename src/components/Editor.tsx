@@ -168,12 +168,21 @@ export const Editor: React.FC<EditorProps> = ({
     // 智能联想功能
     const engineStore = useEngineStore()
     const { settings } = useSettings()
+
+    // 获取本地化的默认提示词
+    const defaultSystemPrompt = t('autocomplete.defaultSystemPrompt')
+    // 如果用户没有自定义提示词，使用本地化的默认提示词
+    const effectivePrompt = settings.autocompletePrompt || defaultSystemPrompt
+
     const autocomplete = useAutocomplete(engineStore, {
         debounceMs: settings.autocompleteDelay,
         maxContextLength: 500,
         maxTokens: 50,
         enabled: settings.autocompleteEnabled && (previewMode === 'edit' || previewMode === 'split'),
-        customPrompt: settings.autocompletePrompt
+        // 当角色关联开启时，将角色设定附加到续写提示词中
+        customPrompt: settings.autocompleteUseRolePrompt && settings.systemPrompt
+            ? `${effectivePrompt}\n\n写作风格参考：${settings.systemPrompt}`.trim()
+            : effectivePrompt
     })
     // 分屏模式滚动联动 ref
     const splitLeftRef = useRef<HTMLDivElement>(null)
@@ -350,14 +359,18 @@ export const Editor: React.FC<EditorProps> = ({
             // 只在元素可见时调整高度
             if (el.offsetParent === null) return  // 元素不可见
 
+            // 确定当前的滚动容器
+            const scrollContainer = previewMode === 'split' ? splitLeftRef.current : scrollRef.current
             // 保存当前滚动位置
-            const scrollTop = scrollRef.current?.scrollTop || 0
+            const scrollTop = scrollContainer?.scrollTop || 0
+
             // 临时设置高度来测量
             el.style.height = '0'
             el.style.height = `${Math.max(el.scrollHeight, 400)}px`  // 保持最小高度
+
             // 恢复滚动位置
-            if (scrollRef.current) {
-                scrollRef.current.scrollTop = scrollTop
+            if (scrollContainer) {
+                scrollContainer.scrollTop = scrollTop
             }
         }
     }, [content, previewMode])  // 添加 previewMode 依赖，模式切换时重新计算高度
@@ -510,7 +523,7 @@ export const Editor: React.FC<EditorProps> = ({
 
                                     <textarea
                                         ref={textareaRef}
-                                        className="editor-body"
+                                        className={`editor-body ${autocomplete.suggestion && !autocomplete.isLoading ? 'ghost-active' : ''}`}
                                         value={content}
                                         onChange={(e) => {
                                             onChange(e.target.value)
@@ -518,7 +531,10 @@ export const Editor: React.FC<EditorProps> = ({
                                             autocomplete.handleInput(e.target.value, e.target.selectionStart)
                                         }}
                                         onClick={(e) => {
-                                            // 点击时检查是否在末尾，触发续写
+                                            // 1. 点击任意位置，先取消当前的联想
+                                            autocomplete.dismissSuggestion()
+
+                                            // 2. 检查是否在段落末尾，若是则重新触发
                                             const target = e.target as HTMLTextAreaElement
                                             autocomplete.handleCursorChange(target.value, target.selectionStart)
                                         }}
@@ -526,27 +542,36 @@ export const Editor: React.FC<EditorProps> = ({
                                             // Tab 键接受联想建议
                                             if (e.key === 'Tab' && autocomplete.suggestion) {
                                                 e.preventDefault()
-                                                const suggestion = autocomplete.acceptSuggestion()
-                                                if (suggestion && textareaRef.current) {
-                                                    // 保存当前滚动位置
-                                                    const scrollTop = textareaRef.current.scrollTop
+                                                const result = autocomplete.acceptSuggestion()
+                                                if (result && textareaRef.current) {
+                                                    const { text, hasRemaining } = result
+                                                    // 保存当前滚动容器的滚动位置
+                                                    const scrollContainer = previewMode === 'split' ? splitLeftRef.current : scrollRef.current
+                                                    const currentScrollTop = scrollContainer?.scrollTop || 0
+
                                                     const cursorPos = textareaRef.current.selectionStart
-                                                    const newContent = content.slice(0, cursorPos) + suggestion + content.slice(cursorPos)
+                                                    const newContent = content.slice(0, cursorPos) + text + content.slice(cursorPos)
                                                     onChange(newContent)
                                                     // 移动光标到建议末尾
-                                                    const newPos = cursorPos + suggestion.length
+                                                    const newPos = cursorPos + text.length
                                                     setTimeout(() => {
                                                         if (textareaRef.current) {
-                                                            // 恢复滚动位置
-                                                            textareaRef.current.scrollTop = scrollTop
-                                                            textareaRef.current.setSelectionRange(newPos, newPos)
-                                                            // 确保光标可见（但不跳到顶部）
-                                                            textareaRef.current.blur()
+                                                            // 确保光标位置正确
                                                             textareaRef.current.focus()
-                                                            // 再次恢复滚动位置
-                                                            textareaRef.current.scrollTop = scrollTop
-                                                            // 触发连续续写
-                                                            autocomplete.triggerContinuation(newContent, newPos)
+                                                            textareaRef.current.setSelectionRange(newPos, newPos)
+
+                                                            // 恢复正确容器的滚动位置
+                                                            if (scrollContainer) {
+                                                                scrollContainer.scrollTop = currentScrollTop
+                                                            }
+
+                                                            if (hasRemaining) {
+                                                                // 如果还有剩余建议，只更新上下文状态，不重新触发生成
+                                                                autocomplete.updateContext(newContent, newPos)
+                                                            } else {
+                                                                // 全部接受完，触发连续续写
+                                                                autocomplete.triggerContinuation(newContent, newPos)
+                                                            }
                                                         }
                                                     }, 0)
                                                 }
@@ -666,7 +691,7 @@ export const Editor: React.FC<EditorProps> = ({
 
                             <textarea
                                 ref={textareaRef}
-                                className="editor-body"
+                                className={`editor-body ${autocomplete.suggestion && !autocomplete.isLoading ? 'ghost-active' : ''}`}
                                 value={content}
                                 onChange={(e) => {
                                     onChange(e.target.value)
@@ -674,7 +699,10 @@ export const Editor: React.FC<EditorProps> = ({
                                     autocomplete.handleInput(e.target.value, e.target.selectionStart)
                                 }}
                                 onClick={(e) => {
-                                    // 点击时检查是否在末尾，触发续写
+                                    // 1. 点击任意位置，先取消当前的联想
+                                    autocomplete.dismissSuggestion()
+
+                                    // 2. 检查是否在段落末尾，若是则重新触发
                                     const target = e.target as HTMLTextAreaElement
                                     autocomplete.handleCursorChange(target.value, target.selectionStart)
                                 }}
@@ -682,15 +710,16 @@ export const Editor: React.FC<EditorProps> = ({
                                     // Tab 键接受联想建议
                                     if (e.key === 'Tab' && autocomplete.suggestion) {
                                         e.preventDefault()
-                                        const suggestion = autocomplete.acceptSuggestion()
-                                        if (suggestion && textareaRef.current) {
+                                        const result = autocomplete.acceptSuggestion()
+                                        if (result && textareaRef.current) {
+                                            const { text, hasRemaining } = result
                                             // 保存当前滚动位置
                                             const scrollTop = textareaRef.current.scrollTop
                                             const cursorPos = textareaRef.current.selectionStart
-                                            const newContent = content.slice(0, cursorPos) + suggestion + content.slice(cursorPos)
+                                            const newContent = content.slice(0, cursorPos) + text + content.slice(cursorPos)
                                             onChange(newContent)
                                             // 移动光标到建议末尾
-                                            const newPos = cursorPos + suggestion.length
+                                            const newPos = cursorPos + text.length
                                             setTimeout(() => {
                                                 if (textareaRef.current) {
                                                     // 恢复滚动位置
@@ -700,8 +729,12 @@ export const Editor: React.FC<EditorProps> = ({
                                                     textareaRef.current.blur()
                                                     textareaRef.current.focus()
                                                     textareaRef.current.scrollTop = scrollTop
-                                                    // 触发连续续写
-                                                    autocomplete.triggerContinuation(newContent, newPos)
+
+                                                    if (hasRemaining) {
+                                                        autocomplete.updateContext(newContent, newPos)
+                                                    } else {
+                                                        autocomplete.triggerContinuation(newContent, newPos)
+                                                    }
                                                 }
                                             }, 0)
                                         }

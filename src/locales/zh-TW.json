@@ -99,6 +99,12 @@
         "clearCacheFailed": "清除失敗"
     },
     "model": {
+        "selectModel": "選擇模型",
+        "downloaded": "已下載",
+        "download": "下載",
+        "inUse": "使用中",
+        "use": "使用",
+        "builtIn": "內建",
         "speedUltraFast": "🚀 極速",
         "speedVeryFast": "⚡ 很快",
         "speedFast": "🚗 流暢",
@@ -244,6 +250,8 @@
         "zoomIn": "放大",
         "zoomOut": "縮小",
         "fullscreen": "全螢幕",
+        "smartAutocomplete": "切換智能續寫",
+        "acceptAutocomplete": "接受智能續寫",
         "windowsHint": "💡 在 Windows 系統上，Cmd 鍵對應 Ctrl 鍵"
     },
     "menu": {
@@ -394,5 +402,47 @@
         "welcome": "歡迎使用智簡筆記本",
         "selectFolderPrompt": "請選擇一個資料夾作為筆記庫",
         "selectButton": "選擇資料夾"
+    },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "極輕量，回應快速",
+            "rec": "快速預覽、簡單問答"
+        },
+        "qwen15b": {
+            "desc": "輕量級，品質平衡",
+            "rec": "日常寫作、智能補全"
+        },
+        "qwen3b": {
+            "desc": "推薦！品質與速度平衡",
+            "rec": "文章創作、深度對話"
+        },
+        "qwen7b": {
+            "desc": "最強大，需要較好硬體",
+            "rec": "專業寫作、程式輔助"
+        },
+        "llama3b": {
+            "desc": "Meta Llama 系列",
+            "rec": "英文寫作、翻譯輔助"
+        },
+        "phi3mini": {
+            "desc": "微軟 Phi 系列",
+            "rec": "邏輯分析、程式輔助"
+        }
+    },
+    "autocomplete": {
+        "acceptHint": "按 Tab 接受",
+        "loading": "思考中...",
+        "title": "智能續寫",
+        "enabled": "啟用智能續寫",
+        "enabledHint": "輸入停頓後自動生成續寫建議",
+        "useRolePrompt": "角色風格關聯",
+        "useRolePromptHint": "開啟後，續寫風格將參考上方角色設定的提示詞",
+        "prompt": "自定義提示詞",
+        "promptPlaceholder": "留空使用預設提示詞...",
+        "promptHint": "自定義 AI 續寫的提示詞，可優化生成效果",
+        "delay": "觸發延遲",
+        "delayHint": "停止輸入後多久觸發續寫（毫秒）",
+        "defaultPrompt": "預設：名言詩句按原文補全，固定搭配按慣用法，其他自然續寫",
+        "defaultSystemPrompt": "你是一個寫作助手。根據用戶提供的上下文，直接續寫接下來的內容。\n規則：\n1. 只輸出續寫內容，不要解釋\n2. 不要重複已有內容\n3. 如果識別到用戶正在引用名人名言、著名詩句、經典語錄或成語典故，請按照原文準確補全，保持引用的完整性\n4. 如果是固定搭配或常用表達（如\"不僅...而且...\"、\"因為...所以...\"等），按照慣用法補全\n5. 其他情況下，續寫應該自然流暢，根據前後語意和上下文風格進行自然補全\n6. 保持簡潔，通常續寫一句話即可"
     }
 }

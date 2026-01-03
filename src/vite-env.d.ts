@@ -86,6 +86,8 @@ interface ShortcutsAPI {
     onOpenSettings(callback: () => void): () => void
     onToggleFocusMode(callback: () => void): () => void
     onCycleEditorMode(callback: () => void): () => void
+    onToggleSmartAutocomplete(callback: () => void): () => void
+    syncSmartAutocomplete(enabled: boolean): Promise<boolean>
 }
 
 // Vault 设置同步 API

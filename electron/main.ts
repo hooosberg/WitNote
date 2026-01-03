@@ -111,7 +111,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: '访问 GitHub',
         openSettings: '打开设置',
         toggleFocusMode: '切换专注模式',
-        showMainWindow: '显示主窗口'
+        showMainWindow: '显示主窗口',
+        enableSmartAutocomplete: '开启智能续写',
+        disableSmartAutocomplete: '关闭智能续写'
     },
     'zh-TW': {
         about: '關於 {appName}',
@@ -152,7 +154,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: '造訪 GitHub',
         openSettings: '開啟設定',
         toggleFocusMode: '切換專注模式',
-        showMainWindow: '顯示主視窗'
+        showMainWindow: '顯示主視窗',
+        enableSmartAutocomplete: '開啟智能續寫',
+        disableSmartAutocomplete: '關閉智能續寫'
     },
     en: {
         about: 'About {appName}',
@@ -194,7 +198,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: 'Visit GitHub',
         openSettings: 'Open Settings',
         toggleFocusMode: 'Toggle Focus Mode',
-        showMainWindow: 'Show Main Window'
+        showMainWindow: 'Show Main Window',
+        enableSmartAutocomplete: 'Enable Smart Autocomplete',
+        disableSmartAutocomplete: 'Disable Smart Autocomplete'
     },
     ja: {
         about: '{appName} について',
@@ -235,7 +241,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: 'GitHub を開く',
         openSettings: '設定を開く',
         toggleFocusMode: '集中モードを切り替え',
-        showMainWindow: 'メインウィンドウを表示'
+        showMainWindow: 'メインウィンドウを表示',
+        enableSmartAutocomplete: 'スマート入力補完を有効化',
+        disableSmartAutocomplete: 'スマート入力補完を無効化'
     },
     ko: {
         about: '{appName} 정보',
@@ -276,7 +284,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: 'GitHub 방문',
         openSettings: '설정 열기',
         toggleFocusMode: '집중 모드 전환',
-        showMainWindow: '메인 윈도우 표시'
+        showMainWindow: '메인 윈도우 표시',
+        enableSmartAutocomplete: '스마트 자동완성 활성화',
+        disableSmartAutocomplete: '스마트 자동완성 비활성화'
     },
     fr: {
         about: 'À propos de {appName}',
@@ -317,7 +327,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: 'Visiter GitHub',
         openSettings: 'Ouvrir les Paramètres',
         toggleFocusMode: 'Basculer Mode Focus',
-        showMainWindow: 'Afficher la fenêtre principale'
+        showMainWindow: 'Afficher la fenêtre principale',
+        enableSmartAutocomplete: 'Activer Auto-complétion Intelligente',
+        disableSmartAutocomplete: 'Désactiver Auto-complétion Intelligente'
     },
     de: {
         about: 'Über {appName}',
@@ -358,7 +370,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: 'GitHub besuchen',
         openSettings: 'Einstellungen öffnen',
         toggleFocusMode: 'Fokus-Modus umschalten',
-        showMainWindow: 'Hauptfenster anzeigen'
+        showMainWindow: 'Hauptfenster anzeigen',
+        enableSmartAutocomplete: 'Intelligente Autovervollständigung aktivieren',
+        disableSmartAutocomplete: 'Intelligente Autovervollständigung deaktivieren'
     },
     es: {
         about: 'Acerca de {appName}',
@@ -399,7 +413,9 @@ const allMenuTranslations: Record<string, any> = {
         visitGitHub: 'Visitar GitHub',
         openSettings: 'Abrir Ajustes',
         toggleFocusMode: 'Alternar Modo Enfoque',
-        showMainWindow: 'Mostrar ventana principal'
+        showMainWindow: 'Mostrar ventana principal',
+        enableSmartAutocomplete: 'Activar Autocompletado Inteligente',
+        disableSmartAutocomplete: 'Desactivar Autocompletado Inteligente'
     }
 }
 
@@ -491,6 +507,9 @@ const IGNORED_PATTERNS = [
 ]
 
 let mainWindow: BrowserWindow | null = null
+
+// 智能续写状态（用于动态更新菜单显示）
+let smartAutocompleteEnabled: boolean = true
 
 // ============ 文件系统类型 ============
 
@@ -1213,6 +1232,13 @@ function setupIpcHandlers() {
         return true
     })
 
+    // 同步智能续写状态（渲染进程通知主进程状态变化）
+    ipcMain.handle('menu:syncSmartAutocomplete', (_event, enabled: boolean) => {
+        smartAutocompleteEnabled = enabled
+        createApplicationMenu()  // 重建菜单以更新显示
+        return true
+    })
+
     // ============ Ollama 模型管理 IPC 处理器 ============
     // MAS 沙盒环境中禁止使用 spawn 调用外部命令
 
@@ -1470,6 +1496,15 @@ function createApplicationMenu() {
                     accelerator: 'CmdOrCtrl+E',
                     click: () => {
                         mainWindow?.webContents.send('shortcuts:cycleEditorMode')
+                    }
+                },
+                {
+                    label: smartAutocompleteEnabled
+                        ? tm('menu.disableSmartAutocomplete')
+                        : tm('menu.enableSmartAutocomplete'),
+                    accelerator: 'CmdOrCtrl+Shift+A',
+                    click: () => {
+                        mainWindow?.webContents.send('shortcuts:toggleSmartAutocomplete')
                     }
                 },
                 { type: 'separator' as const },

@@ -61,6 +61,12 @@ export interface UseFileSystemReturn {
     moveItem: (sourcePath: string, targetDir: string) => Promise<boolean>  // 移动文件/文件夹
 }
 
+// localStorage 键名
+const STORAGE_KEYS = {
+    ACTIVE_FILE_PATH: 'witnote-active-file-path',
+    ACTIVE_FOLDER_PATH: 'witnote-active-folder-path',
+}
+
 export function useFileSystem(): UseFileSystemReturn {
     // Vault 状态
     const [vaultPath, setVaultPath] = useState<string | null>(null)
@@ -75,6 +81,9 @@ export function useFileSystem(): UseFileSystemReturn {
     const [activeFolder, setActiveFolder] = useState<FileNode | null>(null)
     const [fileContent, setFileContent] = useState('')
     const [isNewlyCreatedFile, setIsNewlyCreatedFile] = useState(false)
+
+    // 标记是否已恢复状态
+    const stateRestoredRef = useRef(false)
 
     // 防抖保存定时器
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -129,13 +138,91 @@ export function useFileSystem(): UseFileSystemReturn {
     }, [vaultPath, activeFile])
 
     /**
-     * Vault 路径变化时刷新文件树
+     * Vault 路径变化时刷新文件树并恢复视图状态
      */
     useEffect(() => {
-        if (vaultPath) {
-            refreshTree()
+        const initVault = async () => {
+            if (!vaultPath) return
+
+            // 先刷新文件树
+            setIsLoading(true)
+            try {
+                const tree = await window.fs.readDirectory()
+                setFileTree(tree)
+
+                // 如果还没恢复状态，尝试恢复
+                if (!stateRestoredRef.current) {
+                    stateRestoredRef.current = true
+
+                    // 恢复 activeFile
+                    const savedFilePath = localStorage.getItem(STORAGE_KEYS.ACTIVE_FILE_PATH)
+                    if (savedFilePath) {
+                        const fileNode = findNodeByPath(tree, savedFilePath)
+                        if (fileNode && !fileNode.isDirectory) {
+                            // 读取文件内容并设置活动文件
+                            try {
+                                const content = await window.fs.readFile(fileNode.path)
+                                setActiveFile(fileNode)
+                                setFileContent(content)
+                                lastContentRef.current = content
+                                console.log('📂 恢复活动文件:', fileNode.path)
+                            } catch (e) {
+                                console.error('恢复文件失败:', e)
+                                localStorage.removeItem(STORAGE_KEYS.ACTIVE_FILE_PATH)
+                            }
+                        } else {
+                            localStorage.removeItem(STORAGE_KEYS.ACTIVE_FILE_PATH)
+                        }
+                    }
+
+                    // 恢复 activeFolder（只有在没有 activeFile 时才恢复文件夹视图）
+                    if (!savedFilePath) {
+                        const savedFolderPath = localStorage.getItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH)
+                        if (savedFolderPath) {
+                            const folderNode = findNodeByPath(tree, savedFolderPath)
+                            if (folderNode && folderNode.isDirectory) {
+                                setActiveFolder(folderNode)
+                                console.log('📁 恢复活动文件夹:', folderNode.path)
+                            } else {
+                                localStorage.removeItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH)
+                            }
+                        }
+                    } else {
+                        // 如果有 activeFile，同时设置其父文件夹
+                        const savedFilePath2 = localStorage.getItem(STORAGE_KEYS.ACTIVE_FILE_PATH)
+                        if (savedFilePath2) {
+                            const parentPath = savedFilePath2.includes('/')
+                                ? savedFilePath2.substring(0, savedFilePath2.lastIndexOf('/'))
+                                : null
+                            if (parentPath) {
+                                const parentNode = findNodeByPath(tree, parentPath)
+                                setActiveFolder(parentNode)
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('初始化文件树失败:', error)
+            } finally {
+                setIsLoading(false)
+            }
         }
+        initVault()
     }, [vaultPath])
+
+    /**
+     * 递归查找文件夹节点
+     */
+    const findNodeByPath = (nodes: FileNode[], path: string): FileNode | null => {
+        for (const node of nodes) {
+            if (node.path === path) return node
+            if (node.children) {
+                const found = findNodeByPath(node.children, path)
+                if (found) return found
+            }
+        }
+        return null
+    }
 
     /**
      * 刷新文件树
@@ -213,6 +300,14 @@ export function useFileSystem(): UseFileSystemReturn {
 
         setActiveFolder(node)
         setActiveFile(null)
+
+        // 保存状态到 localStorage
+        if (node) {
+            localStorage.setItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH, node.path)
+        } else {
+            localStorage.removeItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH)
+        }
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE_FILE_PATH)
     }, [activeFile, fileContent, refreshTree])
 
     /**
@@ -260,6 +355,9 @@ export function useFileSystem(): UseFileSystemReturn {
             const content = await window.fs.readFile(node.path)
             setActiveFile(node)
 
+            // 保存活动文件路径到 localStorage
+            localStorage.setItem(STORAGE_KEYS.ACTIVE_FILE_PATH, node.path)
+
             // 自动选中文件的父文件夹
             const parentPath = node.path.includes('/')
                 ? node.path.substring(0, node.path.lastIndexOf('/'))
@@ -268,9 +366,11 @@ export function useFileSystem(): UseFileSystemReturn {
             if (parentPath) {
                 const parentNode = findNodeByPath(fileTree, parentPath)
                 setActiveFolder(parentNode)
+                localStorage.setItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH, parentPath)
             } else {
                 // 文件在根目录
                 setActiveFolder(null)
+                localStorage.removeItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH)
             }
 
             setFileContent(content)
@@ -373,20 +473,6 @@ export function useFileSystem(): UseFileSystemReturn {
             console.error('创建文件失败:', error)
         }
     }, [vaultPath, activeFolder, refreshTree, openFile])
-
-    /**
-     * 递归查找文件夹节点
-     */
-    const findNodeByPath = (nodes: FileNode[], path: string): FileNode | null => {
-        for (const node of nodes) {
-            if (node.path === path) return node
-            if (node.children) {
-                const found = findNodeByPath(node.children, path)
-                if (found) return found
-            }
-        }
-        return null
-    }
 
     /**
      * 创建新文件夹（自动检查重名并编号）

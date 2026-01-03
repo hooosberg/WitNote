@@ -124,9 +124,17 @@
         "zoomIn": "Acercar",
         "zoomOut": "Alejar",
         "fullscreen": "Pantalla completa",
+        "smartAutocomplete": "Alternar autocompletado inteligente",
+        "acceptAutocomplete": "Aceptar autocompletado",
         "windowsHint": "En Windows, use Ctrl en lugar de Command."
     },
     "model": {
+        "selectModel": "Seleccionar modelo",
+        "downloaded": "Descargado",
+        "download": "Descargar",
+        "inUse": "En uso",
+        "use": "Usar",
+        "builtIn": "Integrado",
         "speedUltraFast": "🚀 Ultra Rápido",
         "speedVeryFast": "⚡ Muy Rápido",
         "speedFast": "🚗 Fluido",
@@ -397,5 +405,47 @@
         "splitMode": "Modo Dividido",
         "focusMode": "Modo Enfoque",
         "exitFocusMode": "Salir del Modo Enfoque"
+    },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "Ultraligero, respuesta rápida",
+            "rec": "Vista rápida, preguntas y respuestas simples"
+        },
+        "qwen15b": {
+            "desc": "Ligero, calidad equilibrada",
+            "rec": "Escritura diaria, autocompletado inteligente"
+        },
+        "qwen3b": {
+            "desc": "¡Recomendado! Equilibrio entre calidad y velocidad",
+            "rec": "Creación de artículos, conversación profunda"
+        },
+        "qwen7b": {
+            "desc": "El más potente, requiere buen hardware",
+            "rec": "Escritura profesional, asistencia de codificación"
+        },
+        "llama3b": {
+            "desc": "Serie Meta Llama",
+            "rec": "Escritura en inglés, ayuda para la traducción"
+        },
+        "phi3mini": {
+            "desc": "Serie Microsoft Phi",
+            "rec": "Análisis lógico, asistencia de codificación"
+        }
+    },
+    "autocomplete": {
+        "acceptHint": "Tab para aceptar",
+        "loading": "Pensando...",
+        "title": "Autocompletado inteligente",
+        "enabled": "Activar autocompletado inteligente",
+        "enabledHint": "Generar sugerencias automáticamente tras pausa al escribir",
+        "useRolePrompt": "Sincronizar estilo de rol",
+        "useRolePromptHint": "Si se activa, el autocompletado sigue el estilo del rol seleccionado",
+        "prompt": "Prompt personalizado",
+        "promptPlaceholder": "Dejar vacío para predeterminado...",
+        "promptHint": "Personalice el prompt de IA para mejores sugerencias",
+        "delay": "Retardo de activación",
+        "delayHint": "Retardo tras dejar de escribir antes de activar (ms)",
+        "defaultPrompt": "Por defecto: Completar citas/poemas como el original, expresiones idiomáticas, de lo contrario continuar naturalmente",
+        "defaultSystemPrompt": "Eres un asistente de escritura. Continúa escribiendo directamente basándote en el contexto proporcionado por el usuario.\nReglas:\n1. Solo salida el contenido de continuación, no expliques.\n2. No repitas contenido existente.\n3. Si reconoces citas famosas, poemas conocidos, citas clásicas o expresiones idiomáticas, complétalas fielmente según el original.\n4. Para expresiones fijas o comunes ('no solo... sino también...', 'porque... por lo tanto...'), completa según el uso idiomático.\n5. En otros casos, la continuación debe ser natural y fluida, basada en el contexto y estilo.\n6. Mantenlo conciso, generalmente solo una oración."
     }
 }

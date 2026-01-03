@@ -10,10 +10,12 @@ export interface WebLLMModelInfo {
     size: string;
     expectedBytes: number;
     description: string;
+    descriptionKey?: string;
     /** 详细特点描述 */
     features?: string;
     /** 推荐场景 */
     recommended?: string;
+    recommendedKey?: string;
     isBuiltIn?: boolean;
 }
 
@@ -29,8 +31,10 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         size: '290MB',
         expectedBytes: 290,
         description: '极轻量，响应快速',
+        descriptionKey: 'webllmModels.qwen05b.desc',
         features: '体积最小，下载快，适合文字补齐',
         recommended: '快速预览、简单问答',
+        recommendedKey: 'webllmModels.qwen05b.rec',
         isBuiltIn: true
     },
     {
@@ -39,8 +43,10 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         size: '880MB',
         expectedBytes: 880,
         description: '轻量级，质量平衡',
+        descriptionKey: 'webllmModels.qwen15b.desc',
         features: '3倍参数，明显更聪明，仍然轻量',
         recommended: '日常写作、智能补齐',
+        recommendedKey: 'webllmModels.qwen15b.rec',
         isBuiltIn: false
     },
     // ===== 中等模型（适合对话、写作）=====
@@ -50,8 +56,10 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         size: '1.8GB',
         expectedBytes: 1800,
         description: '推荐！质量与速度平衡',
+        descriptionKey: 'webllmModels.qwen3b.desc',
         features: '质量显著提升，创意写作更佳',
         recommended: '文章创作、深度对话',
+        recommendedKey: 'webllmModels.qwen3b.rec',
         isBuiltIn: false
     },
     // ===== 大型模型（适合复杂任务）=====
@@ -61,8 +69,10 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         size: '4.1GB',
         expectedBytes: 4100,
         description: '最强大，需要较好硬件',
+        descriptionKey: 'webllmModels.qwen7b.desc',
         features: '最佳质量，复杂推理能力强',
         recommended: '专业写作、代码辅助',
+        recommendedKey: 'webllmModels.qwen7b.rec',
         isBuiltIn: false
     },
     // ===== Llama 系列（备选）=====
@@ -72,8 +82,10 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         size: '1.8GB',
         expectedBytes: 1800,
         description: 'Meta Llama 系列',
+        descriptionKey: 'webllmModels.llama3b.desc',
         features: '多语言支持，擅长英文',
         recommended: '英文写作、翻译辅助',
+        recommendedKey: 'webllmModels.llama3b.rec',
         isBuiltIn: false
     },
     {
@@ -82,8 +94,10 @@ export const ALL_WEBLLM_MODELS_INFO: WebLLMModelInfo[] = [
         size: '2.0GB',
         expectedBytes: 2000,
         description: '微软 Phi 系列',
+        descriptionKey: 'webllmModels.phi3mini.desc',
         features: '推理能力强，代码友好',
         recommended: '逻辑分析、编程辅助',
+        recommendedKey: 'webllmModels.phi3mini.rec',
         isBuiltIn: false
     }
 ];

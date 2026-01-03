@@ -64,6 +64,7 @@ export interface AppSettings {
     autocompleteEnabled: boolean;  // 是否启用自动补齐
     autocompletePrompt: string;    // 自定义续写提示词（空则使用默认）
     autocompleteDelay: number;     // 延迟时间（毫秒）
+    autocompleteUseRolePrompt: boolean;  // 是否使用角色设定影响续写风格
 }
 
 // 默认设置
@@ -92,7 +93,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     // 自动补齐配置
     autocompleteEnabled: true,
     autocompletePrompt: '', // 空则使用默认提示词
-    autocompleteDelay: 500
+    autocompleteDelay: 500,
+    autocompleteUseRolePrompt: false  // 默认不使用角色设定
 };
 
 export interface UseSettingsReturn {

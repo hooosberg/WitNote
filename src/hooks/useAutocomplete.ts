@@ -33,8 +33,10 @@ interface UseAutocompleteResult {
     cursorPosition: number
     /** 当前内容（用于镜像层渲染） */
     lastContent: string
-    /** 接受当前建议，返回插入的文字 */
-    acceptSuggestion: () => string | null
+    /** 接受当前建议，返回插入的文字和是否还有剩余 */
+    acceptSuggestion: () => { text: string, hasRemaining: boolean } | null
+    /** 手动更新上下文状态（不触发生成） */
+    updateContext: (content: string, cursorPos: number) => void
     /** 取消当前建议 */
     dismissSuggestion: () => void
     /** 处理输入变化 */
@@ -52,8 +54,10 @@ const AUTOCOMPLETE_SYSTEM_PROMPT = `你是一个写作助手。根据用户提�
 规则：
 1. 只输出续写内容，不要解释
 2. 不要重复已有内容
-3. 续写应该自然流畅，与上下文风格一致
-4. 保持简洁，通常续写一句话即可`
+3. 如果识别到用户正在引用名人名言、著名诗句、经典语录或成语典故，请按照原文准确补全，保持引用的完整性
+4. 如果是固定搭配或常用表达（如"不仅...而且..."、"因为...所以..."等），按照惯用法补全
+5. 其他情况下，续写应该自然流畅，根据前后语意和上下文风格进行自然补全
+6. 保持简洁，通常续写一句话即可`
 
 export function useAutocomplete(
     engineStore: UseEngineStoreReturn,
@@ -104,12 +108,41 @@ export function useAutocomplete(
     }, [cleanup])
 
     // 接受建议，返回要插入的文字
-    const acceptSuggestion = useCallback((): string | null => {
-        const accepted = suggestion
-        setSuggestion(null)
-        setIsLoading(false)
-        return accepted
+    const acceptSuggestion = useCallback((): { text: string, hasRemaining: boolean } | null => {
+        if (!suggestion) return null
+
+        // 查找第一个标点符号位置
+        const punctuationRegex = /([，。！？；：,.!?:;\n])/
+        const match = suggestion.match(punctuationRegex)
+
+        let splitIndex = suggestion.length
+        if (match && match.index !== undefined) {
+            // 包含标点符号
+            splitIndex = match.index + 1
+        }
+
+        const text = suggestion.slice(0, splitIndex)
+        const remainder = suggestion.slice(splitIndex)
+        const hasRemaining = remainder.length > 0
+
+        if (hasRemaining) {
+            // 如果还有剩余，更新建议为剩余部分
+            setSuggestion(remainder)
+            // 保持 loading 状态为 false（因为不需要重新加载）
+        } else {
+            // 如果全部接受，清理状态
+            setSuggestion(null)
+            setIsLoading(false)
+        }
+
+        return { text, hasRemaining }
     }, [suggestion])
+
+    // 手动更新上下文（用于部分接受后的状态同步）
+    const updateContext = useCallback((content: string, cursorPos: number) => {
+        lastContentRef.current = content
+        lastCursorRef.current = cursorPos
+    }, [])
 
     // 调用 AI 生成建议
     const generateSuggestion = useCallback(async (context: string) => {
@@ -287,15 +320,20 @@ export function useAutocomplete(
 
     // 处理光标位置变化（点击、选择等场景）
     // 只在光标在文章末尾时触发
+    // 处理光标位置变化（点击、选择等场景）
+    // 策略：光标在文末，或光标在段落末尾（后面是换行符）时触发
     const handleCursorChange = useCallback((content: string, cursorPos: number) => {
         if (!enabled) return
 
-        // 只有光标在文本末尾附近（±5字符）时才触发
-        const isNearEnd = cursorPos >= content.length - 5
+        // 1. 文末
+        const isAtEOF = cursorPos >= content.length
 
-        if (isNearEnd && content.trim().length >= 5) {
-            console.log('🔮 Autocomplete: 光标在末尾，触发续写')
-            triggerGeneration(content, cursorPos, debounceMs * 2) // 使用更长的延迟
+        // 2. 段落末尾 (光标后是换行符)
+        const isAtLineEnd = content[cursorPos] === '\n'
+
+        if ((isAtEOF || isAtLineEnd) && content.trim().length >= 5) {
+            console.log('🔮 Autocomplete: 光标在段落/文末，触发续写')
+            triggerGeneration(content, cursorPos, debounceMs) // 保持一致的延迟
         }
     }, [enabled, triggerGeneration, debounceMs])
 
@@ -340,6 +378,7 @@ export function useAutocomplete(
         cursorPosition: lastCursorRef.current,
         lastContent: lastContentRef.current,
         acceptSuggestion,
+        updateContext,
         dismissSuggestion,
         handleInput,
         handleCursorChange,

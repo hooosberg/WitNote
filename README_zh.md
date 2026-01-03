@@ -43,8 +43,15 @@
 
 ---
 
-## ✨ 功能亮点 (v1.3.0)
+## ✨ 功能亮点 (v1.3.1)
 
+### 🆕 v1.3.1 新功能
+- ✨ **智能续写** — 基于上下文的 AI 智能续写，按 Tab 键逐句接受建议，让写作如行云流水
+- 🌓 **双栏预览** — 所见即所得，左侧编辑右侧实时预览
+- ⚡️ **快捷编辑** — 悬浮菜单增强，选中文字快速修改格式
+- 🖼️ **图片插入** — 支持粘贴、拖拽、菜单插入图片
+
+### 🔧 核心功能
 - 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
 - 🤖 **三擎合一** — 自由切换 **WebLLM** (轻量)、**Ollama** (本地强力) 或 **云端 API** (自定连接)
 - 🎭 **丰富角色库** — 内置 10+ 种精选角色提示词 (写作、翻译、润色等)，支持一键切换与自定义
@@ -57,9 +64,6 @@
 - 🗂️ **卡片网格视图** — iOS 风格，拖拽排序，上下文菜单完善
 - 🔍 **上下文感知** — AI 可直接读取当前文章或文件夹内容
 - 🎯 **专注模式** — 窗口变窄自动切换纯文本编辑体验
-- 🌓 **双栏预览** — 所见即所得，左侧编辑右侧实时预览
-- 🖼️ **图片插入** — 支持粘贴、拖拽、菜单插入图片
-- ⚡️ **快捷编辑** — 悬浮菜单增强，选中文字快速修改格式
 
 ---
 
@@ -69,11 +73,11 @@
 
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-| 🍎 macOS | `WitNote-1.3.0.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
-| 🪟 Windows (x64) | `WitNote-1.3.0-setup-x64.exe` | 普通电脑 (Intel/AMD) |
-| 🪟 Windows (ARM64) | `WitNote-1.3.0-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
-| 🐧 Linux (AppImage) | `WitNote-1.3.0-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
-| 📦 Linux (Deb) | `WitNote-1.3.0-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
+| 🍎 macOS | `WitNote-1.3.1.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
+| 🪟 Windows (x64) | `WitNote-1.3.1-setup-x64.exe` | 普通电脑 (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.1-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.1-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
+| 📦 Linux (Deb) | `WitNote-1.3.1-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
 
 ---
 
@@ -152,10 +156,10 @@
 3. 双击运行
 
 **Deb (Ubuntu/Debian):**
-1. 下载 `.deb` 文件 (如 `WitNote-1.3.0-amd64.deb`)
+1. 下载 `.deb` 文件 (如 `WitNote-1.3.1-amd64.deb`)
 2. 在终端运行安装命令 (这将自动处理依赖):
    ```bash
-   sudo apt install ./WitNote-1.3.0-amd64.deb
+   sudo apt install ./WitNote-1.3.1-amd64.deb
    ```
 
 > 📝 **注意事项 (Windows 用户必读)**:
@@ -188,6 +192,15 @@
 
 ## 📸 截图
 
+### ✨ 智能续写 (v1.3.1 新功能)
+![智能续写](src/pic/witnote%20宣传截图/中文版设计/智能续写.jpg)
+
+### 🌓 双栏实时预览 (v1.3.1 新功能)
+![双栏实时预览](src/pic/witnote%20宣传截图/中文版设计/双栏实时预览.jpg)
+
+### ⚡️ 快捷编辑 (v1.3.1 新功能)
+![快捷编辑](src/pic/witnote%20宣传截图/中文版设计/快捷编辑.jpg)
+
 ### 🎯 专注模式
 ![专注模式](src/pic/witnote%20宣传截图/中文版设计/专注模式.jpg)
 
@@ -212,14 +225,8 @@
 ### ⌨️ 快捷键
 ![快捷键](src/pic/witnote%20宣传截图/中文版设计/快捷键.jpg)
 
-### 🌓 双栏实时预览
-![双栏实时预览](src/pic/witnote%20宣传截图/中文版设计/双栏实时预览.jpg)
-
 ### 🖼️ 插入图片
 ![插入图片](src/pic/witnote%20宣传截图/中文版设计/插入图片.jpg)
-
-### ⚡️ 快捷编辑
-![快捷编辑](src/pic/witnote%20宣传截图/中文版设计/快捷编辑.jpg)
 
 ---
 

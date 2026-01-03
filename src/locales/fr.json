@@ -124,9 +124,17 @@
         "zoomIn": "Zoom avant",
         "zoomOut": "Zoom arrière",
         "fullscreen": "Plein écran",
+        "smartAutocomplete": "Basculer l'autocomplétion intelligente",
+        "acceptAutocomplete": "Accepter l'autocomplétion",
         "windowsHint": "Sur Windows, utilisez Ctrl au lieu de Command."
     },
     "model": {
+        "selectModel": "Sélectionner le modèle",
+        "downloaded": "Téléchargé",
+        "download": "Télécharger",
+        "inUse": "En cours",
+        "use": "Utiliser",
+        "builtIn": "Intégré",
         "speedUltraFast": "🚀 Ultra Rapide",
         "speedVeryFast": "⚡ Très Rapide",
         "speedFast": "🚗 Fluide",
@@ -397,5 +405,47 @@
         "splitMode": "Mode Divisé",
         "focusMode": "Mode Focus",
         "exitFocusMode": "Quitter le Mode Focus"
+    },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "Ultra-léger, réponse rapide",
+            "rec": "Aperçu rapide, questions-réponses simples"
+        },
+        "qwen15b": {
+            "desc": "Léger, qualité équilibrée",
+            "rec": "Écriture quotidienne, autocomplétion intelligente"
+        },
+        "qwen3b": {
+            "desc": "Recommandé ! Équilibre qualité et vitesse",
+            "rec": "Création d'articles, conversation approfondie"
+        },
+        "qwen7b": {
+            "desc": "Le plus puissant, nécessite un bon matériel",
+            "rec": "Écriture professionnelle, assistance au codage"
+        },
+        "llama3b": {
+            "desc": "Série Meta Llama",
+            "rec": "Écriture en anglais, aide à la traduction"
+        },
+        "phi3mini": {
+            "desc": "Série Microsoft Phi",
+            "rec": "Analyse logique, assistance au codage"
+        }
+    },
+    "autocomplete": {
+        "acceptHint": "Tab pour accepter",
+        "loading": "Réflexion...",
+        "title": "Autocomplétion intelligente",
+        "enabled": "Activer l'autocomplétion intelligente",
+        "enabledHint": "Générer automatiquement des suggestions après une pause",
+        "useRolePrompt": "Synchro style de rôle",
+        "useRolePromptHint": "Si activé, l'autocomplétion suit le style du rôle sélectionné",
+        "prompt": "Prompt personnalisé",
+        "promptPlaceholder": "Laisser vide pour défaut...",
+        "promptHint": "Personnalisez le prompt IA pour de meilleures suggestions",
+        "delay": "Délai de déclenchement",
+        "delayHint": "Délai après l'arrêt de la frappe avant déclenchement (ms)",
+        "defaultPrompt": "Défaut : Compléter les citations/poèmes comme l'original, expressions idiomatiques, sinon continuer naturellement",
+        "defaultSystemPrompt": "Vous êtes un assistant d'écriture. Continuez directement l'écriture en fonction du contexte fourni par l'utilisateur.\nRègles :\n1. Ne sortez que le contenu de la suite, pas d'explications.\n2. Ne répétez pas le contenu existant.\n3. Si vous reconnaissez une citation célèbre, un poème connu, une citation classique ou une expression idiomatique, complétez-la fidèlement selon l'original.\n4. Pour les expressions figées ou courantes ('non seulement... mais aussi...', 'parce que... donc...'), complétez selon l'usage idiomatique.\n5. Autrement, la suite doit être naturelle, fluide et cohérente avec le style du contexte.\n6. Restez concis, généralement juste une phrase."
     }
 }

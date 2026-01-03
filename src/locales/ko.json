@@ -102,6 +102,12 @@
         "clearCacheFailed": "캐시 지우기 실패"
     },
     "model": {
+        "selectModel": "모델 선택",
+        "downloaded": "다운로드됨",
+        "download": "다운로드",
+        "inUse": "사용 중",
+        "use": "사용",
+        "builtIn": "내장",
         "speedUltraFast": "🚀 초고속",
         "speedVeryFast": "⚡ 매우 빠름",
         "speedFast": "🚗 빠름",
@@ -347,6 +353,8 @@
         "zoomIn": "확대",
         "zoomOut": "축소",
         "fullscreen": "전체 화면",
+        "smartAutocomplete": "스마트 자동 완성 전환",
+        "acceptAutocomplete": "자동 완성 수락",
         "windowsHint": "Windows에서는 Command 키 대신 Ctrl 키를 사용하세요."
     },
     "roles": {
@@ -398,5 +406,47 @@
         "splitMode": "분할 모드",
         "focusMode": "집중 모드",
         "exitFocusMode": "집중 모드 종료"
+    },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "초경량, 빠른 응답",
+            "rec": "빠른 미리보기, 간단한 Q&A"
+        },
+        "qwen15b": {
+            "desc": "경량, 균형 잡힌 품질",
+            "rec": "일상적인 글쓰기, 스마트 자동 완성"
+        },
+        "qwen3b": {
+            "desc": "추천! 품질과 속도의 균형",
+            "rec": "기사 작성, 깊이 있는 대화"
+        },
+        "qwen7b": {
+            "desc": "가장 강력함, 고성능 하드웨어 필요",
+            "rec": "전문적인 글쓰기, 코딩 보조"
+        },
+        "llama3b": {
+            "desc": "Meta Llama 시리즈",
+            "rec": "영어 작문, 번역 보조"
+        },
+        "phi3mini": {
+            "desc": "Microsoft Phi 시리즈",
+            "rec": "논리 분석, 코딩 보조"
+        }
+    },
+    "autocomplete": {
+        "acceptHint": "Tab으로 수락",
+        "loading": "생각 중...",
+        "title": "스마트 자동 완성",
+        "enabled": "스마트 자동 완성 켜기",
+        "enabledHint": "입력 중지 후 자동으로 제안 생성",
+        "useRolePrompt": "역할 스타일 동기화",
+        "useRolePromptHint": "활성화하면 자동 완성이 선택된 역할 프롬프트 스타일을 따릅니다",
+        "prompt": "사용자 지정 프롬프트",
+        "promptPlaceholder": "기본값을 사용하려면 비워두세요...",
+        "promptHint": "생성을 최적화하기 위해 AI 프롬프트 사용자 지정",
+        "delay": "트리거 지연",
+        "delayHint": "입력 중지 후 트리거까지의 지연 (ms)",
+        "defaultPrompt": "기본값: 명언/시구는 원문대로 완성, 관용 표현에 따르고, 그 외에는 자연스럽게 이어쓰기",
+        "defaultSystemPrompt": "당신은 글쓰기 도우미입니다. 사용자가 제공한 문맥을 바탕으로 다음 내용을 직접 이어 쓰세요.\n규칙:\n1. 이어질 내용만 출력하고 설명하지 마세요\n2. 기존 내용을 반복하지 마세요\n3. 명언, 유명한 시구, 고전 인용문, 또는 관용어를 인식하면 원문대로 정확하게 완성하세요\n4. 고정 표현이나 관용구('~뿐만 아니라 ~도', '왜냐하면 ~이기 때문에' 등)는 관용법에 따라 완성하세요\n5. 그 외의 경우, 문맥과 스타일에 맞게 자연스럽게 이어쓰세요\n6. 간결하게 유지하고, 보통 한 문장 정도로 작성하세요"
     }
 }

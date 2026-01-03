@@ -55,6 +55,7 @@
         "clear": "清空对话",
         "thinking": "思考中...",
         "loading": "加载中...",
+        "localLoading": "本地加载中...",
         "error": "发生错误",
         "retry": "重试",
         "contextFile": "正在读取",
@@ -104,6 +105,12 @@
         "clearCacheFailed": "清除失败"
     },
     "model": {
+        "selectModel": "选择模型",
+        "downloaded": "已下载",
+        "download": "下载",
+        "inUse": "使用中",
+        "use": "使用",
+        "builtIn": "内置",
         "speedUltraFast": "🚀 极速",
         "speedVeryFast": "⚡ 很快",
         "speedFast": "🚗 流畅",
@@ -254,6 +261,8 @@
         "zoomIn": "放大",
         "zoomOut": "缩小",
         "fullscreen": "全屏",
+        "smartAutocomplete": "切换智能续写",
+        "acceptAutocomplete": "接受智能续写",
         "windowsHint": "💡 在 Windows 系统上，Cmd 键对应 Ctrl 键"
     },
     "guide": {
@@ -407,17 +416,46 @@
         "chef": "厨艺助手",
         "chefPrompt": "你是厨艺助手，分享食谱、烹饪技巧和食材搭配建议。步骤清晰，易于操作。"
     },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "极轻量，响应快速",
+            "rec": "快速预览、简单问答"
+        },
+        "qwen15b": {
+            "desc": "轻量级，质量平衡",
+            "rec": "日常写作、智能补齐"
+        },
+        "qwen3b": {
+            "desc": "推荐！质量与速度平衡",
+            "rec": "文章创作、深度对话"
+        },
+        "qwen7b": {
+            "desc": "最强大，需要较好硬件",
+            "rec": "专业写作、代码辅助"
+        },
+        "llama3b": {
+            "desc": "Meta Llama 系列",
+            "rec": "英文写作、翻译辅助"
+        },
+        "phi3mini": {
+            "desc": "微软 Phi 系列",
+            "rec": "逻辑分析、编程辅助"
+        }
+    },
     "autocomplete": {
         "acceptHint": "按 Tab 接受",
         "loading": "思考中...",
         "title": "智能续写",
         "enabled": "启用智能续写",
         "enabledHint": "输入停顿后自动生成续写建议",
+        "useRolePrompt": "角色风格关联",
+        "useRolePromptHint": "开启后，续写风格将参考上方角色设定的提示词",
         "prompt": "自定义提示词",
         "promptPlaceholder": "留空使用默认提示词...",
         "promptHint": "自定义 AI 续写的提示词，可优化生成效果",
         "delay": "触发延迟",
         "delayHint": "停止输入后多久触发续写（毫秒）",
-        "defaultPrompt": "默认提示词：根据上下文直接续写内容，保持简洁流畅"
+        "defaultPrompt": "默认：名言诗句按原文补全，固定搭配按惯用法，其他自然续写",
+        "defaultSystemPrompt": "你是一个写作助手。根据用户提供的上下文，直接续写接下来的内容。\n规则：\n1. 只输出续写内容，不要解释\n2. 不要重复已有内容\n3. 如果识别到用户正在引用名人名言、著名诗句、经典语录或成语典故，请按照原文准确补全，保持引用的完整性\n4. 如果是固定搭配或常用表达（如\"不仅...而且...\"、\"因为...所以...\"等），按照惯用法补全\n5. 其他情况下，续写应该自然流畅，根据前后语意和上下文风格进行自然补全\n6. 保持简洁，通常续写一句话即可"
     }
 }

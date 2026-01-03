@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -155,7 +155,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         <div className="chat-panel-v2">
             {/* 消息区域 - 添加 relative 定位限制覆盖层范围 */}
             <div className="chat-messages" style={{ position: 'relative' }}>
-                {/* WebLLM 首次使用 - 模型选择界面 */}
+                {/* WebLLM 首次使用 - 简洁引导界面 */}
                 {showWebLLMSetup && (
                     <div style={{
                         position: 'absolute',
@@ -164,141 +164,100 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                         right: 0,
                         bottom: 0,
                         display: 'flex',
+                        flexDirection: 'column',
                         justifyContent: 'center',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         background: 'var(--bg-primary)',
                         zIndex: 10,
-                        flexDirection: 'column',
                         padding: '24px',
-                        overflowY: 'auto'
+                        textAlign: 'center'
                     }}>
+                        {/* 图标 */}
                         <div style={{
-                            width: '100%',
-                            maxWidth: '400px',
-                            margin: '0 auto'
+                            width: '64px',
+                            height: '64px',
+                            borderRadius: '16px',
+                            background: 'var(--bg-secondary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                            marginBottom: '16px'
                         }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                marginBottom: '8px'
-                            }}>
-                                <div style={{
-                                    width: '48px',
-                                    height: '48px',
-                                    borderRadius: '12px',
-                                    background: 'var(--bg-secondary)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                                }}>
-                                    <Bot size={24} style={{ color: 'var(--accent-color)' }} />
-                                </div>
-                                <div>
-                                    <h3 style={{
-                                        fontSize: '18px',
-                                        fontWeight: 600,
-                                        color: 'var(--text-primary)',
-                                        margin: 0
-                                    }}>{t('chat.selectModel')}</h3>
-                                    <p style={{
-                                        fontSize: '13px',
-                                        color: 'var(--text-secondary)',
-                                        margin: '4px 0 0 0'
-                                    }}>{t('chat.chooseModelHint')}</p>
-                                </div>
-                            </div>
-
-                            {/* 模型列表 */}
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '8px',
-                                marginTop: '16px'
-                            }}>
-                                {ALL_WEBLLM_MODELS_INFO.map((model) => (
-                                    <div
-                                        key={model.model_id}
-                                        onClick={() => {
-                                            engineStore.selectModel(model.model_id);
-                                            engineStore.completeWebLLMSetup();
-                                            engineStore.initWebLLM(model.model_id);
-                                        }}
-                                        style={{
-                                            padding: '14px 16px',
-                                            background: 'var(--bg-card)',
-                                            borderRadius: '10px',
-                                            border: '1px solid var(--border-color)',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.borderColor = 'var(--accent-color)';
-                                            e.currentTarget.style.background = 'var(--bg-hover)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.borderColor = 'var(--border-color)';
-                                            e.currentTarget.style.background = 'var(--bg-card)';
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                            <span style={{
-                                                fontSize: '14px',
-                                                fontWeight: 600,
-                                                color: 'var(--text-primary)'
-                                            }}>
-                                                {model.displayName}
-                                            </span>
-                                            <span style={{
-                                                fontSize: '11px',
-                                                padding: '2px 8px',
-                                                borderRadius: '10px',
-                                                background: 'var(--border-color)',
-                                                color: 'var(--text-secondary)'
-                                            }}>
-                                                {model.size}
-                                            </span>
-                                            {model.isBuiltIn && (
-                                                <span style={{
-                                                    fontSize: '10px',
-                                                    padding: '2px 6px',
-                                                    borderRadius: '4px',
-                                                    background: 'rgba(16, 185, 129, 0.1)',
-                                                    color: '#10b981'
-                                                }}>
-                                                    {t('chat.builtIn')}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div style={{
-                                            fontSize: '12px',
-                                            color: 'var(--text-primary)',
-                                            marginBottom: '4px'
-                                        }}>
-                                            {model.description}
-                                        </div>
-                                        {model.features && (
-                                            <div style={{
-                                                fontSize: '11px',
-                                                color: 'var(--text-secondary)'
-                                            }}>
-                                                {model.features}
-                                            </div>
-                                        )}
-                                        {model.recommended && (
-                                            <div style={{
-                                                fontSize: '10px',
-                                                color: 'var(--accent-color)',
-                                                marginTop: '4px'
-                                            }}>
-                                                ✨ {model.recommended}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                            <Bot size={32} style={{ color: 'var(--accent-color)' }} />
                         </div>
+
+                        {/* 引导文字 */}
+                        <h3 style={{
+                            fontSize: '18px',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            margin: '0 0 8px 0'
+                        }}>{t('chat.selectModel')}</h3>
+                        <p style={{
+                            fontSize: '13px',
+                            color: 'var(--text-secondary)',
+                            margin: '0 0 24px 0',
+                            maxWidth: '280px'
+                        }}>{t('chat.chooseModelHint')}</p>
+
+                        {/* 模型选择下拉按钮 */}
+                        <div style={{ position: 'relative' }}>
+                            <select
+                                id="webllm-model-select"
+                                style={{
+                                    padding: '12px 40px 12px 16px',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
+                                    color: 'var(--text-primary)',
+                                    background: 'var(--bg-card)',
+                                    border: '1.5px solid var(--accent-color)',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    appearance: 'none',
+                                    minWidth: '220px',
+                                    textAlign: 'left'
+                                }}
+                                defaultValue=""
+                                onChange={(e) => {
+                                    const modelId = e.target.value;
+                                    if (modelId) {
+                                        engineStore.selectModel(modelId);
+                                        engineStore.completeWebLLMSetup();
+                                        engineStore.initWebLLM(modelId);
+                                    }
+                                }}
+                            >
+                                <option value="" disabled>{t('model.selectModel')}</option>
+                                {ALL_WEBLLM_MODELS_INFO.map((model) => (
+                                    <option key={model.model_id} value={model.model_id}>
+                                        {model.displayName} ({model.size})
+                                    </option>
+                                ))}
+                            </select>
+                            {/* 下拉箭头 */}
+                            <ChevronDown
+                                size={18}
+                                style={{
+                                    position: 'absolute',
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: 'var(--accent-color)',
+                                    pointerEvents: 'none'
+                                }}
+                            />
+                        </div>
+
+                        {/* 推荐提示 */}
+                        <p style={{
+                            fontSize: '11px',
+                            color: 'var(--text-tertiary)',
+                            margin: '16px 0 0 0',
+                            maxWidth: '280px'
+                        }}>
+                            💡 {t('chat.firstUseDesc', { size: '290MB - 4.1GB' })}
+                        </p>
                     </div>
                 )}
 
@@ -760,17 +719,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                     background: 'rgba(16, 185, 129, 0.1)',
                                                     borderRadius: '4px'
                                                 }}>
-                                                    {t('chat.builtIn')}
+                                                    {t('model.builtIn')}
                                                 </span>
                                             </button>
 
                                             {showModelMenu && createPortal(
                                                 <div className="model-dropdown" ref={menuRef}>
                                                     <div className="model-section">
-                                                        <div className="model-section-title">{t('chat.selectModel')}</div>
+                                                        <div className="model-section-title">{t('model.selectModel')}</div>
                                                         {ALL_WEBLLM_MODELS_INFO.map((model) => {
                                                             const isCurrentModel = model.model_id === engineStore.selectedModel
-                                                            const isDownloaded = engineStore.webllmCachedModels.some(c => c.includes(model.model_id.split('-MLC')[0]))
+                                                            const isDownloaded = engineStore.webllmCachedModels.includes(model.model_id)
 
                                                             return (
                                                                 <div
@@ -820,14 +779,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                                         }}>
                                                                             {model.size}
                                                                         </span>
-                                                                        {isDownloaded && (
-                                                                            <span style={{
-                                                                                fontSize: '10px',
-                                                                                color: '#10b981',
-                                                                                marginLeft: 'auto'
-                                                                            }}>✓ {t('chat.downloaded')}</span>
-                                                                        )}
-                                                                        {isCurrentModel && (
+                                                                        {isCurrentModel ? (
                                                                             <span style={{
                                                                                 fontSize: '11px',
                                                                                 fontWeight: 500,
@@ -840,7 +792,28 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                                                 alignItems: 'center',
                                                                                 gap: '4px'
                                                                             }}>
-                                                                                <Check size={10} /> {t('chat.inUse')}
+                                                                                <Check size={10} /> {t('model.inUse')}
+                                                                            </span>
+                                                                        ) : isDownloaded ? (
+                                                                            <span style={{
+                                                                                fontSize: '10px',
+                                                                                color: '#10b981',
+                                                                                marginLeft: 'auto'
+                                                                            }}>✓ {t('model.downloaded')}</span>
+                                                                        ) : (
+                                                                            <span style={{
+                                                                                fontSize: '10px',
+                                                                                color: 'var(--text-secondary)',
+                                                                                marginLeft: 'auto',
+                                                                                padding: '2px 6px',
+                                                                                background: 'var(--bg-secondary)',
+                                                                                border: '1px solid var(--border-color)',
+                                                                                borderRadius: '4px',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '4px'
+                                                                            }}>
+                                                                                <Download size={10} /> {t('model.download')}
                                                                             </span>
                                                                         )}
                                                                     </div>
@@ -848,16 +821,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                                                         fontSize: '11px',
                                                                         color: 'var(--text-secondary)'
                                                                     }}>
-                                                                        {model.description}
+                                                                        {t(model.descriptionKey || model.description)}
                                                                     </div>
-                                                                    {model.recommended && (
-                                                                        <div style={{
-                                                                            fontSize: '10px',
-                                                                            color: 'var(--accent-color)'
-                                                                        }}>
-                                                                            ✨ {model.recommended}
-                                                                        </div>
-                                                                    )}
+
                                                                 </div>
                                                             )
                                                         })}
@@ -899,54 +865,60 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                             ) : (
                                 <span className="model-label">{formatModelName(modelName)}</span>
                             )
-                        ) : status === 'loading' ? (
-                            <div className="model-loading-status" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <span className="loading-text">
-                                        {loadProgress ? `${t('chat.loading', '正在加载')} ${Math.round(loadProgress.progress * 100)}%` : t('chat.loading')}
-                                    </span>
-                                    {loadProgress && (
-                                        <div className="loading-progress-bar">
-                                            <div
-                                                className="loading-progress-fill"
-                                                style={{ width: `${Math.round(loadProgress.progress * 100)}%` }}
-                                            />
-                                        </div>
+                        ) : status === 'loading' ? (() => {
+                            // 判断当前模型是否已缓存
+                            const isCached = engineStore?.currentEngine === 'webllm' &&
+                                engineStore.webllmCachedModels.includes(engineStore.selectedModel);
+                            const loadingText = isCached ? t('chat.localLoading') : t('chat.downloading');
+                            return (
+                                <div className="model-loading-status" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <span className="loading-text">
+                                            {loadProgress ? `${loadingText} ${Math.round(loadProgress.progress * 100)}%` : loadingText}
+                                        </span>
+                                        {loadProgress && (
+                                            <div className="loading-progress-bar">
+                                                <div
+                                                    className="loading-progress-fill"
+                                                    style={{ width: `${Math.round(loadProgress.progress * 100)}%` }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* 取消按钮 - 仅在 WebLLM 下载时显示 */}
+                                    {engineStore?.currentEngine === 'webllm' && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setConfirmDialog({
+                                                    isOpen: true,
+                                                    title: t('chat.confirmCancelDownloadTitle'),
+                                                    message: t('chat.confirmCancelDownloadMessage'),
+                                                    onConfirm: () => {
+                                                        engineStore?.resetWebLLMSetup();
+                                                        setConfirmDialog(null);
+                                                    }
+                                                });
+                                            }}
+                                            title={t('models.cancelDownload')}
+                                            style={{
+                                                padding: '4px',
+                                                borderRadius: '50%',
+                                                border: 'none',
+                                                background: 'var(--bg-hover)',
+                                                color: 'var(--text-secondary)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        >
+                                            <X size={14} />
+                                        </button>
                                     )}
                                 </div>
-                                {/* 取消按钮 - 仅在 WebLLM 下载时显示 */}
-                                {engineStore?.currentEngine === 'webllm' && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setConfirmDialog({
-                                                isOpen: true,
-                                                title: t('chat.confirmCancelDownloadTitle'),
-                                                message: t('chat.confirmCancelDownloadMessage'),
-                                                onConfirm: () => {
-                                                    engineStore?.resetWebLLMSetup();
-                                                    setConfirmDialog(null);
-                                                }
-                                            });
-                                        }}
-                                        title={t('models.cancelDownload')}
-                                        style={{
-                                            padding: '4px',
-                                            borderRadius: '50%',
-                                            border: 'none',
-                                            background: 'var(--bg-hover)',
-                                            color: 'var(--text-secondary)',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                )}
-                            </div>
-                        ) : null}
+                            );
+                        })() : null}
                     </div>
                 </div>
 

@@ -206,7 +206,17 @@ contextBridge.exposeInMainWorld('shortcuts', {
         const handler = () => callback()
         ipcRenderer.on('shortcuts:cycleEditorMode', handler)
         return () => ipcRenderer.removeListener('shortcuts:cycleEditorMode', handler)
-    }
+    },
+
+    onToggleSmartAutocomplete: (callback: () => void): (() => void) => {
+        const handler = () => callback()
+        ipcRenderer.on('shortcuts:toggleSmartAutocomplete', handler)
+        return () => ipcRenderer.removeListener('shortcuts:toggleSmartAutocomplete', handler)
+    },
+
+    // 同步智能续写状态到主进程菜单
+    syncSmartAutocomplete: (enabled: boolean): Promise<boolean> =>
+        ipcRenderer.invoke('menu:syncSmartAutocomplete', enabled)
 })
 
 console.log('🔗 Preload 脚本已加载')

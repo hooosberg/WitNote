@@ -55,6 +55,7 @@
         "clear": "Clear Chat",
         "thinking": "Thinking...",
         "loading": "Loading...",
+        "localLoading": "Loading from cache...",
         "error": "Error occurred",
         "retry": "Retry",
         "contextFile": "Reading",
@@ -104,6 +105,12 @@
         "clearCacheFailed": "Failed to clear cache"
     },
     "model": {
+        "selectModel": "Select Model",
+        "downloaded": "Downloaded",
+        "download": "Download",
+        "inUse": "In Use",
+        "use": "Use",
+        "builtIn": "Built-in",
         "speedUltraFast": "🚀 Ultra Fast",
         "speedVeryFast": "⚡ Very Fast",
         "speedFast": "🚗 Fast",
@@ -254,6 +261,8 @@
         "zoomIn": "Zoom In",
         "zoomOut": "Zoom Out",
         "fullscreen": "Toggle Fullscreen",
+        "smartAutocomplete": "Toggle Smart Autocomplete",
+        "acceptAutocomplete": "Accept Autocomplete",
         "windowsHint": "💡 On Windows, Cmd corresponds to Ctrl"
     },
     "guide": {
@@ -407,17 +416,46 @@
         "chef": "Cooking",
         "chefPrompt": "You are a cooking assistant. Share recipes, cooking techniques, and ingredient pairing suggestions. Clear steps, easy to follow."
     },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "Ultra-lightweight, fast response",
+            "rec": "Quick preview, simple QA"
+        },
+        "qwen15b": {
+            "desc": "Lightweight, balanced quality",
+            "rec": "Daily writing, smart autocomplete"
+        },
+        "qwen3b": {
+            "desc": "Recommended! Balanced quality & speed",
+            "rec": "Article creation, deep conversation"
+        },
+        "qwen7b": {
+            "desc": "Most powerful, requires good hardware",
+            "rec": "Professional writing, coding assistant"
+        },
+        "llama3b": {
+            "desc": "Meta Llama Series",
+            "rec": "English writing, translation"
+        },
+        "phi3mini": {
+            "desc": "Microsoft Phi Series",
+            "rec": "Logic analysis, coding assistant"
+        }
+    },
     "autocomplete": {
         "acceptHint": "Press Tab to accept",
         "loading": "Thinking...",
         "title": "Smart Autocomplete",
         "enabled": "Enable Smart Autocomplete",
         "enabledHint": "Auto-generate suggestions after typing pauses",
+        "useRolePrompt": "Role Style Sync",
+        "useRolePromptHint": "When enabled, autocomplete will follow the role prompt style above",
         "prompt": "Custom Prompt",
         "promptPlaceholder": "Leave empty for default...",
         "promptHint": "Customize the AI prompt for better suggestions",
         "delay": "Trigger Delay",
         "delayHint": "Delay after typing stops before triggering (ms)",
-        "defaultPrompt": "Default: Continue writing naturally, keep it concise"
+        "defaultPrompt": "Default: Complete quotes/poems as original, use idiomatic expressions, otherwise continue naturally",
+        "defaultSystemPrompt": "You are a writing assistant. Directly continue writing based on the context provided by the user.\nRules:\n1. Output only the continuation, do not explain.\n2. Do not repeat existing content.\n3. If you recognize that the user is quoting famous sayings, well-known poems, classic quotes, or idioms, complete them accurately according to the original text.\n4. For fixed collocations or common expressions (such as 'not only...but also...', 'because...therefore...'), complete according to idiomatic usage.\n5. In other cases, the continuation should be natural and smooth, based on the context and style.\n6. Keep it concise, usually just one sentence."
     }
 }

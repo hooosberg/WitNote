@@ -1325,7 +1325,8 @@ select:focus {
 .editor-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 0 40px 48px;
+  /* 调整：减少左右内边距，增加可视宽度 */
+  padding: 0 48px 48px;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box;
@@ -1396,6 +1397,9 @@ select:focus {
   resize: none;
   overflow: hidden;
   box-sizing: border-box;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .editor-title::placeholder {
@@ -1462,10 +1466,26 @@ select:focus {
   min-height: 400px;
   overflow: hidden;
   box-sizing: border-box;
+  /* 修复：移除两端对齐，回归左对齐 */
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  /* 更强力：允许在任何地方断行 */
+  overflow-x: hidden;
+  /* 强制禁止横向滚动 */
+  /* 调整：减少内边距，让文字更宽 */
+  padding: 0 12px 0 4px;
 }
 
 .editor-body::placeholder {
   color: var(--text-muted);
+}
+
+/* 幽灵模式（联想时）：文字透明，仅显示光标，让位给镜像层 */
+.editor-body.ghost-active {
+  color: transparent !important;
+  caret-color: var(--text-primary);
 }
 
 /* Markdown 预览区域 */
@@ -1474,6 +1494,10 @@ select:focus {
   line-height: 1.8;
   color: var(--text-primary);
   min-height: 400px;
+  /* 修复：预览模式也保持一致的两端对齐 */
+  text-align: justify;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .editor-preview h1 {
@@ -1701,7 +1725,7 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 4px;
-  z-index: 100;
+  z-index: 1000;
   /* 移除 transform: translateY(-50%)，垂直居中在 JS 中计算 */
   animation: menu-fade-in 0.15s ease;
 }
@@ -1750,13 +1774,15 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 4px;
+  gap: 4px;
   padding: 2px 4px;
+  /* 确保背景完全不透明，遮挡下方文字 */
   background: var(--bg-main);
-  /* 使用主背景色确保不透明 */
+  background-clip: padding-box;
   /* 不透明背景，提高可读性 */
   border: 1px solid var(--border-color);
   border-radius: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   animation: options-slide-in 0.2s ease;
 }
 
@@ -1899,19 +1925,19 @@ select:focus {
 /* 左侧编辑区 - 右边有分割线 */
 .editor-split-left {
   border-right: 1px solid var(--border-color);
-  padding-left: 40px;
-  /* 外侧边距与普通模式一致 */
-  padding-right: 20px;
-  /* 靠近中线侧边距小 */
+  padding-left: 48px;
+  /* 统一左侧边距 */
+  padding-right: 48px;
+  /* 统一右侧边距 */
 }
 
 /* 右侧预览区 */
 .editor-split-right {
   background: var(--bg-main);
-  padding-left: 20px;
-  /* 靠近中线侧边距小 */
-  padding-right: 40px;
-  /* 外侧边距与普通模式一致 */
+  padding-left: 48px;
+  /* 统一左侧边距 */
+  padding-right: 48px;
+  /* 统一右侧边距 */
 }
 
 /* 专注模式下分屏的外侧边距增大 */
@@ -3747,7 +3773,7 @@ select:focus {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background: var(--text-muted);
+  background: var(--toggle-off-bg, #d1d5db);
   border-radius: 24px;
   transition: var(--transition-fast);
 }
@@ -3766,11 +3792,23 @@ select:focus {
 }
 
 .toggle-switch input:checked+.toggle-slider {
-  background: var(--accent-color);
+  background: #22c55e;
+  /* 统一使用绿色表示启用 */
 }
 
 .toggle-switch input:checked+.toggle-slider::before {
   transform: translateX(20px);
+}
+
+/* 深色模式下的开关样式 */
+[data-theme="dark"] .toggle-slider {
+  background: #4b5563;
+  /* 更深的关闭状态背景 */
+}
+
+[data-theme="dark"] .toggle-switch input:checked+.toggle-slider {
+  background: #22c55e;
+  /* 绿色启用状态 */
 }
 
 /* Ollama 下载提示 */
@@ -4834,8 +4872,9 @@ select:focus {
  * 渲染透明原文（占位）+ 可见续写
  * z-index 低于设置面板(10000)和浮动工具栏(9999)
  */
-.autocomplete-mirror {
-  pointer-events: none;
+.autocomplete-mirror,
+.autocomplete-mirror * {
+  pointer-events: none !important;
   z-index: 100;
 }
 
@@ -4847,19 +4886,35 @@ select:focus {
 }
 
 .autocomplete-loading {
-  color: var(--text-tertiary);
-  opacity: 0.4;
-  animation: pulse 1.2s ease-in-out infinite;
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+  /* 增加与文字的距离 */
+  vertical-align: middle;
+  height: 1.2em;
+  align-items: center;
+  /* 参数位置：修改 translateY 的值来微调垂直位置，负数向上，正数向下 */
+  transform: translateY(-4px);
 }
 
-@keyframes pulse {
+.autocomplete-loading-dot {
+  display: inline-block;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+  font-weight: bold;
+  animation: loading-wave 1.2s ease-in-out infinite;
+}
+
+@keyframes loading-wave {
 
   0%,
   100% {
-    opacity: 0.3;
+    transform: translateY(0);
+    opacity: 0.4;
   }
 
   50% {
-    opacity: 0.6;
+    transform: translateY(-3px);
+    opacity: 1;
   }
 }

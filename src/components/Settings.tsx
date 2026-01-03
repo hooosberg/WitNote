@@ -452,17 +452,13 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             {modelInfo.size}
                                                         </span>
                                                         {modelInfo.isBuiltIn && (
-                                                            <span className="builtin-tag">{t('chat.builtIn')}</span>
+                                                            <span className="builtin-tag">{t('model.builtIn')}</span>
                                                         )}
                                                     </div>
                                                     <div style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 500 }}>
-                                                        {modelInfo.description}
+                                                        {t(modelInfo.descriptionKey || modelInfo.description)}
                                                     </div>
-                                                    {modelInfo.features && (
-                                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                                                            {modelInfo.features}
-                                                        </div>
-                                                    )}
+
                                                     {modelInfo.recommended && (
                                                         <div style={{
                                                             fontSize: '10px',
@@ -472,7 +468,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             alignItems: 'center',
                                                             gap: '4px'
                                                         }}>
-                                                            <span>✨ {modelInfo.recommended}</span>
+                                                            <span>✨ {t(modelInfo.recommendedKey || modelInfo.recommended)}</span>
                                                         </div>
                                                     )}
                                                     {/* 进度条 */}
@@ -489,7 +485,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                                     width: `${progressVal}%`,
                                                                     minWidth: progressVal > 0 ? '4px' : '0',
                                                                     height: '100%',
-                                                                    background: 'var(--accent)',
+                                                                    background: 'var(--accent-color)',
                                                                     transition: 'width 0.3s ease'
                                                                 }} />
                                                             </div>
@@ -502,7 +498,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                                 whiteSpace: 'nowrap',
                                                                 maxWidth: '300px'
                                                             }}>
-                                                                {progressVal}% {engineStore.webllmProgress?.text || '加载中...'}
+                                                                {progressVal}% {isCached ? t('chat.localLoading') : t('chat.downloading')}
                                                             </div>
                                                         </div>
                                                     )}
@@ -512,7 +508,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px' }}>
                                                     {isLoading ? (
                                                         <>
-                                                            <Loader2 size={18} className="spin" style={{ color: 'var(--accent)' }} />
+                                                            <Loader2 size={18} className="spin" style={{ color: 'var(--accent-color)' }} />
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -552,20 +548,57 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             </button>
                                                         </>
                                                     ) : isReady && isSelected ? (
+                                                        // 使用中 - 亮绿色
                                                         <button
                                                             className="download-btn"
-                                                            style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
+                                                            style={{
+                                                                padding: '6px 14px',
+                                                                fontSize: '13px',
+                                                                borderRadius: '6px',
+                                                                background: '#22c55e',
+                                                                color: 'white'
+                                                            }}
                                                             disabled
                                                         >
-                                                            <Check size={16} style={{ marginRight: '4px' }} /> {t('chat.inUse')}
+                                                            <Check size={16} style={{ marginRight: '4px' }} /> {t('model.inUse')}
                                                         </button>
-                                                    ) : (
+                                                    ) : isCached ? (
+                                                        // 已下载但未使用 - 浅绿色
                                                         <button
                                                             className="download-btn"
-                                                            onClick={() => engineStore.initWebLLM(modelInfo.model_id)}
-                                                            style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '6px' }}
+                                                            onClick={() => {
+                                                                engineStore.completeWebLLMSetup();
+                                                                engineStore.initWebLLM(modelInfo.model_id);
+                                                            }}
+                                                            style={{
+                                                                padding: '6px 14px',
+                                                                fontSize: '13px',
+                                                                borderRadius: '6px',
+                                                                background: 'rgba(34, 197, 94, 0.15)',
+                                                                color: '#22c55e',
+                                                                border: '1px solid rgba(34, 197, 94, 0.3)'
+                                                            }}
                                                         >
-                                                            {isCached ? t('chat.use') : t('chat.download')}
+                                                            {t('model.use')}
+                                                        </button>
+                                                    ) : (
+                                                        // 未下载 - 灰色
+                                                        <button
+                                                            className="download-btn"
+                                                            onClick={() => {
+                                                                engineStore.completeWebLLMSetup();
+                                                                engineStore.initWebLLM(modelInfo.model_id);
+                                                            }}
+                                                            style={{
+                                                                padding: '6px 14px',
+                                                                fontSize: '13px',
+                                                                borderRadius: '6px',
+                                                                background: 'var(--bg-hover)',
+                                                                color: 'var(--text-secondary)',
+                                                                border: '1px solid var(--border-color)'
+                                                            }}
+                                                        >
+                                                            {t('model.download')}
                                                         </button>
                                                     )}
 
@@ -586,68 +619,9 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                                     message: confirmMsg,
                                                                     onConfirm: async () => {
                                                                         setConfirmDialog(null);
-                                                                        if (modelInfo.isBuiltIn) {
-                                                                            // 内置模型：彻底清除所有缓存（类似 Chrome DevTools 的 Clear site data）
-                                                                            try {
-                                                                                console.log('🧹 开始清除所有站点数据...');
-
-                                                                                // 1. 删除所有 IndexedDB 数据库（不过滤）
-                                                                                const dbs = await window.indexedDB.databases();
-                                                                                console.log('📦 发现数据库:', dbs.map(db => db.name));
-
-                                                                                const deletePromises = dbs.map(db => new Promise<void>((resolve) => {
-                                                                                    if (db.name) {
-                                                                                        console.log('🗑️ 删除:', db.name);
-                                                                                        const req = window.indexedDB.deleteDatabase(db.name);
-                                                                                        req.onsuccess = () => {
-                                                                                            console.log('✅', db.name);
-                                                                                            resolve();
-                                                                                        };
-                                                                                        req.onerror = (e) => {
-                                                                                            console.error('❌', db.name, e);
-                                                                                            resolve(); // 继续删除其他
-                                                                                        };
-                                                                                        req.onblocked = () => {
-                                                                                            console.warn('⚠️ 阻塞:', db.name);
-                                                                                            resolve();
-                                                                                        };
-                                                                                    } else {
-                                                                                        resolve();
-                                                                                    }
-                                                                                }));
-
-                                                                                await Promise.all(deletePromises);
-                                                                                console.log('✅ 所有 IndexedDB 已清除');
-
-                                                                                // 2. 清除所有 Cache Storage
-                                                                                const cacheNames = await caches.keys();
-                                                                                console.log('📦 发现 Cache:', cacheNames);
-                                                                                await Promise.all(cacheNames.map(name => caches.delete(name)));
-                                                                                console.log('✅ 所有 Cache 已清除');
-
-                                                                                // 3. 清除 localStorage 相关标记
-                                                                                localStorage.removeItem('webllm-setup-completed');
-                                                                                localStorage.removeItem('zen-selected-webllm-model');
-                                                                                console.log('✅ localStorage 已清理');
-
-                                                                                // 4. 刷新页面
-                                                                                console.log('🔄 准备刷新页面');
-                                                                                // 直接刷新页面，不需要额外确认
-                                                                                setConfirmDialog(null);
-                                                                                window.location.reload();
-                                                                            } catch (error) {
-                                                                                console.error('❌ 清除失败:', error);
-                                                                                setConfirmDialog({
-                                                                                    isOpen: true,
-                                                                                    title: t('chat.clearCacheFailed'),
-                                                                                    message: String(error),
-                                                                                    onConfirm: () => setConfirmDialog(null)
-                                                                                });
-                                                                            }
-                                                                        } else {
-                                                                            // 非内置模型：使用标准删除方法
-                                                                            engineStore.deleteWebLLMModel(modelInfo.model_id);
-                                                                        }
+                                                                        // 统一使用 deleteWebLLMModel 删除特定模型的缓存
+                                                                        // 不再区分内置和非内置模型
+                                                                        await engineStore.deleteWebLLMModel(modelInfo.model_id);
                                                                     }
                                                                 });
                                                             }}
@@ -894,74 +868,6 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 </div>
                             )
                         }
-
-                        {/* 智能续写设置（所有引擎通用） */}
-                        <div className="settings-section fade-in" style={{ marginTop: '24px' }}>
-                            <div className="settings-section-header">
-                                <h3 className="settings-section-title">{t('autocomplete.title')}</h3>
-                                {/* 启用开关 */}
-                                <label className="toggle-switch">
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.autocompleteEnabled}
-                                        onChange={(e) => setSetting('autocompleteEnabled', e.target.checked)}
-                                    />
-                                    <span className="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                {t('autocomplete.enabledHint')}
-                            </p>
-
-                            {settings.autocompleteEnabled && (
-                                <div style={{
-                                    padding: '16px',
-                                    background: 'var(--bg-secondary)',
-                                    borderRadius: '10px',
-                                    border: '1px solid var(--border-color)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '16px'
-                                }}>
-                                    {/* 延迟设置 */}
-                                    <div>
-                                        <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
-                                            {t('autocomplete.delay')} ({settings.autocompleteDelay}ms)
-                                        </label>
-                                        <input
-                                            type="range"
-                                            min="200"
-                                            max="2000"
-                                            step="100"
-                                            value={settings.autocompleteDelay}
-                                            onChange={(e) => setSetting('autocompleteDelay', parseInt(e.target.value))}
-                                            style={{ width: '100%' }}
-                                        />
-                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                                            {t('autocomplete.delayHint')}
-                                        </p>
-                                    </div>
-
-                                    {/* 自定义提示词 */}
-                                    <div>
-                                        <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
-                                            {t('autocomplete.prompt')}
-                                        </label>
-                                        <textarea
-                                            value={settings.autocompletePrompt}
-                                            onChange={(e) => setSetting('autocompletePrompt', e.target.value)}
-                                            className="settings-textarea"
-                                            placeholder={t('autocomplete.promptPlaceholder')}
-                                            rows={4}
-                                            style={{ width: '100%', resize: 'vertical' }}
-                                        />
-                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                                            {settings.autocompletePrompt ? t('autocomplete.promptHint') : t('autocomplete.defaultPrompt')}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                     </div >
                 );
 
@@ -1216,6 +1122,74 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 </div>
                             )}
                         </div>
+
+                        {/* 智能续写设置 - 与角色设定相关 */}
+                        <div className="settings-section fade-in" style={{ marginTop: '24px' }}>
+                            <div className="settings-section-header">
+                                <h3 className="settings-section-title">{t('autocomplete.title')}</h3>
+                                {/* 启用开关 */}
+                                <label className="toggle-switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.autocompleteEnabled}
+                                        onChange={(e) => setSetting('autocompleteEnabled', e.target.checked)}
+                                    />
+                                    <span className="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {t('autocomplete.enabledHint')}
+                            </p>
+
+                            {settings.autocompleteEnabled && (
+                                <div style={{
+                                    padding: '16px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '16px'
+                                }}>
+                                    {/* 延迟设置 */}
+                                    <div>
+                                        <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
+                                            {t('autocomplete.delay')} ({settings.autocompleteDelay}ms)
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="200"
+                                            max="2000"
+                                            step="100"
+                                            value={settings.autocompleteDelay}
+                                            onChange={(e) => setSetting('autocompleteDelay', parseInt(e.target.value))}
+                                            style={{ width: '100%' }}
+                                        />
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                            {t('autocomplete.delayHint')}
+                                        </p>
+                                    </div>
+
+                                    {/* 自定义提示词 */}
+                                    <div>
+                                        <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
+                                            {t('autocomplete.prompt')}
+                                        </label>
+                                        <textarea
+                                            value={settings.autocompletePrompt}
+                                            onChange={(e) => setSetting('autocompletePrompt', e.target.value)}
+                                            className="settings-textarea"
+                                            placeholder={t('autocomplete.promptPlaceholder')}
+                                            rows={4}
+                                            style={{ width: '100%', resize: 'vertical' }}
+                                        />
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                            {settings.autocompletePrompt ? t('autocomplete.promptHint') : t('autocomplete.defaultPrompt')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
 
@@ -1250,6 +1224,10 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 <div className="shortcut-item">
                                     <span className="shortcut-desc">{t('shortcuts.focusMode')}</span>
                                     <kbd className="shortcut-key">Cmd+Shift+F</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.smartAutocomplete')}</span>
+                                    <kbd className="shortcut-key">Cmd+Shift+A</kbd>
                                 </div>
                                 <div className="shortcut-item">
                                     <span className="shortcut-desc">{t('shortcuts.closeWindow')}</span>
@@ -1287,6 +1265,10 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 <div className="shortcut-item">
                                     <span className="shortcut-desc">{t('shortcuts.selectAll')}</span>
                                     <kbd className="shortcut-key">Cmd+A</kbd>
+                                </div>
+                                <div className="shortcut-item">
+                                    <span className="shortcut-desc">{t('shortcuts.acceptAutocomplete')}</span>
+                                    <kbd className="shortcut-key">Tab</kbd>
                                 </div>
                             </div>
                         </div>

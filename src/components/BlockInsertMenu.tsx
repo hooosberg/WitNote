@@ -116,16 +116,18 @@ export const BlockInsertMenu: React.FC<BlockInsertMenuProps> = ({
         }
 
         const buttonSize = 28
-        const buttonGap = 6
 
         // 垂直位置：caretPos.top 是光标行顶部，加上行高一半实现居中
         // 手动微调偏移量（正值向下，负值向上）
-        const verticalOffset = -5  // 🎯 调整这个值来微调垂直对齐
+        const verticalOffset = -7  // 🎯 调整这个值来微调垂直对齐
         const lineCenterY = caretPos.top + (lineHeight / 2)
         const top = (textareaRect.top - containerRect.top) + lineCenterY - (buttonSize / 2) + verticalOffset
 
-        // 水平位置：textarea 左边界 - 容器左边界 - 按钮宽度 - 间距
-        const left = textareaRect.left - containerRect.left - buttonSize - buttonGap
+        // 水平位置：使用固定偏移量将菜单放置在左侧空白区域（Gutter）的中间
+        // 调节此参数可左右移动菜单位置
+        // Adjust this value to move the menu left/right
+        const MENU_LEFT_OFFSET = 35
+        const left = -MENU_LEFT_OFFSET
 
         return { top, left }
     }, [textareaRef, content])

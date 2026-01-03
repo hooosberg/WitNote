@@ -43,8 +43,15 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ---
 
-## ✨ Features (v1.3.0)
+## ✨ Features (v1.3.1)
 
+### 🆕 What's New in v1.3.1
+- ✨ **AI Autocomplete** — Context-aware AI writing suggestions, press Tab to accept sentence by sentence, making writing flow effortlessly
+- 🌓 **Dual-Pane Preview** — WYSIWYG, edit on the left, real-time preview on the right
+- ⚡️ **Quick Edit** — Enhanced floating menu for styling selected text
+- 🖼️ **Image Insertion** — Support paste, drag-and-drop, and menu insertion
+
+### 🔧 Core Features
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
 - 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
 - 🎭 **Rich Role Library** — Built-in 10+ selected role prompts (Writer, Translator, Polisher, etc.), one-click switch & custom support
@@ -57,9 +64,6 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 - 🗂️ **Card Grid View** — iOS-style with drag-and-drop sorting, polished context menus
 - 🔍 **Context Aware** — AI can directly read your current article or folder contents
 - 🎯 **Focus Mode** — Auto-switches to distraction-free editing when window narrows
-- 🌓 **Dual-Pane Preview** — WYSIWYG, edit on the left, real-time preview on the right
-- 🖼️ **Image Insertion** — Support paste, drag-and-drop, and menu insertion
-- ⚡️ **Quick Edit** — Enhanced floating menu for styling selected text
 
 ---
 
@@ -72,11 +76,11 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 
 | Platform | File | Note |
 |----------|------|------|
-| 🍎 macOS | `WitNote-1.3.0.dmg` | Apple Silicon (M1/M2/M3/M4/M5) Only |
-| 🪟 Windows (x64) | `WitNote-1.3.0-setup-x64.exe` | Standard PC (Intel/AMD) |
-| 🪟 Windows (ARM64) | `WitNote-1.3.0-setup-arm64.exe` | Snapdragon PCs (e.g. Surface Pro X) |
-| 🐧 Linux (AppImage) | `WitNote-1.3.0-x86_64.AppImage` | x64 Universal (ARM64 available) |
-| 📦 Linux (Deb) | `WitNote-1.3.0-amd64.deb` | Ubuntu/Debian x64 (ARM64 available) |
+| 🍎 macOS | `WitNote-1.3.1.dmg` | Apple Silicon (M1/M2/M3/M4/M5) Only |
+| 🪟 Windows (x64) | `WitNote-1.3.1-setup-x64.exe` | Standard PC (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.1-setup-arm64.exe` | Snapdragon PCs (e.g. Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.1-x86_64.AppImage` | x64 Universal (ARM64 available) |
+| 📦 Linux (Deb) | `WitNote-1.3.1-amd64.deb` | Ubuntu/Debian x64 (ARM64 available) |
 
 ---
 
@@ -165,10 +169,10 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 3. Double-click to run
 
 **Deb (Ubuntu/Debian):**
-1. Download `.deb` file (e.g., `WitNote-1.3.0-amd64.deb`)
+1. Download `.deb` file (e.g., `WitNote-1.3.1-amd64.deb`)
 2. Run installation via terminal (automatically handles dependencies):
    ```bash
-   sudo apt install ./WitNote-1.3.0-amd64.deb
+   sudo apt install ./WitNote-1.3.1-amd64.deb
    ```
 
 ### 🐧 Linux Installation
@@ -212,6 +216,15 @@ Supports connecting to OpenAI-compatible Cloud APIs.
 
 ## 📸 Screenshots
 
+### ✨ AI Autocomplete (v1.3.1 New)
+![AI Autocomplete](src/pic/witnote%20宣传截图/英文版设计/智能续写en.jpg)
+
+### 🌓 Dual-Pane Preview (v1.3.1 New)
+![Dual-Pane Preview](src/pic/witnote%20宣传截图/英文版设计/双栏实时预览.jpg)
+
+### ⚡️ Quick Edit (v1.3.1 New)
+![Quick Edit](src/pic/witnote%20宣传截图/英文版设计/快捷编辑.jpg)
+
 ### 🎯 Focus Mode
 ![Focus Mode](src/pic/witnote%20宣传截图/英文版设计/专注模式.jpg)
 
@@ -236,14 +249,8 @@ Supports connecting to OpenAI-compatible Cloud APIs.
 ### ⌨️ Shortcuts
 ![Shortcuts](src/pic/witnote%20宣传截图/英文版设计/SHORTCUT%20KEY.jpg)
 
-### 🌓 Dual-Pane Preview
-![Dual-Pane Preview](src/pic/witnote%20宣传截图/英文版设计/双栏实时预览.jpg)
-
 ### 🖼️ Image Insertion
 ![Image Insertion](src/pic/witnote%20宣传截图/英文版设计/插入图片.jpg)
-
-### ⚡️ Quick Edit
-![Quick Edit](src/pic/witnote%20宣传截图/英文版设计/快捷编辑.jpg)
 
 ---
 

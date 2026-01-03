@@ -39,6 +39,13 @@ import './styles/index.css'
 // 颜色配置已移动到 useColorTags hook
 const COLORS = TAG_COLORS
 
+// localStorage 键名
+const APP_STORAGE_KEYS = {
+    SHOW_SETTINGS: 'witnote-app-show-settings',
+    SETTINGS_TAB: 'witnote-app-settings-tab',
+    PREVIEW_MODE: 'witnote-app-preview-mode',
+}
+
 // 排序选项
 type SortOption = 'name-asc' | 'name-desc' | 'time-asc' | 'time-desc'
 
@@ -56,7 +63,7 @@ const AppContent: React.FC = () => {
     const llm = useLLM(engineStore)
     const { } = useToast()
     const folderOrder = useFolderOrder()
-    const { settings } = useSettings()
+    const { settings, setSetting } = useSettings()
     const colorTags = useColorTags()
 
     // 平台检测：为 Windows 添加特殊 class 以调整布局
@@ -161,12 +168,39 @@ const AppContent: React.FC = () => {
     const [_sortBy, _setSortBy] = useState<SortOption>('time-desc')
     const [filterColor, _setFilterColor] = useState<ColorKey | 'all'>('all')
 
-    // 设置面板状态
-    const [showSettings, setShowSettings] = useState(false)
-    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'>('appearance')
+    // 设置面板状态 - 从 localStorage 恢复
+    const [showSettings, setShowSettings] = useState(() => {
+        return localStorage.getItem(APP_STORAGE_KEYS.SHOW_SETTINGS) === 'true'
+    })
+    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'>(() => {
+        const saved = localStorage.getItem(APP_STORAGE_KEYS.SETTINGS_TAB)
+        if (saved && ['appearance', 'ai', 'persona', 'shortcuts', 'about'].includes(saved)) {
+            return saved as 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'
+        }
+        return 'appearance'
+    })
 
-    // 预览模式状态（从 Editor 提升到 App 以便在右上角显示按钮）
-    const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>('edit')
+    // 预览模式状态 - 从 localStorage 恢复
+    const [previewMode, setPreviewMode] = useState<'edit' | 'preview' | 'split'>(() => {
+        const saved = localStorage.getItem(APP_STORAGE_KEYS.PREVIEW_MODE)
+        if (saved && ['edit', 'preview', 'split'].includes(saved)) {
+            return saved as 'edit' | 'preview' | 'split'
+        }
+        return 'edit'
+    })
+
+    // 保存设置状态到 localStorage
+    useEffect(() => {
+        localStorage.setItem(APP_STORAGE_KEYS.SHOW_SETTINGS, String(showSettings))
+    }, [showSettings])
+
+    useEffect(() => {
+        localStorage.setItem(APP_STORAGE_KEYS.SETTINGS_TAB, settingsDefaultTab)
+    }, [settingsDefaultTab])
+
+    useEffect(() => {
+        localStorage.setItem(APP_STORAGE_KEYS.PREVIEW_MODE, previewMode)
+    }, [previewMode])
 
     // 三态切换：编辑 → 预览 → 分屏 → 编辑
     const togglePreviewMode = () => {
@@ -276,21 +310,10 @@ const AppContent: React.FC = () => {
                     llm.clearMessages()
                     console.log('📝 新文件，清空聊天记录')
 
-                    // 如果是 Markdown 文件，发送语法提示
-                    if (activeFile.extension === 'md' || activeFile.extension === '.md') {
-                        llm.injectMessage("assistant", t("editor.mdCheatSheet"));
-                    }
+
                 } else {
                     // 已有内容的文件：加载聊天记录
-                    llm.loadChatHistory(activeFile.path).then((history) => {
-                        // 如果是 Markdown 文件且聊天记录为空，发送语法提示
-                        if (
-                            (activeFile.extension === 'md' || activeFile.extension === '.md') &&
-                            (!history || history.length === 0)
-                        ) {
-                            llm.injectMessage("assistant", t("editor.mdCheatSheet"));
-                        }
-                    })
+                    llm.loadChatHistory(activeFile.path)
                 }
                 llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
             } else if (activeFolder) {
@@ -389,14 +412,30 @@ const AppContent: React.FC = () => {
             })
         })
 
+        // 监听智能续写切换快捷方式 (Cmd+Shift+A)
+        const unsubToggleSmartAutocomplete = window.shortcuts.onToggleSmartAutocomplete(async () => {
+            const newValue = !settings.autocompleteEnabled
+            await setSetting('autocompleteEnabled', newValue)
+            // 同步状态到主进程菜单
+            window.shortcuts.syncSmartAutocomplete(newValue)
+        })
+
         return () => {
             unsubCreateArticle()
             unsubCreateFolder()
             unsubOpenSettings()
             unsubToggleFocusMode()
             unsubCycleEditorMode()
+            unsubToggleSmartAutocomplete()
         }
-    }, [activeFolder, settings.defaultFormat, createNewFile, autoHideLeft, autoHideRight, manualFocusMode])
+    }, [activeFolder, settings.defaultFormat, createNewFile, autoHideLeft, autoHideRight, manualFocusMode, settings.autocompleteEnabled, setSetting])
+
+    // 同步智能续写状态到菜单（初始化和设置面板切换时）
+    useEffect(() => {
+        if (window.shortcuts?.syncSmartAutocomplete) {
+            window.shortcuts.syncSmartAutocomplete(settings.autocompleteEnabled)
+        }
+    }, [settings.autocompleteEnabled])
 
     // 关闭菜单（点击外部区域时）
     useEffect(() => {

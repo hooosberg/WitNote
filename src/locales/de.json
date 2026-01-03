@@ -124,9 +124,17 @@
         "zoomIn": "Vergrößern",
         "zoomOut": "Verkleinern",
         "fullscreen": "Vollbild",
+        "smartAutocomplete": "Intelligente Autovervollständigung umschalten",
+        "acceptAutocomplete": "Autovervollständigung akzeptieren",
         "windowsHint": "Unter Windows verwenden Sie Strg anstelle von Command."
     },
     "model": {
+        "selectModel": "Modell auswählen",
+        "downloaded": "Heruntergeladen",
+        "download": "Herunterladen",
+        "inUse": "In Verwendung",
+        "use": "Verwenden",
+        "builtIn": "Integriert",
         "speedUltraFast": "🚀 Ultra Schnell",
         "speedVeryFast": "⚡ Sehr Schnell",
         "speedFast": "🚗 Flüssig",
@@ -397,5 +405,47 @@
         "splitMode": "Geteilter Modus",
         "focusMode": "Fokus-Modus",
         "exitFocusMode": "Fokus-Modus beenden"
+    },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "Das leichteste, schnelle Antwort",
+            "rec": "Schnellvorschau, einfache Fragen & Antworten"
+        },
+        "qwen15b": {
+            "desc": "Leichtgewichtig, ausgeglichene Qualität",
+            "rec": "Tägliches Schreiben, intelligente Autovervollständigung"
+        },
+        "qwen3b": {
+            "desc": "Empfohlen! Balance zwischen Qualität und Geschwindigkeit",
+            "rec": "Artikel schreiben, tiefgehende Gespräche"
+        },
+        "qwen7b": {
+            "desc": "Am leistungsstärksten, gute Hardware erforderlich",
+            "rec": "Professionelles Schreiben, Programmierassistenz"
+        },
+        "llama3b": {
+            "desc": "Meta Llama-Serie",
+            "rec": "Englisches Schreiben, Übersetzungsunterstützung"
+        },
+        "phi3mini": {
+            "desc": "Microsoft Phi-Serie",
+            "rec": "Logische Analyse, Programmierassistenz"
+        }
+    },
+    "autocomplete": {
+        "acceptHint": "Tab zum Akzeptieren",
+        "loading": "Denken...",
+        "title": "Intelligente Autovervollständigung",
+        "enabled": "Intelligente Autovervollständigung aktivieren",
+        "enabledHint": "Vorschläge automatisch generieren nach Tipppause",
+        "useRolePrompt": "Rollenstil-Synchronisierung",
+        "useRolePromptHint": "Wenn aktiviert, folgt die Autovervollständigung dem ausgewählten Rollenprompt-Stil",
+        "prompt": "Benutzerdefinierter Prompt",
+        "promptPlaceholder": "Leer lassen für Standard...",
+        "promptHint": "Passen Sie den AI-Prompt an, um Vorschläge zu optimieren",
+        "delay": "Auslöseverzögerung",
+        "delayHint": "Verzögerung nach dem Tippen vor dem Auslösen (ms)",
+        "defaultPrompt": "Standard: Zitate/Gedichte original vervollständigen, idiomatische Ausdrücke, sonst natürlich fortfahren",
+        "defaultSystemPrompt": "Du bist ein Schreibassistent. Schreibe direkt basierend auf dem vom Benutzer bereitgestellten Kontext weiter.\nRegeln:\n1. Gib nur den fortgesetzten Inhalt aus, keine Erklärungen.\n2. Wiederhole keine vorhandenen Inhalte.\n3. Wenn du berühmte Zitate, bekannte Gedichte, klassische Zitate oder Redewendungen erkennst, vervollständige sie genau nach dem Original.\n4. Bei festen Ausdrücken oder gängigen Redewendungen ('nicht nur... sondern auch...', 'weil... deshalb...') vervollständige nach dem idiomatischen Gebrauch.\n5. In anderen Fällen sollte die Fortsetzung natürlich und flüssig sein, basierend auf Kontext und Stil.\n6. Halte es kurz, meistens nur einen Satz."
     }
 }

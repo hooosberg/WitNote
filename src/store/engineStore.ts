@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { OpenAIEngine, CloudConfig, DEFAULT_CLOUD_CONFIG } from '../engines/OpenAIEngine';
-import { DEFAULT_WEBLLM_MODEL } from '../engines/webllmModels';
+import { DEFAULT_WEBLLM_MODEL, ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels';
 import { OllamaModel } from '../services/types';
 import { isWebLLMEnabled } from '../utils/platform';
 
@@ -289,14 +289,8 @@ export function useEngineStore(): UseEngineStoreReturn {
             }));
 
             // 刷新缓存列表以便 UI 立即显示已下载状态
-            setTimeout(async () => {
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    const webllmCaches = cacheNames.filter(name =>
-                        name.includes('webllm') || name.includes('mlc')
-                    );
-                    setState(prev => ({ ...prev, webllmCachedModels: webllmCaches }));
-                }
+            setTimeout(() => {
+                refreshWebLLMCache();
             }, 100);
         } catch (error) {
             console.error('WebLLM 初始化失败:', error);
@@ -314,16 +308,72 @@ export function useEngineStore(): UseEngineStoreReturn {
         }
     }, [state.selectedModel]);
 
-    // 刷新 WebLLM 缓存列表
+    /**
+     * 验证单个模型的缓存完整性
+     * 通过计算缓存总大小与预期大小比对来判断是否完整下载
+     */
+    const verifyModelCacheIntegrity = async (modelId: string, expectedMB: number): Promise<boolean> => {
+        try {
+            if (!('caches' in window)) return false;
+
+            const cacheNames = await caches.keys();
+            // 查找包含该模型 ID 前缀的缓存（去掉 -MLC 后缀）
+            const modelPrefix = modelId.split('-MLC')[0];
+            const relevantCaches = cacheNames.filter(name =>
+                name.includes(modelPrefix) || name.includes('webllm') || name.includes('mlc')
+            );
+
+            if (relevantCaches.length === 0) return false;
+
+            // 计算所有相关缓存条目的总大小
+            let totalBytes = 0;
+            for (const cacheName of relevantCaches) {
+                const cache = await caches.open(cacheName);
+                const requests = await cache.keys();
+
+                // 只计算与当前模型相关的缓存条目
+                for (const request of requests) {
+                    if (request.url.includes(modelPrefix)) {
+                        const response = await cache.match(request);
+                        if (response) {
+                            const blob = await response.clone().blob();
+                            totalBytes += blob.size;
+                        }
+                    }
+                }
+            }
+
+            // 转换为 MB 并验证（允许 10% 误差）
+            const actualMB = totalBytes / (1024 * 1024);
+            const tolerance = 0.1;
+            const minMB = expectedMB * (1 - tolerance);
+
+            console.log(`📦 模型 ${modelId} 缓存验证: ${actualMB.toFixed(1)}MB / 预期 ${expectedMB}MB (最小 ${minMB.toFixed(1)}MB)`);
+
+            return actualMB >= minMB;
+        } catch (e) {
+            console.warn(`验证模型缓存失败 ${modelId}:`, e);
+            return false;
+        }
+    };
+
+    // 刷新 WebLLM 缓存列表（只包含完整下载的模型）
     const refreshWebLLMCache = useCallback(async () => {
         try {
-            if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                const webllmCaches = cacheNames.filter(name =>
-                    name.includes('webllm') || name.includes('mlc')
-                );
-                setState(prev => ({ ...prev, webllmCachedModels: webllmCaches }));
+            if (!('caches' in window)) return;
+
+            const verifiedModels: string[] = [];
+
+            // 验证每个已知模型的完整性
+            for (const model of ALL_WEBLLM_MODELS_INFO) {
+                const isComplete = await verifyModelCacheIntegrity(model.model_id, model.expectedBytes);
+                if (isComplete) {
+                    verifiedModels.push(model.model_id);
+                }
             }
+
+            console.log('✅ 已验证的完整模型:', verifiedModels);
+            setState(prev => ({ ...prev, webllmCachedModels: verifiedModels }));
         } catch (e) {
             console.warn('无法读取缓存:', e);
         }
@@ -332,15 +382,55 @@ export function useEngineStore(): UseEngineStoreReturn {
     // 删除 WebLLM 模型缓存
     const deleteWebLLMModel = useCallback(async (modelId: string) => {
         try {
+            // 提取模型前缀（去掉 -MLC 后缀）
+            const modelPrefix = modelId.split('-MLC')[0];
+            console.log('🎯 要删除的模型:', modelId);
+            console.log('🎯 模型前缀:', modelPrefix);
+
+            // 1. 删除 Cache Storage 中与该模型相关的缓存条目
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
-                for (const name of cacheNames) {
-                    if (name.includes(modelId) || name.includes('webllm')) {
-                        await caches.delete(name);
+                console.log('🔍 所有缓存:', cacheNames);
+
+                for (const cacheName of cacheNames) {
+                    // 检查包含 webllm 或 mlc 的缓存
+                    if (cacheName.includes('webllm') || cacheName.includes('mlc') || cacheName.includes(modelPrefix)) {
+                        const cache = await caches.open(cacheName);
+                        const requests = await cache.keys();
+
+                        // 只删除与当前模型相关的缓存条目
+                        let deletedEntries = 0;
+                        for (const request of requests) {
+                            if (request.url.includes(modelPrefix)) {
+                                await cache.delete(request);
+                                deletedEntries++;
+                            }
+                        }
+                        console.log(`🗑️ 从缓存 ${cacheName} 删除了 ${deletedEntries} 个条目`);
+
+                        // 如果缓存变空了，删除整个缓存
+                        const remainingRequests = await cache.keys();
+                        if (remainingRequests.length === 0) {
+                            await caches.delete(cacheName);
+                            console.log(`🗑️ 删除空缓存: ${cacheName}`);
+                        }
                     }
                 }
-                await refreshWebLLMCache();
             }
+
+            // 2. 删除 IndexedDB 中与该模型相关的数据库
+            if (window.indexedDB?.databases) {
+                const dbs = await window.indexedDB.databases();
+                for (const db of dbs) {
+                    if (db.name && db.name.includes(modelPrefix)) {
+                        console.log('🗑️ 删除 IndexedDB:', db.name);
+                        window.indexedDB.deleteDatabase(db.name);
+                    }
+                }
+            }
+
+            console.log(`✅ 模型 ${modelId} 缓存已删除`);
+            await refreshWebLLMCache();
         } catch (e) {
             console.error('删除缓存失败:', e);
         }

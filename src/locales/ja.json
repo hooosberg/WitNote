@@ -102,6 +102,12 @@
         "clearCacheFailed": "キャッシュのクリアに失敗しました"
     },
     "model": {
+        "selectModel": "モデルを選択",
+        "downloaded": "ダウンロード済み",
+        "download": "ダウンロード",
+        "inUse": "使用中",
+        "use": "使用",
+        "builtIn": "内蔵",
         "speedUltraFast": "🚀 超高速",
         "speedVeryFast": "⚡ 高速",
         "speedFast": "🚗 スムーズ",
@@ -307,6 +313,8 @@
         "zoomIn": "拡大",
         "zoomOut": "縮小",
         "fullscreen": "全画面表示",
+        "smartAutocomplete": "スマート自動補完切替",
+        "acceptAutocomplete": "自動補完を承認",
         "windowsHint": "WindowsではCommandキーの代わりにCtrlキーを使用してください。"
     },
     "menu": {
@@ -398,5 +406,47 @@
         "splitMode": "分割モード",
         "focusMode": "集中モード",
         "exitFocusMode": "集中モード終了"
+    },
+    "webllmModels": {
+        "qwen05b": {
+            "desc": "超軽量、高速応答",
+            "rec": "クイックプレビュー、簡単なQ&A"
+        },
+        "qwen15b": {
+            "desc": "軽量、バランスの取れた品質",
+            "rec": "日常の執筆、スマート補完"
+        },
+        "qwen3b": {
+            "desc": "推奨！品質と速度のバランス",
+            "rec": "記事作成、深い会話"
+        },
+        "qwen7b": {
+            "desc": "最強、高性能ハードウェアが必要",
+            "rec": "専門的な執筆、コーディング支援"
+        },
+        "llama3b": {
+            "desc": "Meta Llama シリーズ",
+            "rec": "英語の執筆、翻訳支援"
+        },
+        "phi3mini": {
+            "desc": "Microsoft Phi シリーズ",
+            "rec": "論理分析、コーディング支援"
+        }
+    },
+    "autocomplete": {
+        "acceptHint": "Tabで承認",
+        "loading": "思考中...",
+        "title": "スマート自動補完",
+        "enabled": "スマート自動補完を有効にする",
+        "enabledHint": "入力停止後に続きを自動生成します",
+        "useRolePrompt": "役割スタイル同期",
+        "useRolePromptHint": "有効にすると、自動補完は選択された役割のプロンプトスタイルに従います",
+        "prompt": "カスタムプロンプト",
+        "promptPlaceholder": "デフォルトを使用するには空欄に...",
+        "promptHint": "AIプロンプトをカスタマイズして生成を最適化",
+        "delay": "トリガー遅延",
+        "delayHint": "入力停止からトリガーまでの遅延 (ms)",
+        "defaultPrompt": "デフォルト：名言や詩句は原文通りに補完、慣用表現に従い、その他は自然に続ける",
+        "defaultSystemPrompt": "あなたは執筆アシスタントです。ユーザーが提供した文脈に基づいて、次の内容を直接書き続けてください。\nルール：\n1. 続きの内容のみを出力し、説明はしないこと\n2. 既存の内容を繰り返さないこと\n3. 名言、有名な詩句、経典の引用、または慣用表現を認識した場合は、原文通りに正確に補完すること\n4. 固定表現や慣用句（「～だけでなく～も」「なぜなら～だから」など）は慣用法に従って補完すること\n5. その他の場合は、文脈とスタイルに基づいて自然に流暢に続けること\n6. 簡潔に保ち、通常は一文程度で書くこと"
     }
 }
