@@ -59,6 +59,11 @@ export interface AppSettings {
     // 编辑器偏好
     defaultFormat: 'txt' | 'md';  // 默认文件格式
     smartFormatConversion: boolean;  // 智能格式转换（true: MD转TXT时去标符, false: 1:1转换）
+
+    // 自动补齐配置
+    autocompleteEnabled: boolean;  // 是否启用自动补齐
+    autocompletePrompt: string;    // 自定义续写提示词（空则使用默认）
+    autocompleteDelay: number;     // 延迟时间（毫秒）
 }
 
 // 默认设置
@@ -82,7 +87,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
     // 编辑器偏好
     defaultFormat: 'md',
-    smartFormatConversion: true
+    smartFormatConversion: true,
+
+    // 自动补齐配置
+    autocompleteEnabled: true,
+    autocompletePrompt: '', // 空则使用默认提示词
+    autocompleteDelay: 500
 };
 
 export interface UseSettingsReturn {

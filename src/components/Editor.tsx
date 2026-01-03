@@ -12,6 +12,10 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { FloatingToolbar } from './FloatingToolbar'
 import { BlockInsertMenu } from './BlockInsertMenu'
+import { AutocompletePopup } from './AutocompletePopup'
+import { useAutocomplete } from '../hooks/useAutocomplete'
+import { useEngineStore } from '../store/engineStore'
+import { useSettings } from '../hooks/useSettings'
 
 interface EditorProps {
     content: string
@@ -26,6 +30,7 @@ interface EditorProps {
     createdAt?: number
     modifiedAt?: number
     previewMode: 'edit' | 'preview' | 'split'
+    onPreviewModeChange?: (mode: 'edit' | 'preview' | 'split') => void
 }
 
 // 配置 marked 使用 GitHub 风格
@@ -152,12 +157,24 @@ export const Editor: React.FC<EditorProps> = ({
     focusMode = false,
     createdAt,
     modifiedAt,
-    previewMode
+    previewMode,
+    onPreviewModeChange
 }) => {
     const { t, i18n } = useTranslation()
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const titleRef = useRef<HTMLTextAreaElement>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
+
+    // 智能联想功能
+    const engineStore = useEngineStore()
+    const { settings } = useSettings()
+    const autocomplete = useAutocomplete(engineStore, {
+        debounceMs: settings.autocompleteDelay,
+        maxContextLength: 500,
+        maxTokens: 50,
+        enabled: settings.autocompleteEnabled && (previewMode === 'edit' || previewMode === 'split'),
+        customPrompt: settings.autocompletePrompt
+    })
     // 分屏模式滚动联动 ref
     const splitLeftRef = useRef<HTMLDivElement>(null)
     const splitRightRef = useRef<HTMLDivElement>(null)
@@ -408,7 +425,13 @@ export const Editor: React.FC<EditorProps> = ({
                         <div className="format-toggle-switch">
                             <button
                                 className={`format-option ${!isMarkdown ? 'active' : ''}`}
-                                onClick={isMarkdown ? onFormatToggle : undefined}
+                                onClick={() => {
+                                    if (isMarkdown && onFormatToggle) {
+                                        onFormatToggle()
+                                        // 转换为 TXT 时自动切回编辑模式
+                                        onPreviewModeChange?.('edit')
+                                    }
+                                }}
                                 title={isMarkdown ? '转换为 TXT 副本' : '当前格式'}
                             >
                                 TXT
@@ -475,16 +498,92 @@ export const Editor: React.FC<EditorProps> = ({
                                     />
                                 )}
 
-                                <textarea
-                                    ref={textareaRef}
-                                    className="editor-body"
-                                    value={content}
-                                    onChange={(e) => onChange(e.target.value)}
-                                    onFocus={handleBodyFocus}
+                                {/* 智能联想弹出框与文本框包装 */}
+                                <div style={{ position: 'relative' }}>
+                                    <AutocompletePopup
+                                        textareaRef={textareaRef}
+                                        content={autocomplete.lastContent || content}
+                                        cursorPosition={autocomplete.cursorPosition}
+                                        suggestion={autocomplete.suggestion}
+                                        isLoading={autocomplete.isLoading}
+                                    />
 
-                                    placeholder={t('editor.bodyPlaceholder')}
-                                    spellCheck={false}
-                                />
+                                    <textarea
+                                        ref={textareaRef}
+                                        className="editor-body"
+                                        value={content}
+                                        onChange={(e) => {
+                                            onChange(e.target.value)
+                                            // 触发联想
+                                            autocomplete.handleInput(e.target.value, e.target.selectionStart)
+                                        }}
+                                        onClick={(e) => {
+                                            // 点击时检查是否在末尾，触发续写
+                                            const target = e.target as HTMLTextAreaElement
+                                            autocomplete.handleCursorChange(target.value, target.selectionStart)
+                                        }}
+                                        onKeyDown={(e) => {
+                                            // Tab 键接受联想建议
+                                            if (e.key === 'Tab' && autocomplete.suggestion) {
+                                                e.preventDefault()
+                                                const suggestion = autocomplete.acceptSuggestion()
+                                                if (suggestion && textareaRef.current) {
+                                                    // 保存当前滚动位置
+                                                    const scrollTop = textareaRef.current.scrollTop
+                                                    const cursorPos = textareaRef.current.selectionStart
+                                                    const newContent = content.slice(0, cursorPos) + suggestion + content.slice(cursorPos)
+                                                    onChange(newContent)
+                                                    // 移动光标到建议末尾
+                                                    const newPos = cursorPos + suggestion.length
+                                                    setTimeout(() => {
+                                                        if (textareaRef.current) {
+                                                            // 恢复滚动位置
+                                                            textareaRef.current.scrollTop = scrollTop
+                                                            textareaRef.current.setSelectionRange(newPos, newPos)
+                                                            // 确保光标可见（但不跳到顶部）
+                                                            textareaRef.current.blur()
+                                                            textareaRef.current.focus()
+                                                            // 再次恢复滚动位置
+                                                            textareaRef.current.scrollTop = scrollTop
+                                                            // 触发连续续写
+                                                            autocomplete.triggerContinuation(newContent, newPos)
+                                                        }
+                                                    }, 0)
+                                                }
+                                                return
+                                            }
+                                            // Esc 键取消联想
+                                            if (e.key === 'Escape' && autocomplete.suggestion) {
+                                                autocomplete.dismissSuggestion()
+                                                return
+                                            }
+                                        }}
+                                        onFocus={handleBodyFocus}
+                                        placeholder={t('editor.bodyPlaceholder')}
+                                        spellCheck={false}
+                                    />
+                                </div>
+
+                                {/* 底部分隔线和统计 */}
+                                <div className="editor-divider editor-divider-bottom">
+                                    <span className="divider-dot"></span>
+                                    <span className="divider-dot"></span>
+                                    <span className="divider-dot"></span>
+                                </div>
+
+                                <div className="editor-stats">
+                                    <span className="stat-item">{wordCount} {t('editor.wordCount')}</span>
+                                    {modifiedAt && (
+                                        <span className="stat-item">
+                                            {t('editor.modified')}: {new Date(modifiedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
+                                                month: 'numeric',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -553,16 +652,71 @@ export const Editor: React.FC<EditorProps> = ({
                             />
                         )}
 
-                        <textarea
-                            ref={textareaRef}
-                            className="editor-body"
-                            value={content}
-                            onChange={(e) => onChange(e.target.value)}
+                        {/* 智能联想弹出框与文本框包装 */}
+                        <div style={{ position: 'relative', display: showPreview ? 'none' : 'block' }}>
+                            {!showPreview && (
+                                <AutocompletePopup
+                                    textareaRef={textareaRef}
+                                    content={autocomplete.lastContent || content}
+                                    cursorPosition={autocomplete.cursorPosition}
+                                    suggestion={autocomplete.suggestion}
+                                    isLoading={autocomplete.isLoading}
+                                />
+                            )}
 
-                            placeholder={t('editor.bodyPlaceholder')}
-                            spellCheck={false}
-                            style={{ display: showPreview ? 'none' : 'block' }}
-                        />
+                            <textarea
+                                ref={textareaRef}
+                                className="editor-body"
+                                value={content}
+                                onChange={(e) => {
+                                    onChange(e.target.value)
+                                    // 触发联想
+                                    autocomplete.handleInput(e.target.value, e.target.selectionStart)
+                                }}
+                                onClick={(e) => {
+                                    // 点击时检查是否在末尾，触发续写
+                                    const target = e.target as HTMLTextAreaElement
+                                    autocomplete.handleCursorChange(target.value, target.selectionStart)
+                                }}
+                                onKeyDown={(e) => {
+                                    // Tab 键接受联想建议
+                                    if (e.key === 'Tab' && autocomplete.suggestion) {
+                                        e.preventDefault()
+                                        const suggestion = autocomplete.acceptSuggestion()
+                                        if (suggestion && textareaRef.current) {
+                                            // 保存当前滚动位置
+                                            const scrollTop = textareaRef.current.scrollTop
+                                            const cursorPos = textareaRef.current.selectionStart
+                                            const newContent = content.slice(0, cursorPos) + suggestion + content.slice(cursorPos)
+                                            onChange(newContent)
+                                            // 移动光标到建议末尾
+                                            const newPos = cursorPos + suggestion.length
+                                            setTimeout(() => {
+                                                if (textareaRef.current) {
+                                                    // 恢复滚动位置
+                                                    textareaRef.current.scrollTop = scrollTop
+                                                    textareaRef.current.setSelectionRange(newPos, newPos)
+                                                    // 确保光标可见
+                                                    textareaRef.current.blur()
+                                                    textareaRef.current.focus()
+                                                    textareaRef.current.scrollTop = scrollTop
+                                                    // 触发连续续写
+                                                    autocomplete.triggerContinuation(newContent, newPos)
+                                                }
+                                            }, 0)
+                                        }
+                                        return
+                                    }
+                                    // Esc 键取消联想
+                                    if (e.key === 'Escape' && autocomplete.suggestion) {
+                                        autocomplete.dismissSuggestion()
+                                        return
+                                    }
+                                }}
+                                placeholder={t('editor.bodyPlaceholder')}
+                                spellCheck={false}
+                            />
+                        </div>
 
                         <div
                             className="editor-preview"

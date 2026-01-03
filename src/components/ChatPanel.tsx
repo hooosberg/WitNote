@@ -155,7 +155,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         <div className="chat-panel-v2">
             {/* 消息区域 - 添加 relative 定位限制覆盖层范围 */}
             <div className="chat-messages" style={{ position: 'relative' }}>
-                {/* WebLLM 首次使用提示 */}
+                {/* WebLLM 首次使用 - 模型选择界面 */}
                 {showWebLLMSetup && (
                     <div style={{
                         position: 'absolute',
@@ -165,79 +165,140 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                         bottom: 0,
                         display: 'flex',
                         justifyContent: 'center',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
                         background: 'var(--bg-primary)',
                         zIndex: 10,
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        padding: '24px',
+                        overflowY: 'auto'
                     }}>
                         <div style={{
-                            width: '64px',
-                            height: '64px',
-                            borderRadius: '16px',
-                            background: 'var(--bg-secondary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '24px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                            width: '100%',
+                            maxWidth: '400px',
+                            margin: '0 auto'
                         }}>
-                            <Server size={32} style={{ color: 'var(--accent-color)' }} />
-                        </div>
-
-                        <h3 style={{
-                            fontSize: '20px',
-                            fontWeight: 600,
-                            color: 'var(--text-primary)',
-                            marginBottom: '12px',
-                            marginTop: 0
-                        }}>{t('chat.firstUseTitle')}</h3>
-
-                        <p style={{
-                            fontSize: '14px',
-                            color: 'var(--text-secondary)',
-                            lineHeight: '1.6',
-                            marginBottom: '32px',
-                            marginTop: 0,
-                            textAlign: 'center',
-                            maxWidth: '300px'
-                        }}>
-                            <span dangerouslySetInnerHTML={{
-                                __html: t('chat.firstUseDesc', { size: ALL_WEBLLM_MODELS_INFO[0]?.size || '290MB' }).replace('\n', '<br />')
-                            }} />
-                        </p>
-
-                        <button
-                            onClick={() => {
-                                engineStore.completeWebLLMSetup();
-                                engineStore.initWebLLM(engineStore.selectedModel);
-                            }}
-                            style={{
-                                padding: '10px 24px',
-                                background: 'var(--accent-color)',
-                                color: '#ffffff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                fontWeight: 500,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.opacity = '0.9';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.opacity = '1';
-                                e.currentTarget.style.transform = 'translateY(0)';
-                            }}
-                        >
-                            <Cloud size={16} />
-                            {t('chat.startDownload')}
-                        </button>
+                                gap: '12px',
+                                marginBottom: '8px'
+                            }}>
+                                <div style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    borderRadius: '12px',
+                                    background: 'var(--bg-secondary)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                }}>
+                                    <Bot size={24} style={{ color: 'var(--accent-color)' }} />
+                                </div>
+                                <div>
+                                    <h3 style={{
+                                        fontSize: '18px',
+                                        fontWeight: 600,
+                                        color: 'var(--text-primary)',
+                                        margin: 0
+                                    }}>{t('chat.selectModel')}</h3>
+                                    <p style={{
+                                        fontSize: '13px',
+                                        color: 'var(--text-secondary)',
+                                        margin: '4px 0 0 0'
+                                    }}>{t('chat.chooseModelHint')}</p>
+                                </div>
+                            </div>
+
+                            {/* 模型列表 */}
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                                marginTop: '16px'
+                            }}>
+                                {ALL_WEBLLM_MODELS_INFO.map((model) => (
+                                    <div
+                                        key={model.model_id}
+                                        onClick={() => {
+                                            engineStore.selectModel(model.model_id);
+                                            engineStore.completeWebLLMSetup();
+                                            engineStore.initWebLLM(model.model_id);
+                                        }}
+                                        style={{
+                                            padding: '14px 16px',
+                                            background: 'var(--bg-card)',
+                                            borderRadius: '10px',
+                                            border: '1px solid var(--border-color)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.borderColor = 'var(--accent-color)';
+                                            e.currentTarget.style.background = 'var(--bg-hover)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.borderColor = 'var(--border-color)';
+                                            e.currentTarget.style.background = 'var(--bg-card)';
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                            <span style={{
+                                                fontSize: '14px',
+                                                fontWeight: 600,
+                                                color: 'var(--text-primary)'
+                                            }}>
+                                                {model.displayName}
+                                            </span>
+                                            <span style={{
+                                                fontSize: '11px',
+                                                padding: '2px 8px',
+                                                borderRadius: '10px',
+                                                background: 'var(--border-color)',
+                                                color: 'var(--text-secondary)'
+                                            }}>
+                                                {model.size}
+                                            </span>
+                                            {model.isBuiltIn && (
+                                                <span style={{
+                                                    fontSize: '10px',
+                                                    padding: '2px 6px',
+                                                    borderRadius: '4px',
+                                                    background: 'rgba(16, 185, 129, 0.1)',
+                                                    color: '#10b981'
+                                                }}>
+                                                    {t('chat.builtIn')}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div style={{
+                                            fontSize: '12px',
+                                            color: 'var(--text-primary)',
+                                            marginBottom: '4px'
+                                        }}>
+                                            {model.description}
+                                        </div>
+                                        {model.features && (
+                                            <div style={{
+                                                fontSize: '11px',
+                                                color: 'var(--text-secondary)'
+                                            }}>
+                                                {model.features}
+                                            </div>
+                                        )}
+                                        {model.recommended && (
+                                            <div style={{
+                                                fontSize: '10px',
+                                                color: 'var(--accent-color)',
+                                                marginTop: '4px'
+                                            }}>
+                                                ✨ {model.recommended}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -656,35 +717,154 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     ) || ALL_WEBLLM_MODELS_INFO[0];
 
                                     return (
-                                        <div className="model-display-card" style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            padding: '6px 10px',
-                                            background: 'var(--bg-hover)',
-                                            border: '1px solid var(--border-color)',
-                                            borderRadius: '6px'
-                                        }}>
+                                        <div className="webllm-model-selector" ref={menuRef}>
+                                            <button
+                                                className="model-name-btn"
+                                                onClick={() => setShowModelMenu(!showModelMenu)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    padding: '6px 10px',
+                                                    background: 'var(--bg-hover)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '12px',
+                                                    fontWeight: 500,
+                                                    color: 'var(--text-primary)',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = 'var(--bg-card)'
+                                                    e.currentTarget.style.borderColor = 'var(--accent-color)'
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = 'var(--bg-hover)'
+                                                    e.currentTarget.style.borderColor = 'var(--border-color)'
+                                                }}
+                                            >
+                                                <span style={{
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    color: 'var(--text-primary)'
+                                                }}>
+                                                    {modelInfo.displayName}
+                                                </span>
 
-                                            <span className="model-display-name" style={{
-                                                fontSize: '12px',
-                                                fontWeight: 600,
-                                                color: 'var(--text-primary)'
-                                            }}>
-                                                {modelInfo.displayName}
-                                            </span>
+                                                <span style={{
+                                                    fontSize: '11px',
+                                                    fontWeight: 500,
+                                                    color: '#10b981',
+                                                    padding: '2px 6px',
+                                                    background: 'rgba(16, 185, 129, 0.1)',
+                                                    borderRadius: '4px'
+                                                }}>
+                                                    {t('chat.builtIn')}
+                                                </span>
+                                            </button>
 
-                                            <span className="model-display-badge" style={{
-                                                fontSize: '11px',
-                                                fontWeight: 500,
-                                                color: '#10b981',
-                                                padding: '2px 6px',
-                                                background: 'rgba(16, 185, 129, 0.1)',
-                                                borderRadius: '4px'
-                                            }}>
-                                                {t('chat.builtIn')}
-                                            </span>
+                                            {showModelMenu && createPortal(
+                                                <div className="model-dropdown" ref={menuRef}>
+                                                    <div className="model-section">
+                                                        <div className="model-section-title">{t('chat.selectModel')}</div>
+                                                        {ALL_WEBLLM_MODELS_INFO.map((model) => {
+                                                            const isCurrentModel = model.model_id === engineStore.selectedModel
+                                                            const isDownloaded = engineStore.webllmCachedModels.some(c => c.includes(model.model_id.split('-MLC')[0]))
 
+                                                            return (
+                                                                <div
+                                                                    key={model.model_id}
+                                                                    className={`model-item ${isCurrentModel ? 'active' : ''}`}
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        gap: '4px',
+                                                                        padding: '10px 12px',
+                                                                        background: isCurrentModel ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                                                                        borderRadius: '6px',
+                                                                        marginBottom: '4px',
+                                                                        cursor: isCurrentModel ? 'default' : 'pointer',
+                                                                        transition: 'all 0.2s'
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        if (!isCurrentModel) {
+                                                                            // 切换模型并开始加载
+                                                                            engineStore.selectModel(model.model_id)
+                                                                            engineStore.initWebLLM(model.model_id)
+                                                                            setShowModelMenu(false)
+                                                                        }
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        if (!isCurrentModel) {
+                                                                            e.currentTarget.style.background = 'var(--bg-hover)'
+                                                                        }
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        if (!isCurrentModel) {
+                                                                            e.currentTarget.style.background = 'transparent'
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                        <span style={{
+                                                                            fontSize: '13px',
+                                                                            fontWeight: 600,
+                                                                            color: 'var(--text-primary)'
+                                                                        }}>
+                                                                            {model.displayName}
+                                                                        </span>
+                                                                        <span style={{
+                                                                            fontSize: '11px',
+                                                                            color: 'var(--text-tertiary)'
+                                                                        }}>
+                                                                            {model.size}
+                                                                        </span>
+                                                                        {isDownloaded && (
+                                                                            <span style={{
+                                                                                fontSize: '10px',
+                                                                                color: '#10b981',
+                                                                                marginLeft: 'auto'
+                                                                            }}>✓ {t('chat.downloaded')}</span>
+                                                                        )}
+                                                                        {isCurrentModel && (
+                                                                            <span style={{
+                                                                                fontSize: '11px',
+                                                                                fontWeight: 500,
+                                                                                color: '#10b981',
+                                                                                padding: '2px 8px',
+                                                                                background: 'rgba(16, 185, 129, 0.1)',
+                                                                                borderRadius: '4px',
+                                                                                marginLeft: 'auto',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '4px'
+                                                                            }}>
+                                                                                <Check size={10} /> {t('chat.inUse')}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{
+                                                                        fontSize: '11px',
+                                                                        color: 'var(--text-secondary)'
+                                                                    }}>
+                                                                        {model.description}
+                                                                    </div>
+                                                                    {model.recommended && (
+                                                                        <div style={{
+                                                                            fontSize: '10px',
+                                                                            color: 'var(--accent-color)'
+                                                                        }}>
+                                                                            ✨ {model.recommended}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>,
+                                                document.body
+                                            )}
                                         </div>
                                     );
                                 })()

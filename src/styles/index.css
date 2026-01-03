@@ -1344,6 +1344,11 @@ select:focus {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box;
+  /* 使用 flex 布局，让底部栏在内容少时贴底 */
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 120px);
+  /* 减去标题区域和其他元素的高度 */
 }
 
 
@@ -1423,9 +1428,12 @@ select:focus {
   background: var(--text-muted);
 }
 
-/* 底部分隔线 - 更多上边距 */
+/* 底部分隔线 - 使用 auto margin 实现贴底磁吸效果 */
+/* 内容少时贴底，内容多时与文字保持距离 */
 .editor-divider-bottom {
-  margin-top: 40px;
+  margin-top: auto;
+  /* 与文字的最小距离 */
+  padding-top: 180px;
 }
 
 /* 文章统计信息 */
@@ -1743,7 +1751,8 @@ select:focus {
   align-items: center;
   gap: 4px;
   padding: 2px 4px;
-  background: var(--bg-card);
+  background: var(--bg-main);
+  /* 使用主背景色确保不透明 */
   /* 不透明背景，提高可读性 */
   border: 1px solid var(--border-color);
   border-radius: 24px;
@@ -4817,4 +4826,40 @@ select:focus {
 .engine-selector-item.active .engine-label {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+/* ============ 智能联想弹出框（镜像层方案）============ */
+/* 
+ * 镜像层：完整复制 textarea 的样式和尺寸
+ * 渲染透明原文（占位）+ 可见续写
+ * z-index 低于设置面板(10000)和浮动工具栏(9999)
+ */
+.autocomplete-mirror {
+  pointer-events: none;
+  z-index: 100;
+}
+
+.autocomplete-suggestion {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.autocomplete-loading {
+  color: var(--text-tertiary);
+  opacity: 0.4;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }

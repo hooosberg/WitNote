@@ -455,9 +455,26 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                                             <span className="builtin-tag">{t('chat.builtIn')}</span>
                                                         )}
                                                     </div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 500 }}>
                                                         {modelInfo.description}
                                                     </div>
+                                                    {modelInfo.features && (
+                                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                                                            {modelInfo.features}
+                                                        </div>
+                                                    )}
+                                                    {modelInfo.recommended && (
+                                                        <div style={{
+                                                            fontSize: '10px',
+                                                            color: 'var(--accent-color)',
+                                                            marginTop: '4px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px'
+                                                        }}>
+                                                            <span>✨ {modelInfo.recommended}</span>
+                                                        </div>
+                                                    )}
                                                     {/* 进度条 */}
                                                     {isLoading && (
                                                         <div style={{ marginTop: '8px' }}>
@@ -877,6 +894,74 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                 </div>
                             )
                         }
+
+                        {/* 智能续写设置（所有引擎通用） */}
+                        <div className="settings-section fade-in" style={{ marginTop: '24px' }}>
+                            <div className="settings-section-header">
+                                <h3 className="settings-section-title">{t('autocomplete.title')}</h3>
+                                {/* 启用开关 */}
+                                <label className="toggle-switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.autocompleteEnabled}
+                                        onChange={(e) => setSetting('autocompleteEnabled', e.target.checked)}
+                                    />
+                                    <span className="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {t('autocomplete.enabledHint')}
+                            </p>
+
+                            {settings.autocompleteEnabled && (
+                                <div style={{
+                                    padding: '16px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '16px'
+                                }}>
+                                    {/* 延迟设置 */}
+                                    <div>
+                                        <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
+                                            {t('autocomplete.delay')} ({settings.autocompleteDelay}ms)
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="200"
+                                            max="2000"
+                                            step="100"
+                                            value={settings.autocompleteDelay}
+                                            onChange={(e) => setSetting('autocompleteDelay', parseInt(e.target.value))}
+                                            style={{ width: '100%' }}
+                                        />
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                            {t('autocomplete.delayHint')}
+                                        </p>
+                                    </div>
+
+                                    {/* 自定义提示词 */}
+                                    <div>
+                                        <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
+                                            {t('autocomplete.prompt')}
+                                        </label>
+                                        <textarea
+                                            value={settings.autocompletePrompt}
+                                            onChange={(e) => setSetting('autocompletePrompt', e.target.value)}
+                                            className="settings-textarea"
+                                            placeholder={t('autocomplete.promptPlaceholder')}
+                                            rows={4}
+                                            style={{ width: '100%', resize: 'vertical' }}
+                                        />
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                            {settings.autocompletePrompt ? t('autocomplete.promptHint') : t('autocomplete.defaultPrompt')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div >
                 );
 

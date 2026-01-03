@@ -75,6 +75,8 @@
         "initializing": "Initializing...",
         "builtIn": "Built-in",
         "moreModels": "More models in Settings...",
+        "selectModel": "Select Model",
+        "chooseModelHint": "Choose an AI model to get started",
         "aiEngine": "AI Engine",
         "engineWebLLM": "Built-in WebLLM",
         "engineOllama": "External Ollama",
@@ -404,5 +406,18 @@
         "healthPrompt": "You are a healthy living assistant. Provide exercise, diet, and lifestyle advice. Based on science, focused on practicality.",
         "chef": "Cooking",
         "chefPrompt": "You are a cooking assistant. Share recipes, cooking techniques, and ingredient pairing suggestions. Clear steps, easy to follow."
+    },
+    "autocomplete": {
+        "acceptHint": "Press Tab to accept",
+        "loading": "Thinking...",
+        "title": "Smart Autocomplete",
+        "enabled": "Enable Smart Autocomplete",
+        "enabledHint": "Auto-generate suggestions after typing pauses",
+        "prompt": "Custom Prompt",
+        "promptPlaceholder": "Leave empty for default...",
+        "promptHint": "Customize the AI prompt for better suggestions",
+        "delay": "Trigger Delay",
+        "delayHint": "Delay after typing stops before triggering (ms)",
+        "defaultPrompt": "Default: Continue writing naturally, keep it concise"
     }
 }

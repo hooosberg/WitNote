@@ -75,6 +75,8 @@
         "initializing": "正在初始化...",
         "builtIn": "内置",
         "moreModels": "设置中查看更多模型...",
+        "selectModel": "选择模型",
+        "chooseModelHint": "请选择一个 AI 模型开始使用",
         "aiEngine": "AI 引擎",
         "engineWebLLM": "内置 WebLLM",
         "engineOllama": "外部 Ollama",
@@ -404,5 +406,18 @@
         "healthPrompt": "你是健康生活助手，提供运动、饮食、作息等健康建议。基于科学，注重实用。",
         "chef": "厨艺助手",
         "chefPrompt": "你是厨艺助手，分享食谱、烹饪技巧和食材搭配建议。步骤清晰，易于操作。"
+    },
+    "autocomplete": {
+        "acceptHint": "按 Tab 接受",
+        "loading": "思考中...",
+        "title": "智能续写",
+        "enabled": "启用智能续写",
+        "enabledHint": "输入停顿后自动生成续写建议",
+        "prompt": "自定义提示词",
+        "promptPlaceholder": "留空使用默认提示词...",
+        "promptHint": "自定义 AI 续写的提示词，可优化生成效果",
+        "delay": "触发延迟",
+        "delayHint": "停止输入后多久触发续写（毫秒）",
+        "defaultPrompt": "默认提示词：根据上下文直接续写内容，保持简洁流畅"
     }
 }
