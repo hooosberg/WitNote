@@ -100,6 +100,45 @@ export class OpenAIEngine {
         }
     }
 
+    /**
+     * 非流式聊天完成接口 - 用于 autocomplete 等场景
+     * 内部使用流式请求并收集所有 token，避免 CORS 问题
+     */
+    async chat(
+        messages: Array<{ role: string; content: string }>,
+        options: { maxTokens?: number; signal?: AbortSignal } = {}
+    ): Promise<string> {
+        if (!this.config.apiKey) {
+            throw new Error('API Key 未配置');
+        }
+
+        return new Promise((resolve, reject) => {
+            let result = '';
+            const originalAbortController = this.abortController;
+
+            // 支持外部 AbortSignal
+            if (options.signal) {
+                options.signal.addEventListener('abort', () => {
+                    this.abort();
+                });
+            }
+
+            this.streamChat(messages, {
+                onToken: (token) => {
+                    result += token;
+                },
+                onComplete: () => {
+                    this.abortController = originalAbortController;
+                    resolve(result);
+                },
+                onError: (error) => {
+                    this.abortController = originalAbortController;
+                    reject(error);
+                }
+            });
+        });
+    }
+
     abort() {
         this.abortController?.abort();
         this.abortController = null;

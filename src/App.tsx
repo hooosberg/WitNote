@@ -965,6 +965,7 @@ const AppContent: React.FC = () => {
                                 createdAt={activeFile.createdAt}
                                 modifiedAt={activeFile.modifiedAt}
                                 onPreviewModeChange={setPreviewMode}
+                                engineStore={engineStore}
                             />
                         ) : (
                             /* 画廊视图 */

@@ -14,6 +14,7 @@ import { FloatingToolbar } from './FloatingToolbar'
 import { BlockInsertMenu } from './BlockInsertMenu'
 import { AutocompletePopup } from './AutocompletePopup'
 import { useAutocomplete } from '../hooks/useAutocomplete'
+import { UseEngineStoreReturn } from '../store/engineStore'
 import { useEngineStore } from '../store/engineStore'
 import { useSettings } from '../hooks/useSettings'
 
@@ -31,6 +32,8 @@ interface EditorProps {
     modifiedAt?: number
     previewMode: 'edit' | 'preview' | 'split'
     onPreviewModeChange?: (mode: 'edit' | 'preview' | 'split') => void
+    /** 共享的引擎状态（自动续写用），若不传则内部创建独立实例 */
+    engineStore?: UseEngineStoreReturn
 }
 
 // 配置 marked 使用 GitHub 风格
@@ -158,7 +161,8 @@ export const Editor: React.FC<EditorProps> = ({
     createdAt,
     modifiedAt,
     previewMode,
-    onPreviewModeChange
+    onPreviewModeChange,
+    engineStore: externalEngineStore
 }) => {
     const { t, i18n } = useTranslation()
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -166,7 +170,9 @@ export const Editor: React.FC<EditorProps> = ({
     const scrollRef = useRef<HTMLDivElement>(null)
 
     // 智能联想功能
-    const engineStore = useEngineStore()
+    // 优先使用外部传入的 engineStore（确保与 ChatPanel 同步），否则回退到内部创建
+    const internalEngineStore = useEngineStore()
+    const engineStore = externalEngineStore || internalEngineStore
     const { settings } = useSettings()
 
     // 获取本地化的默认提示词

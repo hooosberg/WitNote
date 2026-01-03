@@ -15,6 +15,9 @@ NC='\033[0m' # No Color
 
 echo -e "${YELLOW}🔒 开始安全扫描...${NC}"
 
+FAILURE=0
+
+
 # 1. 检查环境变量文件是否被 Git 追踪
 if git ls-files --error-unmatch .env >/dev/null 2>&1; then
     echo -e "${RED}❌ 严重错误: .env 文件被 Git 追踪！${NC}"

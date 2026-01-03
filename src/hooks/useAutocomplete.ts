@@ -192,9 +192,26 @@ export function useAutocomplete(
                         return
                     }
 
-                    console.log('🔮 Autocomplete: 使用 Ollama 模型', ollamaModel)
+                    // 检测思考型模型（Qwen3、DeepSeek-R1 等）
+                    // 这类模型会先输出大量思考过程，不适合用于自动续写
+                    const isThinkingModel = ollamaModel.toLowerCase().includes('qwen3') ||
+                        ollamaModel.toLowerCase().includes('deepseek-r1') ||
+                        ollamaModel.toLowerCase().includes('qwq')
 
-                    const response = await fetch('http://localhost:11434/api/chat', {
+                    if (isThinkingModel) {
+                        console.log('⚠️ Autocomplete: 思考型模型不支持智能续写，跳过', ollamaModel)
+                        return
+                    }
+
+
+                    // 从 engineStore 获取 Ollama 配置（兼容用户自定义地址）
+                    const ollamaHost = engineStore.ollamaConfig?.host || '127.0.0.1'
+                    const ollamaPort = engineStore.ollamaConfig?.port || 11434
+                    const ollamaBaseUrl = `http://${ollamaHost}:${ollamaPort}`
+
+                    console.log('🔮 Autocomplete: 使用 Ollama 模型', ollamaModel, '地址:', ollamaBaseUrl)
+
+                    const response = await fetch(`${ollamaBaseUrl}/api/chat`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -218,39 +235,26 @@ export function useAutocomplete(
                 }
 
                 case 'openai': {
-                    // Cloud API
-                    const baseUrl = engineStore.cloudConfig?.baseUrl || 'https://api.openai.com/v1'
-                    const apiKey = engineStore.cloudConfig?.apiKey
-                    const modelName = engineStore.cloudConfig?.modelName || 'gpt-3.5-turbo'
-
-                    if (!apiKey) {
-                        console.log('⚠️ Autocomplete: Cloud API 未配置 Key')
+                    // Cloud API - 使用 OpenAIEngine 的 chat 方法（内部使用流式请求避免 CORS 问题）
+                    const engine = engineStore.getEngine()
+                    if (!engine || typeof engine.chat !== 'function') {
+                        console.log('⚠️ Autocomplete: Cloud API 引擎未初始化')
                         return
                     }
 
                     console.log('🔮 Autocomplete: 使用 Cloud API')
 
-                    const response = await fetch(`${baseUrl}/chat/completions`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${apiKey}`
-                        },
-                        body: JSON.stringify({
-                            model: modelName,
-                            messages,
-                            max_tokens: maxTokens,
-                            stream: false
-                        }),
-                        signal: abortControllerRef.current.signal
-                    })
-
-                    if (!response.ok) {
-                        throw new Error(`Cloud API 请求失败: ${response.status}`)
+                    try {
+                        responseText = await engine.chat(messages, {
+                            signal: abortControllerRef.current.signal
+                        })
+                    } catch (error) {
+                        if (error instanceof Error && error.name === 'AbortError') {
+                            // 请求被取消，静默处理
+                            return
+                        }
+                        throw error
                     }
-
-                    const data = await response.json()
-                    responseText = data.choices?.[0]?.message?.content || ''
                     break
                 }
 
@@ -261,6 +265,31 @@ export function useAutocomplete(
 
             // 清理续写结果
             responseText = responseText.trim()
+
+            // 过滤掉思考模型的思考内容（适用于 Qwen3、DeepSeek-R1 等）
+            // 1. 过滤 <think>...</think> 标签
+            responseText = responseText.replace(/<think[^>]*>[\s\S]*?<\/think>/gi, '').trim()
+            // 2. 过滤 <thinking>...</thinking> 标签
+            responseText = responseText.replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/gi, '').trim()
+            // 3. 过滤未闭合的思考标签（如果响应被截断）
+            responseText = responseText.replace(/<think[^>]*>[\s\S]*/gi, '').trim()
+            responseText = responseText.replace(/<thinking[^>]*>[\s\S]*/gi, '').trim()
+            // 4. 过滤开头的中文思考内容（以"嗯，"、"好的，"、"让我"等开头的分析性内容）
+            // 如果第一段是思考性内容，尝试提取实际续写部分
+            if (responseText.match(/^(嗯，|好的，|好，|让我|首先|我需要|用户|这个|看起来)/)) {
+                // 尝试找到可能的实际输出部分（通常在换行后或引号后）
+                const lines = responseText.split('\n').filter(l => l.trim())
+                // 如果有多行，跳过看起来像分析的前几行
+                if (lines.length > 1) {
+                    // 找到第一个不像分析的行
+                    const contentIndex = lines.findIndex(l =>
+                        !l.match(/^(嗯，|好的，|好，|让我|首先|我需要|用户|这个|看起来|分析|理解|根据|可能|应该)/)
+                    )
+                    if (contentIndex > 0 && contentIndex < lines.length) {
+                        responseText = lines.slice(contentIndex).join('\n').trim()
+                    }
+                }
+            }
 
             // 设置建议
             if (responseText) {

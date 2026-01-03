@@ -1,1 +1,112 @@
-"use strict";const r=require("electron");r.contextBridge.exposeInMainWorld("fs",{getVaultPath:()=>r.ipcRenderer.invoke("fs:getVaultPath"),setVaultPath:e=>r.ipcRenderer.invoke("fs:setVaultPath",e),selectDirectory:()=>r.ipcRenderer.invoke("fs:selectDirectory"),disconnectVault:()=>r.ipcRenderer.invoke("fs:disconnectVault"),readDirectory:e=>r.ipcRenderer.invoke("fs:readDirectory",e),readFile:e=>r.ipcRenderer.invoke("fs:readFile",e),writeFile:(e,n)=>r.ipcRenderer.invoke("fs:writeFile",e,n),createFile:e=>r.ipcRenderer.invoke("fs:createFile",e),createDirectory:e=>r.ipcRenderer.invoke("fs:createDirectory",e),deleteFile:e=>r.ipcRenderer.invoke("fs:deleteFile",e),renameFile:(e,n)=>r.ipcRenderer.invoke("fs:renameFile",e,n),saveImage:(e,n,o)=>r.ipcRenderer.invoke("fs:saveImage",e,n,o),selectAndCopyImage:e=>r.ipcRenderer.invoke("fs:selectAndCopyImage",e),isImageReferenced:(e,n)=>r.ipcRenderer.invoke("fs:isImageReferenced",e,n),deleteUnreferencedImage:e=>r.ipcRenderer.invoke("fs:deleteUnreferencedImage",e),watch:e=>r.ipcRenderer.invoke("fs:watch",e),unwatch:()=>r.ipcRenderer.invoke("fs:unwatch"),onFileChange:e=>{const n=(o,t)=>{e(t)};return r.ipcRenderer.on("fs:change",n),()=>{r.ipcRenderer.removeListener("fs:change",n)}}});r.contextBridge.exposeInMainWorld("chat",{load:e=>r.ipcRenderer.invoke("chat:load",e),save:(e,n)=>r.ipcRenderer.invoke("chat:save",e,n)});r.contextBridge.exposeInMainWorld("platform",{os:process.platform,isMac:process.platform==="darwin",isWindows:process.platform==="win32"});r.contextBridge.exposeInMainWorld("appWindow",{setWidth:e=>r.ipcRenderer.invoke("window:setWidth",e)});r.contextBridge.exposeInMainWorld("app",{getVersion:()=>r.ipcRenderer.invoke("app:getVersion")});r.contextBridge.exposeInMainWorld("settings",{get:()=>r.ipcRenderer.invoke("settings:get"),set:(e,n)=>r.ipcRenderer.invoke("settings:set",e,n),reset:()=>r.ipcRenderer.invoke("settings:reset")});r.contextBridge.exposeInMainWorld("vault",{syncSettings:()=>r.ipcRenderer.invoke("vault:syncSettings"),loadSettings:()=>r.ipcRenderer.invoke("vault:loadSettings"),saveEngineConfig:e=>r.ipcRenderer.invoke("vault:saveEngineConfig",e),loadEngineConfig:()=>r.ipcRenderer.invoke("vault:loadEngineConfig")});r.contextBridge.exposeInMainWorld("ollama",{openModelsFolder:()=>r.ipcRenderer.invoke("ollama:openModelsFolder"),listModels:()=>r.ipcRenderer.invoke("ollama:listModels"),pullModel:e=>r.ipcRenderer.invoke("ollama:pullModel",e),deleteModel:e=>r.ipcRenderer.invoke("ollama:deleteModel",e),cancelPull:e=>r.ipcRenderer.invoke("ollama:cancelPull",e),onPullProgress:e=>{const n=(o,t)=>e(t);return r.ipcRenderer.on("ollama:pullProgress",n),()=>r.ipcRenderer.removeListener("ollama:pullProgress",n)}});r.contextBridge.exposeInMainWorld("shortcuts",{onCreateArticle:e=>{const n=()=>e();return r.ipcRenderer.on("shortcuts:createArticle",n),()=>r.ipcRenderer.removeListener("shortcuts:createArticle",n)},onCreateFolder:e=>{const n=()=>e();return r.ipcRenderer.on("shortcuts:createFolder",n),()=>r.ipcRenderer.removeListener("shortcuts:createFolder",n)},onOpenSettings:e=>{const n=()=>e();return r.ipcRenderer.on("shortcuts:openSettings",n),()=>r.ipcRenderer.removeListener("shortcuts:openSettings",n)},onToggleFocusMode:e=>{const n=()=>e();return r.ipcRenderer.on("shortcuts:toggleFocusMode",n),()=>r.ipcRenderer.removeListener("shortcuts:toggleFocusMode",n)},onCycleEditorMode:e=>{const n=()=>e();return r.ipcRenderer.on("shortcuts:cycleEditorMode",n),()=>r.ipcRenderer.removeListener("shortcuts:cycleEditorMode",n)},onToggleSmartAutocomplete:e=>{const n=()=>e();return r.ipcRenderer.on("shortcuts:toggleSmartAutocomplete",n),()=>r.ipcRenderer.removeListener("shortcuts:toggleSmartAutocomplete",n)},syncSmartAutocomplete:e=>r.ipcRenderer.invoke("menu:syncSmartAutocomplete",e)});console.log("🔗 Preload 脚本已加载");
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("fs", {
+  // Vault 路径管理
+  getVaultPath: () => electron.ipcRenderer.invoke("fs:getVaultPath"),
+  setVaultPath: (path) => electron.ipcRenderer.invoke("fs:setVaultPath", path),
+  selectDirectory: () => electron.ipcRenderer.invoke("fs:selectDirectory"),
+  disconnectVault: () => electron.ipcRenderer.invoke("fs:disconnectVault"),
+  // 文件操作
+  readDirectory: (path) => electron.ipcRenderer.invoke("fs:readDirectory", path),
+  readFile: (path) => electron.ipcRenderer.invoke("fs:readFile", path),
+  writeFile: (path, content) => electron.ipcRenderer.invoke("fs:writeFile", path, content),
+  createFile: (path) => electron.ipcRenderer.invoke("fs:createFile", path),
+  createDirectory: (path) => electron.ipcRenderer.invoke("fs:createDirectory", path),
+  deleteFile: (path) => electron.ipcRenderer.invoke("fs:deleteFile", path),
+  renameFile: (oldPath, newPath) => electron.ipcRenderer.invoke("fs:renameFile", oldPath, newPath),
+  // 图片操作
+  saveImage: (relativeDirPath, base64Data, fileName) => electron.ipcRenderer.invoke("fs:saveImage", relativeDirPath, base64Data, fileName),
+  selectAndCopyImage: (relativeDirPath) => electron.ipcRenderer.invoke("fs:selectAndCopyImage", relativeDirPath),
+  // 图片引用检查与清理
+  isImageReferenced: (imageRelativePath, excludeFilePath) => electron.ipcRenderer.invoke("fs:isImageReferenced", imageRelativePath, excludeFilePath),
+  deleteUnreferencedImage: (imageRelativePath) => electron.ipcRenderer.invoke("fs:deleteUnreferencedImage", imageRelativePath),
+  // 文件监听
+  watch: (path) => electron.ipcRenderer.invoke("fs:watch", path),
+  unwatch: () => electron.ipcRenderer.invoke("fs:unwatch"),
+  onFileChange: (callback) => {
+    const handler = (_event, data) => {
+      callback(data);
+    };
+    electron.ipcRenderer.on("fs:change", handler);
+    return () => {
+      electron.ipcRenderer.removeListener("fs:change", handler);
+    };
+  }
+});
+electron.contextBridge.exposeInMainWorld("chat", {
+  load: (filePath) => electron.ipcRenderer.invoke("chat:load", filePath),
+  save: (filePath, messages) => electron.ipcRenderer.invoke("chat:save", filePath, messages)
+});
+electron.contextBridge.exposeInMainWorld("platform", {
+  os: process.platform,
+  isMac: process.platform === "darwin",
+  isWindows: process.platform === "win32"
+});
+electron.contextBridge.exposeInMainWorld("appWindow", {
+  setWidth: (width) => electron.ipcRenderer.invoke("window:setWidth", width)
+});
+electron.contextBridge.exposeInMainWorld("app", {
+  getVersion: () => electron.ipcRenderer.invoke("app:getVersion")
+});
+electron.contextBridge.exposeInMainWorld("settings", {
+  get: () => electron.ipcRenderer.invoke("settings:get"),
+  set: (key, value) => electron.ipcRenderer.invoke("settings:set", key, value),
+  reset: () => electron.ipcRenderer.invoke("settings:reset")
+});
+electron.contextBridge.exposeInMainWorld("vault", {
+  // 同步设置到 Vault
+  syncSettings: () => electron.ipcRenderer.invoke("vault:syncSettings"),
+  // 从 Vault 加载设置
+  loadSettings: () => electron.ipcRenderer.invoke("vault:loadSettings"),
+  // 保存引擎配置到 Vault
+  saveEngineConfig: (config) => electron.ipcRenderer.invoke("vault:saveEngineConfig", config),
+  // 从 Vault 加载引擎配置
+  loadEngineConfig: () => electron.ipcRenderer.invoke("vault:loadEngineConfig")
+});
+electron.contextBridge.exposeInMainWorld("ollama", {
+  openModelsFolder: () => electron.ipcRenderer.invoke("ollama:openModelsFolder"),
+  listModels: () => electron.ipcRenderer.invoke("ollama:listModels"),
+  pullModel: (modelName) => electron.ipcRenderer.invoke("ollama:pullModel", modelName),
+  deleteModel: (modelName) => electron.ipcRenderer.invoke("ollama:deleteModel", modelName),
+  cancelPull: (modelName) => electron.ipcRenderer.invoke("ollama:cancelPull", modelName),
+  onPullProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    electron.ipcRenderer.on("ollama:pullProgress", handler);
+    return () => electron.ipcRenderer.removeListener("ollama:pullProgress", handler);
+  }
+});
+electron.contextBridge.exposeInMainWorld("shortcuts", {
+  onCreateArticle: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:createArticle", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:createArticle", handler);
+  },
+  onCreateFolder: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:createFolder", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:createFolder", handler);
+  },
+  onOpenSettings: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:openSettings", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:openSettings", handler);
+  },
+  onToggleFocusMode: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:toggleFocusMode", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:toggleFocusMode", handler);
+  },
+  onCycleEditorMode: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:cycleEditorMode", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:cycleEditorMode", handler);
+  },
+  onToggleSmartAutocomplete: (callback) => {
+    const handler = () => callback();
+    electron.ipcRenderer.on("shortcuts:toggleSmartAutocomplete", handler);
+    return () => electron.ipcRenderer.removeListener("shortcuts:toggleSmartAutocomplete", handler);
+  },
+  // 同步智能续写状态到主进程菜单
+  syncSmartAutocomplete: (enabled) => electron.ipcRenderer.invoke("menu:syncSmartAutocomplete", enabled)
+});
+console.log("🔗 Preload 脚本已加载");
