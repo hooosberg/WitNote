@@ -166,16 +166,6 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
    sudo apt install ./WitNote-1.3.2-amd64.deb
    ```
 
-### 🐧 Linux Installation
-
-**AppImage (Universal):**
-1. Download `.AppImage` file
-2. Right-click Properties -> Allow executing file as program (or `chmod +x WitNote*.AppImage`)
-3. Double-click to run
-
-**Deb (Ubuntu/Debian):**
-1. Download `.deb` file
-2. Double-click to install or use `sudo dpkg -i WitNote*.deb`
 
 > 📝 **Important Notes for Windows Users**:
 > 
