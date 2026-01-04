@@ -125,16 +125,6 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 | Arch | x64 / ARM64 | x64 / ARM64 |
 | RAM | 8GB | 16GB+ |
 
-> ⚠️ **Note**: Windows ARM64 devices (e.g. Surface Pro X) are now natively supported!
-
-### 🐧 Linux
-
-| Item | Minimum | Recommended |
-|------|---------|-------------|
-| OS Version | Ubuntu 20.04+ / Debian 11+ | Latest Mainstream Distro |
-| Arch | x64 / ARM64 | x64 / ARM64 |
-| RAM | 8GB | 16GB+ |
-
 > ⚠️ **Note**: Windows version is newly released. Feedback welcome!
 
 ---
