@@ -49,15 +49,43 @@ interface UseAutocompleteResult {
     triggerContinuation: (content: string, cursorPos: number) => void
 }
 
-// AI 续写 prompt
-const AUTOCOMPLETE_SYSTEM_PROMPT = `你是一个写作助手。根据用户提供的上下文，直接续写接下来的内容。
+// AI 续写 prompt - 三个级别
+// 精简版 - 适合小模型（<3B参数）
+export const AUTOCOMPLETE_PROMPT_LITE = `续写以下文字，不要重复已有内容，直接输出新内容。`
+
+// 标准版 - 适合中等模型（3B-7B参数）
+export const AUTOCOMPLETE_PROMPT_STANDARD = `你是续写助手。从用户文字的最后一个字之后开始续写。
 规则：
-1. 只输出续写内容，不要解释
-2. 不要重复已有内容
-3. 如果识别到用户正在引用名人名言、著名诗句、经典语录或成语典故，请按照原文准确补全，保持引用的完整性
-4. 如果是固定搭配或常用表达（如"不仅...而且..."、"因为...所以..."等），按照惯用法补全
-5. 其他情况下，续写应该自然流畅，根据前后语意和上下文风格进行自然补全
-6. 保持简洁，通常续写一句话即可`
+1. 不要重复已有内容，只输出新内容
+2. 名言诗句按原文补全，其他自然续写
+3. 通常续写一句话即可`
+
+// 完整版 - 适合大模型（>7B参数）
+export const AUTOCOMPLETE_PROMPT_FULL = `你是一个写作续写助手。用户会给你一段文字，你需要从文字的最后一个字之后开始续写。
+
+【最重要规则】
+- 绝对不要重复用户提供的任何文字！你的输出应该是全新的内容，紧接在用户文字之后。
+- 用户文字的最后几个字是续写的起点标记，你要从这之后开始写新内容。
+
+【其他规则】
+1. 只输出续写的新内容，不要任何解释或前缀
+2. 如果识别到名人名言、著名诗句、经典语录或成语典故，按原文准确补全
+3. 固定搭配如"不仅...而且..."按惯用法补全
+4. 其他情况自然流畅地续写，符合上下文风格
+5. 保持简洁，通常续写一句话即可`
+
+// 获取指定级别的提示词
+export function getAutocompletePromptByLevel(level: 'lite' | 'standard' | 'full'): string {
+    switch (level) {
+        case 'lite': return AUTOCOMPLETE_PROMPT_LITE
+        case 'standard': return AUTOCOMPLETE_PROMPT_STANDARD
+        case 'full': return AUTOCOMPLETE_PROMPT_FULL
+        default: return AUTOCOMPLETE_PROMPT_STANDARD
+    }
+}
+
+// 默认使用标准版
+const AUTOCOMPLETE_SYSTEM_PROMPT = AUTOCOMPLETE_PROMPT_STANDARD
 
 export function useAutocomplete(
     engineStore: UseEngineStoreReturn,
@@ -157,10 +185,27 @@ export function useAutocomplete(
         setIsLoading(true)
 
         try {
+            // 提取最后几个字作为续写起点提示，帮助 AI 理解从哪里开始
+            const lastChars = context.slice(-15).trim()
             const messages = [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: `续写以下内容：\n\n${context}` }
+                {
+                    role: 'user', content: `请续写以下文字（从最后一个字之后开始，不要重复任何已有内容）：
+
+${context}
+
+【提示】上文结尾是"${lastChars}"，请直接输出续写的新内容：`
+                }
             ]
+
+            // 记录生成信息用于调试
+            engineStore.setLastGenerationInfo({
+                timestamp: Date.now(),
+                model: engineStore.selectedModel,
+                systemPrompt,
+                userContext: context,
+                contextLength: context.length
+            })
 
             let responseText = ''
 

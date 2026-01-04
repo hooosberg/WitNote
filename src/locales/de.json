@@ -447,6 +447,19 @@
         "delay": "Auslöseverzögerung",
         "delayHint": "Verzögerung nach dem Tippen vor dem Auslösen (ms)",
         "defaultPrompt": "Standard: Zitate/Gedichte original vervollständigen, idiomatische Ausdrücke, sonst natürlich fortfahren",
-        "defaultSystemPrompt": "Du bist ein Schreibassistent. Schreibe direkt basierend auf dem vom Benutzer bereitgestellten Kontext weiter.\nRegeln:\n1. Gib nur den fortgesetzten Inhalt aus, keine Erklärungen.\n2. Wiederhole keine vorhandenen Inhalte.\n3. Wenn du berühmte Zitate, bekannte Gedichte, klassische Zitate oder Redewendungen erkennst, vervollständige sie genau nach dem Original.\n4. Bei festen Ausdrücken oder gängigen Redewendungen ('nicht nur... sondern auch...', 'weil... deshalb...') vervollständige nach dem idiomatischen Gebrauch.\n5. In anderen Fällen sollte die Fortsetzung natürlich und flüssig sein, basierend auf Kontext und Stil.\n6. Halte es kurz, meistens nur einen Satz."
+        "promptLevelHint": "Passen Sie die Promptlänge an die Modellgröße an: Leicht für kleine Modelle, Vollständig für große Modelle",
+        "promptLite": "Fahren Sie den folgenden Text fort. Wiederholen Sie keinen vorhandenen Inhalt. Geben Sie nur neuen Inhalt aus.",
+        "promptStandard": "Sie sind ein Fortsetzungsassistent. Schreiben Sie direkt nach dem letzten Zeichen weiter.\nRegeln:\n1. Wiederholen Sie keinen vorhandenen Inhalt\n2. Vervollständigen Sie Zitate/Gedichte genau\n3. Schreiben Sie normalerweise nur einen Satz",
+        "promptFull": "Sie sind ein Schreibfortsetzungsassistent. Der Benutzer gibt Ihnen einen Text, und Sie müssen direkt nach dem allerletzten Zeichen weiterschreiben.\n\n【WICHTIGSTE REGEL】\n- Wiederholen Sie NIEMALS Text, den der Benutzer bereitgestellt hat! Ihre Ausgabe sollte völlig neuer Inhalt sein, der unmittelbar auf den Text des Benutzers folgt.\n- Die letzten Zeichen des Benutzertextes markieren, wo Sie beginnen sollten. Schreiben Sie von diesem Punkt an NEUEN Inhalt.\n\n【Weitere Regeln】\n1. Geben Sie nur die neue Fortsetzung aus, keine Erklärungen oder Präfixe\n2. Wenn Sie berühmte Zitate, Gedichte oder Redewendungen erkennen, vervollständigen Sie diese genau\n3. Bei festen Ausdrücken wie 'nicht nur... sondern auch...' idiomatisch vervollständigen\n4. Ansonsten natürlich und flüssig fortsetzen, passend zu Kontext und Stil\n5. Halten Sie es kurz, normalerweise nur einen Satz",
+        "contextLength": "Kontextlänge",
+        "contextLengthHint": "Textlänge vor dem Cursor, die von der KI gelesen wird. ~500 für kleine Modelle, 2000+ für große Modelle.",
+        "aiInsight": "Ausführungsanalyse",
+        "aiInsightHint": "Details der letzten KI-Vervollständigung anzeigen",
+        "model": "Modell",
+        "systemPrompt": "System-Prompt",
+        "userContext": "Benutzerkontext (User Context)",
+        "noInsightData": "Keine Daten verfügbar. Lösen Sie die Autovervollständigung aus.",
+        "time": "Zeit",
+        "chars": "Zeichen"
     }
 }

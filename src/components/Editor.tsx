@@ -176,13 +176,13 @@ export const Editor: React.FC<EditorProps> = ({
     const { settings } = useSettings()
 
     // 获取本地化的默认提示词
-    const defaultSystemPrompt = t('autocomplete.defaultSystemPrompt')
+    const defaultSystemPrompt = t('autocomplete.promptStandard')
     // 如果用户没有自定义提示词，使用本地化的默认提示词
     const effectivePrompt = settings.autocompletePrompt || defaultSystemPrompt
 
     const autocomplete = useAutocomplete(engineStore, {
         debounceMs: settings.autocompleteDelay,
-        maxContextLength: 500,
+        maxContextLength: settings.autocompleteContextLength || 500,
         maxTokens: 50,
         enabled: settings.autocompleteEnabled && (previewMode === 'edit' || previewMode === 'split'),
         // 当角色关联开启时，将角色设定附加到续写提示词中

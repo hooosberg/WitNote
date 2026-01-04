@@ -457,6 +457,19 @@
         "delay": "Trigger Delay",
         "delayHint": "Delay after typing stops before triggering (ms)",
         "defaultPrompt": "Default: Complete quotes/poems as original, use idiomatic expressions, otherwise continue naturally",
-        "defaultSystemPrompt": "You are a writing assistant. Directly continue writing based on the context provided by the user.\nRules:\n1. Output only the continuation, do not explain.\n2. Do not repeat existing content.\n3. If you recognize that the user is quoting famous sayings, well-known poems, classic quotes, or idioms, complete them accurately according to the original text.\n4. For fixed collocations or common expressions (such as 'not only...but also...', 'because...therefore...'), complete according to idiomatic usage.\n5. In other cases, the continuation should be natural and smooth, based on the context and style.\n6. Keep it concise, usually just one sentence."
+        "promptLevelHint": "Adjust prompt length based on model size: Lite for small models, Full for large models",
+        "promptLite": "Continue the following text. Do not repeat existing content. Output new content directly.",
+        "promptStandard": "You are a continuation assistant. Continue writing from the very last character of the user's text.\nRules:\n1. Do not repeat existing content\n2. Complete quotes/poems accurately\n3. Usually write just one sentence",
+        "promptFull": "You are a writing continuation assistant. The user will give you a passage, and you need to continue writing from after the very last character.\n\n【MOST IMPORTANT RULE】\n- NEVER repeat any text the user provided! Your output should be entirely new content that immediately follows the user's text.\n- The last few characters of the user's text mark where you should start. Write NEW content from that point on.\n\n【Other Rules】\n1. Output only the new continuation, no explanations or prefixes\n2. If you recognize famous quotes, poems, or idioms, complete them accurately\n3. For fixed expressions like 'not only...but also...', complete idiomatically\n4. Otherwise, continue naturally and smoothly, matching the context and style\n5. Keep it concise, usually just one sentence",
+        "contextLength": "Context Length",
+        "contextLengthHint": "Text length read by AI before cursor. ~500 for small models, 2000+ for large models.",
+        "aiInsight": "Running Analysis",
+        "aiInsightHint": "View details of the last AI completion",
+        "model": "Model",
+        "systemPrompt": "System Prompt",
+        "userContext": "User Context",
+        "noInsightData": "No data available. Trigger autocomplete to view.",
+        "time": "Time",
+        "chars": "chars"
     }
 }

@@ -447,6 +447,19 @@
         "delay": "Retardo de activación",
         "delayHint": "Retardo tras dejar de escribir antes de activar (ms)",
         "defaultPrompt": "Por defecto: Completar citas/poemas como el original, expresiones idiomáticas, de lo contrario continuar naturalmente",
-        "defaultSystemPrompt": "Eres un asistente de escritura. Continúa escribiendo directamente basándote en el contexto proporcionado por el usuario.\nReglas:\n1. Solo salida el contenido de continuación, no expliques.\n2. No repitas contenido existente.\n3. Si reconoces citas famosas, poemas conocidos, citas clásicas o expresiones idiomáticas, complétalas fielmente según el original.\n4. Para expresiones fijas o comunes ('no solo... sino también...', 'porque... por lo tanto...'), completa según el uso idiomático.\n5. En otros casos, la continuación debe ser natural y fluida, basada en el contexto y estilo.\n6. Mantenlo conciso, generalmente solo una oración."
+        "promptLevelHint": "Ajuste la longitud del prompt según el tamaño del modelo: Ligero para modelos pequeños, Completo para modelos grandes",
+        "promptLite": "Continúa el siguiente texto. No repitas el contenido existente. Salida solo nuevo contenido.",
+        "promptStandard": "Eres un asistente de continuación. Continúa escribiendo después del último carácter.\nReglas:\n1. No repitas contenido existente\n2. Completa citas/poemas con precisión\n3. Generalmente escribe solo una oración",
+        "promptFull": "Eres un asistente de continuación de escritura. El usuario te dará un pasaje, y debes continuar escribiendo directamente después del último carácter.\n\n【REGLA MÁS IMPORTANTE】\n- ¡NUNCA repitas el texto proporcionado por el usuario! Tu salida debe ser contenido completamente nuevo que sigue inmediatamente al texto del usuario.\n- Los últimos caracteres del texto del usuario marcan dónde debes comenzar. Escribe contenido NUEVO desde ese punto.\n\n【Otras Reglas】\n1. Solo produce la nueva continuación, sin explicaciones ni prefijos\n2. Si reconoces citas famosas, poemas o expresiones idiomáticas, complétalas con precisión\n3. Para expresiones fijas como 'no solo... sino también...', completa idiomáticamente\n4. De lo contrario, continúa de forma natural y fluida, coincidiendo con el contexto y el estilo\n5. Mantenlo conciso, generalmente solo una oración",
+        "contextLength": "Longitud del contexto",
+        "contextLengthHint": "Longitud del texto leído por la IA antes del cursor. ~500 para modelos pequeños, 2000+ para modelos grandes.",
+        "aiInsight": "Análisis de ejecución",
+        "aiInsightHint": "Ver detalles de la última finalización de IA",
+        "model": "Modelo",
+        "systemPrompt": "Prompt del sistema (System Prompt)",
+        "userContext": "Contexto del usuario (User Context)",
+        "noInsightData": "Sin datos. Dispare el autocompletado para ver.",
+        "time": "Hora",
+        "chars": "caracteres"
     }
 }

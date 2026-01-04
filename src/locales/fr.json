@@ -447,6 +447,19 @@
         "delay": "Délai de déclenchement",
         "delayHint": "Délai après l'arrêt de la frappe avant déclenchement (ms)",
         "defaultPrompt": "Défaut : Compléter les citations/poèmes comme l'original, expressions idiomatiques, sinon continuer naturellement",
-        "defaultSystemPrompt": "Vous êtes un assistant d'écriture. Continuez directement l'écriture en fonction du contexte fourni par l'utilisateur.\nRègles :\n1. Ne sortez que le contenu de la suite, pas d'explications.\n2. Ne répétez pas le contenu existant.\n3. Si vous reconnaissez une citation célèbre, un poème connu, une citation classique ou une expression idiomatique, complétez-la fidèlement selon l'original.\n4. Pour les expressions figées ou courantes ('non seulement... mais aussi...', 'parce que... donc...'), complétez selon l'usage idiomatique.\n5. Autrement, la suite doit être naturelle, fluide et cohérente avec le style du contexte.\n6. Restez concis, généralement juste une phrase."
+        "promptLevelHint": "Ajustez la longueur du prompt selon la taille du modèle : Léger pour les petits modèles, Complet pour les grands modèles",
+        "promptLite": "Continuez le texte suivant. Ne répétez pas le contenu existant. Produisez uniquement du nouveau contenu.",
+        "promptStandard": "Vous êtes un assistant de continuation. Continuez à écrire après le dernier caractère.\nRègles :\n1. Ne répétez pas le contenu existant\n2. Complétez les citations/poèmes avec précision\n3. Écrivez généralement juste une phrase",
+        "promptFull": "Vous êtes un assistant de continuation d'écriture. L'utilisateur vous donne un passage, et vous devez continuer à écrire directement après le tout dernier caractère.\n\n【RÈGLE LA PLUS IMPORTANTE】\n- Ne répétez JAMAIS le texte fourni par l'utilisateur ! Votre sortie doit être un contenu entièrement nouveau qui suit immédiatement le texte de l'utilisateur.\n- Les derniers caractères du texte de l'utilisateur indiquent où vous devez commencer. Écrivez du NOUVEAU contenu à partir de ce point.\n\n【Autres Règles】\n1. Sortez uniquement la nouvelle continuation, pas d'explications ni de préfixes\n2. Si vous reconnaissez des citations célèbres, des poèmes ou des expressions idiomatiques, complétez-les fidèlement\n3. Pour les expressions figées comme 'non seulement... mais aussi...', complétez idiomatiquement\n4. Sinon, continuez naturellement et de manière fluide, en accord avec le contexte et le style\n5. Restez concis, généralement juste une phrase",
+        "contextLength": "Longueur du contexte",
+        "contextLengthHint": "Longueur du texte lu par l'IA avant le curseur. ~500 pour les petits modèles, 2000+ pour les grands.",
+        "aiInsight": "Analyse d'exécution",
+        "aiInsightHint": "Voir les détails de la dernière complétion IA",
+        "model": "Modèle",
+        "systemPrompt": "Invite système (System Prompt)",
+        "userContext": "Contexte utilisateur (User Context)",
+        "noInsightData": "Aucune donnée. Déclenchez l'autocomplétion pour voir.",
+        "time": "Heure",
+        "chars": "caractères"
     }
 }

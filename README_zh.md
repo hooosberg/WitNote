@@ -43,13 +43,14 @@
 
 ---
 
-## ✨ 功能亮点 (v1.3.1)
+## ✨ 功能亮点 (v1.3.2)
 
-### 🆕 v1.3.1 新功能
-- ✨ **智能续写** — 基于上下文的 AI 智能续写，按 Tab 键逐句接受建议，让写作如行云流水
+### 🆕 v1.3.2 新功能
+- ✨ **增强型智能续写** — 三档预设 (Lite/Standard/Full)，适配不同大小模型，让写作因材施教
+- ⌨️ **智能 Tab 键** — 按 Tab 逐句/逐段接受建议，更加精准可控，告别此消彼长
+- 🛠️ **自定义提示词** — 设置中直接编辑系统提示词，支持一键恢复默认
 - 🌓 **双栏预览** — 所见即所得，左侧编辑右侧实时预览
 - ⚡️ **快捷编辑** — 悬浮菜单增强，选中文字快速修改格式
-- 🖼️ **图片插入** — 支持粘贴、拖拽、菜单插入图片
 
 ### 🔧 核心功能
 - 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
@@ -73,11 +74,11 @@
 
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-| 🍎 macOS | `WitNote-1.3.1.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
-| 🪟 Windows (x64) | `WitNote-1.3.1-setup-x64.exe` | 普通电脑 (Intel/AMD) |
-| 🪟 Windows (ARM64) | `WitNote-1.3.1-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
-| 🐧 Linux (AppImage) | `WitNote-1.3.1-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
-| 📦 Linux (Deb) | `WitNote-1.3.1-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
+| 🍎 macOS | `WitNote-1.3.2.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
+| 🪟 Windows (x64) | `WitNote-1.3.2-setup-x64.exe` | 普通电脑 (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.2-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.2-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
+| 📦 Linux (Deb) | `WitNote-1.3.2-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
 
 ---
 
@@ -159,7 +160,7 @@
 1. 下载 `.deb` 文件 (如 `WitNote-1.3.1-amd64.deb`)
 2. 在终端运行安装命令 (这将自动处理依赖):
    ```bash
-   sudo apt install ./WitNote-1.3.1-amd64.deb
+   sudo apt install ./WitNote-1.3.2-amd64.deb
    ```
 
 > 📝 **注意事项 (Windows 用户必读)**:
@@ -192,13 +193,13 @@
 
 ## 📸 截图
 
-### ✨ 智能续写 (v1.3.1 新功能)
+### ✨ 增强型智能续写 (v1.3.2 新功能)
 ![智能续写](src/pic/witnote%20宣传截图/中文版设计/智能续写.jpg)
 
-### 🌓 双栏实时预览 (v1.3.1 新功能)
+### 🌓 双栏实时预览
 ![双栏实时预览](src/pic/witnote%20宣传截图/中文版设计/双栏实时预览.jpg)
 
-### ⚡️ 快捷编辑 (v1.3.1 新功能)
+### ⚡️ 快捷编辑
 ![快捷编辑](src/pic/witnote%20宣传截图/中文版设计/快捷编辑.jpg)
 
 ### 🎯 专注模式

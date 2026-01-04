@@ -45,6 +45,7 @@ import { changeLanguage, getCurrentLanguage, LanguageCode } from '../i18n';
 import { UseLLMReturn } from '../hooks/useLLM';
 import ConfirmDialog from './ConfirmDialog';
 
+
 import {
     getDefaultSystemPrompt,
     INSTRUCTION_TEMPLATE_STANDARD_ZH,
@@ -68,7 +69,8 @@ import { UseEngineStoreReturn } from '../store/engineStore';
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels';
 import { isWebLLMEnabled, isWindows } from '../utils/platform';
 
-type TabType = 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about';
+type TabType = 'appearance' | 'ai' | 'persona' | 'autocomplete' | 'shortcuts' | 'about';
+
 
 const LANGUAGES: { code: LanguageCode; label: string }[] = [
     { code: 'en', label: 'English' },
@@ -138,6 +140,9 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
     // 提示词等级状态
     const [promptLevel, setPromptLevel] = useState<'lite' | 'standard' | 'full'>('standard');
     const [activeRoleId, setActiveRoleId] = useState<string | null>(null); // 当前选中的预设角色 ID
+
+    // 续写提示词等级状态
+    const [autocompletePromptLevel, setAutocompletePromptLevel] = useState<'lite' | 'standard' | 'full'>('standard');
 
     // 生成完整提示词
     const generatePrompt = (basePrompt: string, level: 'lite' | 'standard' | 'full') => {
@@ -1123,8 +1128,15 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                             )}
                         </div>
 
-                        {/* 智能续写设置 - 与角色设定相关 */}
-                        <div className="settings-section fade-in" style={{ marginTop: '24px' }}>
+
+                    </div>
+                );
+
+
+            case 'autocomplete':
+                return (
+                    <div className="settings-tab-content">
+                        <div className="settings-section">
                             <div className="settings-section-header">
                                 <h3 className="settings-section-title">{t('autocomplete.title')}</h3>
                                 {/* 启用开关 */}
@@ -1170,23 +1182,201 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                                         </p>
                                     </div>
 
-                                    {/* 自定义提示词 */}
+                                    {/* 上下文长度设置 */}
                                     <div>
                                         <label style={{ fontSize: '12px', marginBottom: '6px', display: 'block', color: 'var(--text-secondary)' }}>
-                                            {t('autocomplete.prompt')}
+                                            {t('autocomplete.contextLength')} ({settings.autocompleteContextLength} {t('autocomplete.chars')})
                                         </label>
-                                        <textarea
-                                            value={settings.autocompletePrompt}
-                                            onChange={(e) => setSetting('autocompletePrompt', e.target.value)}
-                                            className="settings-textarea"
-                                            placeholder={t('autocomplete.promptPlaceholder')}
-                                            rows={4}
-                                            style={{ width: '100%', resize: 'vertical' }}
+                                        <input
+                                            type="range"
+                                            min="100"
+                                            max="4000"
+                                            step="100"
+                                            value={settings.autocompleteContextLength}
+                                            onChange={(e) => setSetting('autocompleteContextLength', parseInt(e.target.value))}
+                                            style={{ width: '100%' }}
                                         />
                                         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                                            {settings.autocompletePrompt ? t('autocomplete.promptHint') : t('autocomplete.defaultPrompt')}
+                                            {t('autocomplete.contextLengthHint')}
                                         </p>
                                     </div>
+
+                                    {/* 续写提示词设置 */}
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                                {t('autocomplete.prompt')}
+                                            </label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {/* 提示词级别选择器 */}
+                                                <div className="prompt-level-toggle" style={{ display: 'flex', background: 'var(--bg-card)', padding: '2px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                                                    {[
+                                                        { id: 'lite', label: t('settings.promptLevelLite') },
+                                                        { id: 'standard', label: t('settings.promptLevelStandard') },
+                                                        { id: 'full', label: t('settings.promptLevelFull') }
+                                                    ].map((item) => {
+                                                        const isActive = autocompletePromptLevel === item.id;
+
+                                                        const getLocalizedPrompt = (level: string) => {
+                                                            switch (level) {
+                                                                case 'lite': return t('autocomplete.promptLite');
+                                                                case 'standard': return t('autocomplete.promptStandard');
+                                                                case 'full': return t('autocomplete.promptFull');
+                                                                default: return t('autocomplete.promptStandard');
+                                                            }
+                                                        };
+
+                                                        return (
+                                                            <button
+                                                                key={item.id}
+                                                                onClick={() => {
+                                                                    setAutocompletePromptLevel(item.id as any);
+                                                                    // 如果用户没有自定义提示词，自动更新为对应级别的默认提示词
+                                                                    const currentDefault = getLocalizedPrompt(autocompletePromptLevel);
+                                                                    const newDefault = getLocalizedPrompt(item.id);
+
+                                                                    if (!settings.autocompletePrompt || settings.autocompletePrompt === currentDefault) {
+                                                                        setSetting('autocompletePrompt', newDefault);
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    padding: '3px 8px',
+                                                                    border: 'none',
+                                                                    borderRadius: '4px',
+                                                                    background: isActive ? 'var(--accent-color)' : 'transparent',
+                                                                    color: isActive ? 'white' : 'var(--text-secondary)',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '11px',
+                                                                    fontWeight: isActive ? 500 : 400,
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                            >
+                                                                {item.label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                                {/* 恢复默认按钮 */}
+                                                {(() => {
+                                                    const getLocalizedPrompt = (level: string) => {
+                                                        switch (level) {
+                                                            case 'lite': return t('autocomplete.promptLite');
+                                                            case 'standard': return t('autocomplete.promptStandard');
+                                                            case 'full': return t('autocomplete.promptFull');
+                                                            default: return t('autocomplete.promptStandard');
+                                                        }
+                                                    };
+                                                    const currentDefault = getLocalizedPrompt(autocompletePromptLevel);
+
+                                                    return settings.autocompletePrompt !== currentDefault && (
+                                                        <button
+                                                            onClick={() => setSetting('autocompletePrompt', currentDefault)}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                                padding: '3px 8px',
+                                                                border: '1px solid var(--border-color)',
+                                                                borderRadius: '4px',
+                                                                background: 'var(--bg-card)',
+                                                                color: 'var(--text-secondary)',
+                                                                cursor: 'pointer',
+                                                                fontSize: '11px'
+                                                            }}
+                                                        >
+                                                            <RotateCcw size={12} />
+                                                            {t('settings.restoreDefault')}
+                                                        </button>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+                                        <textarea
+                                            value={settings.autocompletePrompt}
+                                            placeholder={(() => {
+                                                switch (autocompletePromptLevel) {
+                                                    case 'lite': return t('autocomplete.promptLite');
+                                                    case 'standard': return t('autocomplete.promptStandard');
+                                                    case 'full': return t('autocomplete.promptFull');
+                                                    default: return t('autocomplete.promptStandard');
+                                                }
+                                            })()}
+                                            onChange={(e) => setSetting('autocompletePrompt', e.target.value)}
+                                            className="settings-textarea"
+                                            rows={6}
+                                            style={{ width: '100%', resize: 'vertical', fontSize: '12px', lineHeight: '1.5' }}
+                                        />
+                                        <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                                            {t('autocomplete.promptLevelHint')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* AI 运行分析 (Debug Panel) */}
+                        <div className="settings-section fade-in">
+                            <h3 className="settings-section-title">{t('autocomplete.aiInsight')}</h3>
+                            <p className="settings-hint" style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {t('autocomplete.aiInsightHint')}
+                            </p>
+
+                            {engineStore.lastGenerationInfo ? (
+                                <div style={{
+                                    padding: '16px',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-color)',
+                                    fontSize: '12px',
+                                    fontFamily: 'monospace'
+                                }}>
+                                    <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: 'var(--text-secondary)' }}>{t('autocomplete.model')}:</span>
+                                        <strong>{engineStore.lastGenerationInfo.model}</strong>
+                                    </div>
+                                    <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: 'var(--text-secondary)' }}>{t('autocomplete.time')}:</span>
+                                        <span>{new Date(engineStore.lastGenerationInfo.timestamp).toLocaleTimeString()}</span>
+                                    </div>
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <div style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>{t('autocomplete.systemPrompt')}:</div>
+                                        <div style={{
+                                            background: 'var(--bg-card)',
+                                            padding: '8px',
+                                            borderRadius: '6px',
+                                            whiteSpace: 'pre-wrap',
+                                            maxHeight: '100px',
+                                            overflowY: 'auto'
+                                        }}>
+                                            {engineStore.lastGenerationInfo.systemPrompt}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                            {t('autocomplete.userContext')} ({engineStore.lastGenerationInfo.contextLength} {t('autocomplete.chars')}):
+                                        </div>
+                                        <div style={{
+                                            background: 'var(--bg-card)',
+                                            padding: '8px',
+                                            borderRadius: '6px',
+                                            whiteSpace: 'pre-wrap',
+                                            maxHeight: '100px',
+                                            overflowY: 'auto'
+                                        }}>
+                                            {engineStore.lastGenerationInfo.userContext}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: '24px',
+                                    textAlign: 'center',
+                                    color: 'var(--text-secondary)',
+                                    background: 'var(--bg-secondary)',
+                                    borderRadius: '10px',
+                                    border: '1px dashed var(--border-color)'
+                                }}>
+                                    {t('autocomplete.noInsightData')}
                                 </div>
                             )}
                         </div>
@@ -1453,6 +1643,13 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                         >
                             <MessageSquare size={18} />
                             <span>{t('settings.persona')}</span>
+                        </button>
+                        <button
+                            className={`settings-tab ${activeTab === 'autocomplete' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('autocomplete')}
+                        >
+                            <PenTool size={18} />
+                            <span>{t('autocomplete.title')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'shortcuts' ? 'active' : ''}`}

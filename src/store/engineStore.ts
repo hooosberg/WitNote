@@ -40,6 +40,7 @@ export interface EngineState {
     // 通用
     isLoading: boolean;
     error: string | null;
+    lastGenerationInfo: GenerationInfo | null;
 }
 
 export interface UseEngineStoreReturn extends EngineState {
@@ -67,6 +68,19 @@ export interface UseEngineStoreReturn extends EngineState {
 
     // 错误报告
     reportError: (error: string) => void;
+
+    // AI 生成信息（用于调试）
+    lastGenerationInfo: GenerationInfo | null;
+    setLastGenerationInfo: (info: GenerationInfo) => void;
+}
+
+export interface GenerationInfo {
+    timestamp: number;
+    model: string;
+    systemPrompt: string;
+    userContext: string;
+    contextLength: number;
+    response?: string;
 }
 
 const STORAGE_KEYS = {
@@ -113,7 +127,8 @@ export function useEngineStore(): UseEngineStoreReturn {
         cloudConfig: savedCloudConfig,
         cloudApiStatus: 'untested',
         isLoading: true,
-        error: null
+        error: null,
+        lastGenerationInfo: null
     });
 
     // 引擎实例引用
@@ -589,6 +604,14 @@ export function useEngineStore(): UseEngineStoreReturn {
         }));
     }, []);
 
+    // 设置最后一次生成信息
+    const setLastGenerationInfo = useCallback((info: GenerationInfo) => {
+        setState(prev => ({
+            ...prev,
+            lastGenerationInfo: info
+        }));
+    }, []);
+
     // 初始化
     useEffect(() => {
         const init = async () => {
@@ -676,7 +699,8 @@ export function useEngineStore(): UseEngineStoreReturn {
         updateCloudConfig,
         testCloudApi,
         getEngine,
-        reportError
+        reportError,
+        setLastGenerationInfo
     };
 }
 
