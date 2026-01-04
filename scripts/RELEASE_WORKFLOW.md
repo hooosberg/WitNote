@@ -45,7 +45,18 @@ git push origin --tags
 
 ## GitHub Release
 
-8. Create GitHub release via CLI or web UI with the tag and paste release notes.
+8. Create GitHub release via CLI or web UI with the tag
+
+9. Upload release assets from `release/` folder:
+   - **macOS**: `WitNote-X.X.X.dmg`
+   - **Windows x64**: `WitNote-X.X.X-setup-x64.exe`
+   - **Windows ARM64**: `WitNote-X.X.X-setup-arm64.exe`
+   - **Linux x64 AppImage**: `WitNote-X.X.X-x86_64.AppImage`
+   - **Linux x64 Deb**: `WitNote-X.X.X-amd64.deb`
+   - **Linux ARM64 AppImage**: `WitNote-X.X.X-arm64.AppImage`
+   - **Linux ARM64 Deb**: `WitNote-X.X.X-arm64.deb`
+
+10. Paste release notes from `scripts/RELEASE_vX.X.X.md`
 
 ---
 
