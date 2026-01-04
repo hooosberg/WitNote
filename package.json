@@ -192,12 +192,6 @@
             "x64",
             "arm64"
           ]
-        },
-        {
-          "target": "rpm",
-          "arch": [
-            "x64"
-          ]
         }
       ],
       "icon": "build/icons",

@@ -96,7 +96,8 @@
         "confirmClearCacheMessage": "確定要清除模型快取嗎？您需要重新下載模型。",
         "confirmDeleteCacheMessage": "確定要刪除模型快取嗎？",
         "cacheClearedMessage": "已清除 {dbCount} 個資料庫和 {cacheCount} 個快取，頁面即將重新整理",
-        "clearCacheFailed": "清除失敗"
+        "clearCacheFailed": "清除失敗",
+        "thinkingModelHint": "思考型模型不支援智能續寫，回答速度慢建議切換其他模型"
     },
     "model": {
         "selectModel": "選擇模型",

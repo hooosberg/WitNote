@@ -23,13 +23,5 @@ echo "🍎 Apple ID: $APPLE_ID"
 echo "🔐 Team ID: $APPLE_TEAM_ID"
 echo "📦 Building DMG for WitNote..."
 
-# Security Check
-FORBIDDEN_PASS="zire-cdzq-eulv" # Part 1
-FORBIDDEN_PASS+="-wlfn"         # Part 2
-if grep -q "$FORBIDDEN_PASS" "$0"; then
-    echo "❌ SECURITY ALERT: Password found in script! Please clean up immediately."
-    exit 1
-fi
-
 # Run the build
 npm run build

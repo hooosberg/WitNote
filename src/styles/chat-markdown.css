@@ -102,3 +102,23 @@
 .chat-bubble.user .markdown-body td {
     border-color: rgba(255, 255, 255, 0.2);
 }
+
+/* 思考过程样式 */
+.thought-process {
+    font-size: 0.9em;
+    color: var(--text-secondary, #666);
+    background: rgba(0, 0, 0, 0.03);
+    border-left: 3px solid var(--accent-color, #e5e7eb);
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    font-style: italic;
+}
+
+.chat-bubble.user .thought-process {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 亮色/暗色模式适配通常由 var(--text-secondary) 处理，如果在暗色模式下不可见，可能需要额外调整 */

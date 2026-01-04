@@ -99,7 +99,8 @@
         "confirmDeleteCacheTitle": "キャッシュを削除",
         "confirmClearCacheMessage": "モデルキャッシュをクリアしますか？モデルを再ダウンロードする必要があります。",
         "cacheClearedMessage": "{dbCount}個のデータベースと{cacheCount}個のキャッシュを削除しました。ページがリロードされます。",
-        "clearCacheFailed": "キャッシュのクリアに失敗しました"
+        "clearCacheFailed": "キャッシュのクリアに失敗しました",
+        "thinkingModelHint": "思考型モデルはインテリジェントな続き書きをサポートしていません。応答速度が遅いため、他のモデルへの切り替えをお勧めします。"
     },
     "model": {
         "selectModel": "モデルを選択",

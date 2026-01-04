@@ -99,7 +99,8 @@
         "confirmClearCacheMessage": "Möchten Sie den Modell-Cache wirklich leeren? Sie müssen das Modell neu herunterladen.",
         "confirmDeleteCacheMessage": "Möchten Sie den Modell-Cache wirklich löschen?",
         "cacheClearedMessage": "{dbCount} Datenbanken und {cacheCount} Caches wurden gelöscht. Seite wird neu geladen.",
-        "clearCacheFailed": "Cache leeren fehlgeschlagen"
+        "clearCacheFailed": "Cache leeren fehlgeschlagen",
+        "thinkingModelHint": "Denkmodelle unterstützen keine intelligente Fortsetzung. Die Antwortgeschwindigkeit kann langsam sein. Es wird empfohlen, zu einem anderen Modell zu wechseln."
     },
     "shortcuts": {
         "title": "Tastaturkürzel",

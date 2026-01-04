@@ -102,7 +102,8 @@
         "confirmClearCacheMessage": "确定要清除模型缓存吗？您需要重新下载模型。",
         "confirmDeleteCacheMessage": "确定要删除模型缓存吗？",
         "cacheClearedMessage": "已清除 {dbCount} 个数据库和 {cacheCount} 个缓存，页面即将刷新",
-        "clearCacheFailed": "清除失败"
+        "clearCacheFailed": "清除失败",
+        "thinkingModelHint": "思考型模型不支持智能续写，回答速度慢建议切换其他模型"
     },
     "model": {
         "selectModel": "选择模型",

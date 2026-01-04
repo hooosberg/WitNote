@@ -99,7 +99,8 @@
         "confirmClearCacheMessage": "¿Está seguro de que desea borrar la caché del modelo? Necesitará volver a descargar el modelo.",
         "confirmDeleteCacheMessage": "¿Está seguro de que desea eliminar la caché del modelo?",
         "cacheClearedMessage": "Se eliminaron {dbCount} bases de datos y {cacheCount} cachés. La página se recargará.",
-        "clearCacheFailed": "Error al borrar caché"
+        "clearCacheFailed": "Error al borrar caché",
+        "thinkingModelHint": "Los modelos de pensamiento no admiten la continuación inteligente. La velocidad de respuesta puede ser lenta, se recomienda cambiar a otro modelo."
     },
     "shortcuts": {
         "title": "Atajos de teclado",

@@ -99,7 +99,8 @@
         "confirmDeleteCacheTitle": "캐시 삭제",
         "confirmClearCacheMessage": "모델 캐시를 지우시겠습니까? 모델을 다시 다운로드해야 합니다.",
         "cacheClearedMessage": "{dbCount}개의 데이터베이스와 {cacheCount}개의 캐시를 삭제했습니다. 페이지가 새로고침됩니다.",
-        "clearCacheFailed": "캐시 지우기 실패"
+        "clearCacheFailed": "캐시 지우기 실패",
+        "thinkingModelHint": "생각하는 모델은 지능형 이어쓰기를 지원하지 않습니다. 응답 속도가 느리므로 다른 모델로 전환하는 것을 권장합니다"
     },
     "model": {
         "selectModel": "모델 선택",

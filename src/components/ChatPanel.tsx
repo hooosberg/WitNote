@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown, AlertCircle } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -57,6 +57,16 @@ interface ChatPanelProps {
     openSettings?: () => void
 }
 
+const isThinkingModel = (modelName: string) => {
+    if (!modelName) return false
+    const name = modelName.toLowerCase()
+    return name.includes('deepseek-r1') ||
+        name.includes('reasoner') ||
+        name.includes('thinking') ||
+        name.includes('qwen') ||
+        name.includes('cot')
+}
+
 export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSettings }) => {
     const { t } = useTranslation()
 
@@ -87,6 +97,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         message: string;
         onConfirm: () => void;
     } | null>(null)
+
+    const [showThinkingHint, setShowThinkingHint] = useState(false)
+
+    // 监听模型变化，显示思考模型提示
+    useEffect(() => {
+        // Only show hint for Ollama models
+        if (engineStore?.currentEngine === 'ollama' && isThinkingModel(modelName || selectedOllamaModel)) {
+            setShowThinkingHint(true)
+            const timer = setTimeout(() => setShowThinkingHint(false), 4000)
+            return () => clearTimeout(timer)
+        } else {
+            setShowThinkingHint(false)
+        }
+    }, [modelName, selectedOllamaModel, engineStore?.currentEngine])
 
     // 点击外部关闭模型菜单
     useEffect(() => {
@@ -259,7 +283,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                             💡 {t('chat.firstUseDesc', { size: '290MB - 4.1GB' })}
                         </p>
                     </div>
+
                 )}
+
+                {/* 思考模型提示 */}
+
 
                 {/* 当显示 WebLLM 首次设置提示时，不渲染消息列表，避免重合 */}
                 {!showWebLLMSetup && (
@@ -320,6 +348,61 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
 
             {/* 底部区域 - 提高层级防止被覆盖 */}
             <div className="chat-footer" style={{ position: 'relative', zIndex: 20 }}>
+                {/* 思考模型提示（统一居中） */}
+                {showThinkingHint && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: 0,
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        paddingBottom: '12px',
+                        pointerEvents: 'none',
+                        zIndex: 10
+                    }}>
+                        <div style={{
+                            background: 'var(--bg-card)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid #f59e0b',
+                            borderRadius: '8px',
+                            padding: '10px 14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                            whiteSpace: 'normal',
+                            width: '300px',
+                            maxWidth: '90vw',
+                            pointerEvents: 'auto',
+                            position: 'relative',
+                            animation: 'fadeIn 0.3s ease'
+                        }}>
+                            <AlertCircle size={16} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                            <span style={{
+                                fontSize: '13px',
+                                color: 'var(--text-primary)',
+                                fontWeight: 500,
+                                textAlign: 'left',
+                                lineHeight: '1.5'
+                            }}>
+                                {t('chat.thinkingModelHint')}
+                            </span>
+                            {/* 小三角 - 居中指向下方 */}
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '-5px',
+                                left: '50%',
+                                width: '10px',
+                                height: '10px',
+                                background: 'var(--bg-card)',
+                                borderBottom: '1px solid #f59e0b',
+                                borderRight: '1px solid #f59e0b',
+                                transform: 'translateX(-50%) rotate(45deg)'
+                            }} />
+                        </div>
+                    </div>
+                )}
                 {/* 状态栏 */}
                 <div className="chat-status-bar">
                     <div className="chat-model-info" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -534,7 +617,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     {t('chat.thinking')}
                                 </div>
                             ) : ollamaModels.length >= 1 && engineStore?.currentEngine === 'ollama' ? (
-                                <div className="webllm-model-selector" ref={menuRef}>
+                                <div className="webllm-model-selector" ref={menuRef} style={{ position: 'relative' }}>
+                                    {/* 思考模型提示（Ollama） */}
+
                                     <button
                                         className="model-name-btn"
                                         onClick={() => setShowModelMenu(!showModelMenu)}
@@ -676,7 +761,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                     ) || ALL_WEBLLM_MODELS_INFO[0];
 
                                     return (
-                                        <div className="webllm-model-selector" ref={menuRef}>
+                                        <div className="webllm-model-selector" ref={menuRef} style={{ position: 'relative' }}>
+                                            {/* 思考模型提示（WebLLM） */}
+
                                             <button
                                                 className="model-name-btn"
                                                 onClick={() => setShowModelMenu(!showModelMenu)}
@@ -952,26 +1039,34 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
             </div>
 
             {/* ConfirmDialog */}
-            {confirmDialog && createPortal(
-                <ConfirmDialog
-                    title={confirmDialog.title}
-                    message={confirmDialog.message}
-                    onConfirm={confirmDialog.onConfirm}
-                    onCancel={() => setConfirmDialog(null)}
-                />,
-                document.body
-            )}
-        </div>
+            {
+                confirmDialog && createPortal(
+                    <ConfirmDialog
+                        title={confirmDialog.title}
+                        message={confirmDialog.message}
+                        onConfirm={confirmDialog.onConfirm}
+                        onCancel={() => setConfirmDialog(null)}
+                    />,
+                    document.body
+                )
+            }
+        </div >
     )
 }
 
 
 const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
+    // 处理 <think> 标签，将其转换为带有特定样式的 div
+    // 即使 </think> 尚未生成（流式传输中），也能正确在一个 div 中显示
+    const processedContent = message.content
+        .replace(/<think>/g, '<div class="thought-process">')
+        .replace(/<\/think>/g, '</div>');
+
     const rawHtml = message.role === 'user'
         ? message.content.replace(/\n/g, '<br/>')
-        : renderLatex(marked(message.content) as string)
+        : renderLatex(marked(processedContent) as string)
 
-    const sanitizedHtml = DOMPurify.sanitize(rawHtml)
+    const sanitizedHtml = DOMPurify.sanitize(rawHtml, { ADD_ATTR: ['class'] })
 
     return (
         <div className={`chat-bubble ${message.role}`}>

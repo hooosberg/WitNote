@@ -102,7 +102,8 @@
         "confirmClearCacheMessage": "Are you sure you want to clear the model cache? You will need to re-download the model.",
         "confirmDeleteCacheMessage": "Are you sure you want to delete the model cache?",
         "cacheClearedMessage": "Cleared {dbCount} databases and {cacheCount} caches. Page will refresh.",
-        "clearCacheFailed": "Failed to clear cache"
+        "clearCacheFailed": "Failed to clear cache",
+        "thinkingModelHint": "Thinking models do not support intelligent continuation. Response speed may be slow. Switching to another model is recommended."
     },
     "model": {
         "selectModel": "Select Model",
