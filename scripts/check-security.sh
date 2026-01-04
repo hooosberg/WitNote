@@ -37,7 +37,7 @@ fi
 
 echo -e "正在扫描文件内容..."
 
-KEYWORDS=("***REMOVED***" "-----BEGIN PRIVATE KEY-----" "ghp_" "sk_live_")
+KEYWORDS=("zire-cdzq-eulv-wlfn" "-----BEGIN PRIVATE KEY-----" "ghp_" "sk_live_")
 
 # 查找包含敏感关键词的文件（排除 build, dist, node_modules, .git 等）
 # 注意：我们使用 grep 递归搜索
