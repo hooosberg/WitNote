@@ -1,9 +1,46 @@
 #!/bin/bash
 
-# Configuration
-echo "📦 Building Linux Packages (AppImage & Deb) for WitNote..."
+# ═══════════════════════════════════════════════════════════════════════════
+# WitNote Linux 构建脚本
+# 用途: 构建 AppImage 和 Deb 安装包
+# ═══════════════════════════════════════════════════════════════════════════
 
-# Run the build
-# This will run `tsc && vite build` and then `electron-builder --linux`
-# We use --linux flag to target Linux specifically
+set -e  # 遇到错误立即退出
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}       WitNote Linux 构建工具                                  ${NC}"
+echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+
+# 获取版本号
+VERSION=$(grep '"version":' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
+echo -e "📦 当前版本: ${GREEN}$VERSION${NC}"
+
+# 设置环境变量 (Linux 不支持 WebLLM)
+export DISABLE_WEBLLM=true
+echo -e "🔧 DISABLE_WEBLLM: ${YELLOW}true${NC} (Linux 不支持 WebLLM)"
+
+# 清理旧构建
+echo -e "\n${YELLOW}[Step 1] 清理旧构建...${NC}"
+rm -rf release/*linux* release/*Linux* release/*.AppImage release/*.deb 2>/dev/null || true
+echo -e "✅ 清理完成"
+
+# 运行构建
+echo -e "\n${YELLOW}[Step 2] 构建 Linux 版本...${NC}"
+echo -e "执行: npm run build:linux"
 npm run build:linux
+
+# 完成
+echo -e "\n${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}✅ Linux 构建完成！${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "\n📦 输出目录: ${BLUE}release/${NC}"
+echo -e "\n生成的文件:"
+ls -la release/*.AppImage release/*.deb 2>/dev/null || echo "  (请检查 release/ 目录)"
+echo ""
