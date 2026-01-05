@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown, AlertCircle } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown, AlertCircle, Copy } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -177,8 +177,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
 
     return (
         <div className="chat-panel-v2">
-            {/* 消息区域 - 添加 relative 定位限制覆盖层范围 */}
-            <div className="chat-messages" style={{ position: 'relative' }}>
+            {/* 消息区域 - 添加 relative 定位限制覆盖层范围；无消息时禁用滚动以固定空状态 */}
+            <div className="chat-messages" style={{
+                position: 'relative',
+                overflowY: messages.length > 0 ? 'auto' : 'hidden'
+            }}>
+                <div className="topbar-spacer" />
                 {/* WebLLM 首次使用 - 简洁引导界面 */}
                 {showWebLLMSetup && (
                     <div style={{
@@ -1056,6 +1060,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
 
 
 const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
+    const [copied, setCopied] = useState(false)
+    const { t } = useTranslation()
+
     // 处理 <think> 标签，将其转换为带有特定样式的 div
     // 即使 </think> 尚未生成（流式传输中），也能正确在一个 div 中显示
     const processedContent = message.content
@@ -1068,13 +1075,36 @@ const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
 
     const sanitizedHtml = DOMPurify.sanitize(rawHtml, { ADD_ATTR: ['class'] })
 
+    // 复制功能
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(message.content)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch (err) {
+            console.error('复制失败:', err)
+        }
+    }
+
     return (
         <div className={`chat-bubble ${message.role}`}>
-            <div
-                className={`bubble-content markdown-body ${message.isStreaming ? 'streaming' : ''}`}
-            >
-                <span dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
-                {message.isStreaming && <span className="typing-cursor" />}
+            <div className="bubble-row">
+                <div
+                    className={`bubble-content markdown-body ${message.isStreaming ? 'streaming' : ''}`}
+                >
+                    <span dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+                    {message.isStreaming && <span className="typing-cursor" />}
+                </div>
+                {/* AI 回复的复制按钮 - 纯图标，放在气泡右侧 */}
+                {message.role === 'assistant' && !message.isStreaming && (
+                    <button
+                        className={`bubble-copy-icon-btn ${copied ? 'copied' : ''}`}
+                        onClick={handleCopy}
+                        title={t('shortcuts.copy')}
+                    >
+                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
+                )}
             </div>
         </div>
     )

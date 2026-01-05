@@ -405,8 +405,15 @@ export const Editor: React.FC<EditorProps> = ({
     const handleTitleBlur = () => {
         if (onTitleChange) {
             const ext = fileExtension.startsWith('.') ? fileExtension.slice(1) : fileExtension
-            // 默认标题使用当前时间
             let newTitle = title.trim()
+
+            // 如果用户没有输入标题且文件仍是 Untitled_xxx 格式，不触发重命名
+            // 这避免了新建文件时标题框失焦就立即改名导致的状态问题
+            if (!newTitle && isUntitled) {
+                return  // 保持 Untitled_xxx 格式，等用户真正输入标题时再重命名
+            }
+
+            // 如果用户没有输入标题（但文件不是 Untitled 格式），使用当前时间作为默认标题
             if (!newTitle) {
                 const now = new Date()
                 newTitle = `未命名：${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
@@ -433,39 +440,7 @@ export const Editor: React.FC<EditorProps> = ({
 
     return (
         <div className="editor-container">
-            {/* 顶部工具栏 - 水平对齐 */}
-            <div className={`editor-toolbar ${focusMode ? 'focus-mode' : ''}`}>
-                {/* 专注模式下隐藏格式按钮 */}
-                {!focusMode && (
-                    <div className="toolbar-group">
-
-
-                        {/* 格式切换拨片 - 一体式设计 */}
-                        <div className="format-toggle-switch">
-                            <button
-                                className={`format-option ${!isMarkdown ? 'active' : ''}`}
-                                onClick={() => {
-                                    if (isMarkdown && onFormatToggle) {
-                                        onFormatToggle()
-                                        // 转换为 TXT 时自动切回编辑模式
-                                        onPreviewModeChange?.('edit')
-                                    }
-                                }}
-                                title={isMarkdown ? '转换为 TXT 副本' : '当前格式'}
-                            >
-                                TXT
-                            </button>
-                            <button
-                                className={`format-option ${isMarkdown ? 'active' : ''}`}
-                                onClick={!isMarkdown ? onFormatToggle : undefined}
-                                title={!isMarkdown ? '转换为 MD 副本' : '当前格式'}
-                            >
-                                MD
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
+            {/* 顶部工具栏已移除，功能移动到 TopBar */}
 
             {/* 编辑区域 - 可滚动，支持分屏模式 */}
             <div className={`editor-scroll ${focusMode ? 'focus-mode-content' : ''} ${previewMode === 'split' ? 'split-mode' : ''}`} ref={scrollRef}>
@@ -478,6 +453,7 @@ export const Editor: React.FC<EditorProps> = ({
                             className="editor-split-pane editor-split-left"
                             onScroll={() => handleSplitScroll('left')}
                         >
+                            <div className="topbar-spacer" />
                             <div className="editor-content">
                                 <textarea
                                     ref={titleRef}
@@ -624,6 +600,7 @@ export const Editor: React.FC<EditorProps> = ({
                             className="editor-split-pane editor-split-right"
                             onScroll={() => handleSplitScroll('right')}
                         >
+                            <div className="topbar-spacer" />
                             <div className="editor-content">
                                 <h1 className="editor-title-preview">{title || t('editor.titlePlaceholder')}</h1>
                                 <div className="editor-divider">
@@ -641,153 +618,156 @@ export const Editor: React.FC<EditorProps> = ({
                     </div>
                 ) : (
                     /* 普通模式：编辑或预览 */
-                    <div className="editor-content">
-                        <textarea
-                            ref={titleRef}
-                            className="editor-title"
-                            value={title}
-                            onChange={handleTitleChange}
-                            onBlur={handleTitleBlur}
-                            onKeyDown={handleTitleKeyDown}
-                            placeholder={t('editor.titlePlaceholder')}
-                            rows={1}
-                            spellCheck={false}
-                            readOnly={showPreview}
-                        />
-
-                        <div className="editor-divider">
-                            <span className="divider-dot"></span>
-                            <span className="divider-dot"></span>
-                            <span className="divider-dot"></span>
-                        </div>
-
-                        {/* Medium 风格：空白行加号菜单 */}
-                        {!showPreview && (
-                            <BlockInsertMenu
-                                textareaRef={textareaRef}
-                                content={content}
-                                onChange={onChange}
-                                editorScrollRef={scrollRef}
-                                isMarkdown={isMarkdown}
-                                filePath={filePath}
+                    <>
+                        <div className="topbar-spacer" />
+                        <div className="editor-content">
+                            <textarea
+                                ref={titleRef}
+                                className="editor-title"
+                                value={title}
+                                onChange={handleTitleChange}
+                                onBlur={handleTitleBlur}
+                                onKeyDown={handleTitleKeyDown}
+                                placeholder={t('editor.titlePlaceholder')}
+                                rows={1}
+                                spellCheck={false}
+                                readOnly={showPreview}
                             />
-                        )}
 
-                        {/* Medium 风格：选中文字浮动工具栏 */}
-                        {!showPreview && isMarkdown && (
-                            <FloatingToolbar
-                                textareaRef={textareaRef}
-                                content={content}
-                                onChange={onChange}
-                                editorScrollRef={scrollRef}
-                            />
-                        )}
+                            <div className="editor-divider">
+                                <span className="divider-dot"></span>
+                                <span className="divider-dot"></span>
+                                <span className="divider-dot"></span>
+                            </div>
 
-                        {/* 智能联想弹出框与文本框包装 */}
-                        <div style={{ position: 'relative', display: showPreview ? 'none' : 'block' }}>
+                            {/* Medium 风格：空白行加号菜单 */}
                             {!showPreview && (
-                                <AutocompletePopup
+                                <BlockInsertMenu
                                     textareaRef={textareaRef}
-                                    content={autocomplete.lastContent || content}
-                                    cursorPosition={autocomplete.cursorPosition}
-                                    suggestion={autocomplete.suggestion}
-                                    isLoading={autocomplete.isLoading}
+                                    content={content}
+                                    onChange={onChange}
+                                    editorScrollRef={scrollRef}
+                                    isMarkdown={isMarkdown}
+                                    filePath={filePath}
                                 />
                             )}
 
-                            <textarea
-                                ref={textareaRef}
-                                className={`editor-body ${autocomplete.suggestion && !autocomplete.isLoading ? 'ghost-active' : ''}`}
-                                value={content}
-                                onChange={(e) => {
-                                    onChange(e.target.value)
-                                    // 触发联想
-                                    autocomplete.handleInput(e.target.value, e.target.selectionStart)
-                                }}
-                                onClick={(e) => {
-                                    // 1. 点击任意位置，先取消当前的联想
-                                    autocomplete.dismissSuggestion()
+                            {/* Medium 风格：选中文字浮动工具栏 */}
+                            {!showPreview && isMarkdown && (
+                                <FloatingToolbar
+                                    textareaRef={textareaRef}
+                                    content={content}
+                                    onChange={onChange}
+                                    editorScrollRef={scrollRef}
+                                />
+                            )}
 
-                                    // 2. 检查是否在段落末尾，若是则重新触发
-                                    const target = e.target as HTMLTextAreaElement
-                                    autocomplete.handleCursorChange(target.value, target.selectionStart)
-                                }}
-                                onKeyDown={(e) => {
-                                    // Tab 键接受联想建议
-                                    if (e.key === 'Tab' && autocomplete.suggestion) {
-                                        e.preventDefault()
-                                        const result = autocomplete.acceptSuggestion()
-                                        if (result && textareaRef.current) {
-                                            const { text, hasRemaining } = result
-                                            // 保存当前滚动位置
-                                            const scrollTop = textareaRef.current.scrollTop
-                                            const cursorPos = textareaRef.current.selectionStart
-                                            const newContent = content.slice(0, cursorPos) + text + content.slice(cursorPos)
-                                            onChange(newContent)
-                                            // 移动光标到建议末尾
-                                            const newPos = cursorPos + text.length
-                                            setTimeout(() => {
-                                                if (textareaRef.current) {
-                                                    // 恢复滚动位置
-                                                    textareaRef.current.scrollTop = scrollTop
-                                                    textareaRef.current.setSelectionRange(newPos, newPos)
-                                                    // 确保光标可见
-                                                    textareaRef.current.blur()
-                                                    textareaRef.current.focus()
-                                                    textareaRef.current.scrollTop = scrollTop
+                            {/* 智能联想弹出框与文本框包装 */}
+                            <div style={{ position: 'relative', display: showPreview ? 'none' : 'block' }}>
+                                {!showPreview && (
+                                    <AutocompletePopup
+                                        textareaRef={textareaRef}
+                                        content={autocomplete.lastContent || content}
+                                        cursorPosition={autocomplete.cursorPosition}
+                                        suggestion={autocomplete.suggestion}
+                                        isLoading={autocomplete.isLoading}
+                                    />
+                                )}
 
-                                                    if (hasRemaining) {
-                                                        autocomplete.updateContext(newContent, newPos)
-                                                    } else {
-                                                        autocomplete.triggerContinuation(newContent, newPos)
-                                                    }
-                                                }
-                                            }, 0)
-                                        }
-                                        return
-                                    }
-                                    // Esc 键取消联想
-                                    if (e.key === 'Escape' && autocomplete.suggestion) {
+                                <textarea
+                                    ref={textareaRef}
+                                    className={`editor-body ${autocomplete.suggestion && !autocomplete.isLoading ? 'ghost-active' : ''}`}
+                                    value={content}
+                                    onChange={(e) => {
+                                        onChange(e.target.value)
+                                        // 触发联想
+                                        autocomplete.handleInput(e.target.value, e.target.selectionStart)
+                                    }}
+                                    onClick={(e) => {
+                                        // 1. 点击任意位置，先取消当前的联想
                                         autocomplete.dismissSuggestion()
-                                        return
-                                    }
-                                }}
-                                placeholder={t('editor.bodyPlaceholder')}
-                                spellCheck={false}
+
+                                        // 2. 检查是否在段落末尾，若是则重新触发
+                                        const target = e.target as HTMLTextAreaElement
+                                        autocomplete.handleCursorChange(target.value, target.selectionStart)
+                                    }}
+                                    onKeyDown={(e) => {
+                                        // Tab 键接受联想建议
+                                        if (e.key === 'Tab' && autocomplete.suggestion) {
+                                            e.preventDefault()
+                                            const result = autocomplete.acceptSuggestion()
+                                            if (result && textareaRef.current) {
+                                                const { text, hasRemaining } = result
+                                                // 保存当前滚动位置
+                                                const scrollTop = textareaRef.current.scrollTop
+                                                const cursorPos = textareaRef.current.selectionStart
+                                                const newContent = content.slice(0, cursorPos) + text + content.slice(cursorPos)
+                                                onChange(newContent)
+                                                // 移动光标到建议末尾
+                                                const newPos = cursorPos + text.length
+                                                setTimeout(() => {
+                                                    if (textareaRef.current) {
+                                                        // 恢复滚动位置
+                                                        textareaRef.current.scrollTop = scrollTop
+                                                        textareaRef.current.setSelectionRange(newPos, newPos)
+                                                        // 确保光标可见
+                                                        textareaRef.current.blur()
+                                                        textareaRef.current.focus()
+                                                        textareaRef.current.scrollTop = scrollTop
+
+                                                        if (hasRemaining) {
+                                                            autocomplete.updateContext(newContent, newPos)
+                                                        } else {
+                                                            autocomplete.triggerContinuation(newContent, newPos)
+                                                        }
+                                                    }
+                                                }, 0)
+                                            }
+                                            return
+                                        }
+                                        // Esc 键取消联想
+                                        if (e.key === 'Escape' && autocomplete.suggestion) {
+                                            autocomplete.dismissSuggestion()
+                                            return
+                                        }
+                                    }}
+                                    placeholder={t('editor.bodyPlaceholder')}
+                                    spellCheck={false}
+                                />
+                            </div>
+
+                            <div
+                                className="editor-preview"
+                                dangerouslySetInnerHTML={{ __html: previewHtml }}
+                                style={{ display: showPreview ? 'block' : 'none' }}
                             />
-                        </div>
 
-                        <div
-                            className="editor-preview"
-                            dangerouslySetInnerHTML={{ __html: previewHtml }}
-                            style={{ display: showPreview ? 'block' : 'none' }}
-                        />
+                            <div className="editor-divider editor-divider-bottom">
+                                <span className="divider-dot"></span>
+                                <span className="divider-dot"></span>
+                                <span className="divider-dot"></span>
+                            </div>
 
-                        <div className="editor-divider editor-divider-bottom">
-                            <span className="divider-dot"></span>
-                            <span className="divider-dot"></span>
-                            <span className="divider-dot"></span>
+                            <div className="editor-stats">
+                                <span className="stat-item">{wordCount} {t('editor.wordCount')}</span>
+                                {createdAt && (
+                                    <span className="stat-item">
+                                        {t('editor.created')}: {new Date(createdAt).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
+                                    </span>
+                                )}
+                                {modifiedAt && (
+                                    <span className="stat-item">
+                                        {t('editor.modified')}: {new Date(modifiedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
+                                            month: 'numeric',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-
-                        <div className="editor-stats">
-                            <span className="stat-item">{wordCount} {t('editor.wordCount')}</span>
-                            {createdAt && (
-                                <span className="stat-item">
-                                    {t('editor.created')}: {new Date(createdAt).toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')}
-                                </span>
-                            )}
-                            {modifiedAt && (
-                                <span className="stat-item">
-                                    {t('editor.modified')}: {new Date(modifiedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', {
-                                        month: 'numeric',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                    </>
                 )}
             </div>
         </div>

@@ -563,8 +563,13 @@ async function readDirectoryTree(dirPath: string, rootPath: string): Promise<Fil
             })
         } else {
             const ext = extname(entry.name).toLowerCase()
-            // 只显示文本文件
-            if (['.txt', '.md', '.markdown'].includes(ext)) {
+            // 显示文本文件、文档文件和图片文件
+            const allowedExtensions = [
+                '.txt', '.md', '.markdown',  // 文本
+                '.pdf', '.docx',              // 文档
+                '.jpg', '.jpeg', '.png', '.gif', '.webp'  // 图片
+            ]
+            if (allowedExtensions.includes(ext)) {
                 nodes.push({
                     name: entry.name,
                     path: relativePath,
@@ -779,6 +784,16 @@ function setupIpcHandlers() {
         return true
     })
 
+    // 读取文件 Buffer (用于 DOCX 预览)
+    ipcMain.handle('fs:readFileBuffer', async (_event, relativePath: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) throw new Error('未设置 Vault 路径')
+
+        const fullPath = join(vaultPath, relativePath)
+        const buffer = await fs.readFile(fullPath)
+        return buffer.buffer // 返回 ArrayBuffer
+    })
+
     // ============ 图片相关操作 ============
 
     // 保存 Base64 图片到本地 (用于粘贴图片)
@@ -947,7 +962,7 @@ function setupIpcHandlers() {
                     continue
                 }
 
-                // 只检查 .md 和 .txt 文件
+                // 只检查可编辑的文本文件 (PDF/DOCX 不参与图片引用检查)
                 if (!file.endsWith('.md') && !file.endsWith('.txt')) continue
 
                 const filePath = join(searchPath, file)

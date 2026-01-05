@@ -91,12 +91,29 @@ export function useColorTags() {
         return TAG_COLORS.find(c => c.key === color)?.hex || 'transparent'
     }, [getColorTag])
 
+    // 更新路径（当文件移动时调用）
+    const updatePath = useCallback((oldPath: string, newPath: string) => {
+        setColorTags(prev => {
+            const color = prev[oldPath]
+            if (color) {
+                const newTags = { ...prev }
+                delete newTags[oldPath]
+                newTags[newPath] = color
+                saveTags(newTags)
+                console.log('🎨 颜色标签路径更新:', oldPath, '→', newPath)
+                return newTags
+            }
+            return prev
+        })
+    }, [saveTags])
+
     return {
         colorTags,
         isLoaded,
         setColorTag,
         getColorTag,
         getColorHex,
+        updatePath,
     }
 }
 

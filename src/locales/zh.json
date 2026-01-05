@@ -310,10 +310,13 @@
     "contextMenu": {
         "newFolder": "新建文件夹",
         "rename": "重命名",
-        "delete": "删除"
+        "delete": "删除",
+        "pin": "固定",
+        "unpin": "取消固定"
     },
     "gallery": {
-        "newArticle": "新建文章"
+        "newArticle": "新建文章",
+        "searchPlaceholder": "搜索文件..."
     },
     "toast": {
         "fileSaved": "文件已保存",
@@ -471,5 +474,14 @@
         "noInsightData": "暂无数据，请触发一次续写后查看",
         "time": "生成时间",
         "chars": "字符"
+    },
+    "viewer": {
+        "loading": "加载中...",
+        "pdfLoading": "加载 PDF 中...",
+        "docxLoading": "加载文档中...",
+        "loadError": "加载失败",
+        "unsupportedFormat": "不支持的文件格式",
+        "readOnly": "只读文件",
+        "preview": "预览"
     }
 }

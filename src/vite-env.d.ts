@@ -28,6 +28,7 @@ interface FileSystemAPI {
     createDirectory(path: string): Promise<boolean>
     deleteFile(path: string): Promise<boolean>
     renameFile(oldPath: string, newPath: string): Promise<boolean>
+    readFileBuffer(path: string): Promise<ArrayBuffer>
     // 图片操作
     saveImage(relativeDirPath: string, base64Data: string, fileName?: string): Promise<string>
     selectAndCopyImage(relativeDirPath: string): Promise<string | null>

@@ -5,6 +5,16 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 
+// 文件类型常量
+export const EDITABLE_EXTENSIONS = ['.md', '.txt']
+export const VIEWABLE_EXTENSIONS = ['.pdf', '.docx']
+export const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+export const ALL_ALLOWED_EXTENSIONS = [
+    ...EDITABLE_EXTENSIONS,
+    ...VIEWABLE_EXTENSIONS,
+    ...IMAGE_EXTENSIONS
+]
+
 // 文件节点类型
 export interface FileNode {
     name: string
@@ -41,6 +51,7 @@ export interface UseFileSystemReturn {
     fileTree: FileNode[]
     activeFile: FileNode | null
     activeFolder: FileNode | null
+    previewFile: FileNode | null  // 双栏布局右侧预览文件
     fileContent: string
     isLoading: boolean
     isNewlyCreatedFile: boolean  // 新创建的文件标志
@@ -50,6 +61,8 @@ export interface UseFileSystemReturn {
     refreshTree: () => Promise<void>
     openFile: (node: FileNode) => Promise<void>
     selectFolder: (node: FileNode | null) => void
+    setPreviewFile: (file: FileNode | null) => void  // 设置预览文件
+    isEditable: (file: FileNode) => boolean  // 判断文件是否可编辑
     getAllFiles: () => FileNode[]  // 递归获取所有文件
     saveFile: () => Promise<void>
     setFileContent: (content: string) => void
@@ -79,6 +92,7 @@ export function useFileSystem(): UseFileSystemReturn {
     // 当前文件/文件夹状态
     const [activeFile, setActiveFile] = useState<FileNode | null>(null)
     const [activeFolder, setActiveFolder] = useState<FileNode | null>(null)
+    const [previewFile, setPreviewFile] = useState<FileNode | null>(null)  // 双栏布局右侧预览文件
     const [fileContent, setFileContent] = useState('')
     const [isNewlyCreatedFile, setIsNewlyCreatedFile] = useState(false)
 
@@ -88,6 +102,7 @@ export function useFileSystem(): UseFileSystemReturn {
     // 防抖保存定时器
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
     const lastContentRef = useRef<string>('')
+    const isRenamingRef = useRef(false)  // 重命名操作标志，防止 unlink 事件清空编辑器
 
     /**
      * 初始化：检查是否已有 Vault
@@ -128,7 +143,8 @@ export function useFileSystem(): UseFileSystemReturn {
             refreshTree()
 
             // 如果当前打开的文件被删除，清空编辑器
-            if (event.type === 'unlink' && activeFile?.path === event.path) {
+            // 注意：重命名操作会触发 unlink 事件，此时不应清空编辑器
+            if (event.type === 'unlink' && activeFile?.path === event.path && !isRenamingRef.current) {
                 setActiveFile(null)
                 setFileContent('')
             }
@@ -278,7 +294,8 @@ export function useFileSystem(): UseFileSystemReturn {
 
         // 检查当前文件：只有当内容为空且标题未修改（仍是 Untitled_xxx）时才删除
         // 如果用户已经修改了标题（文件名），则保留文件即使内容为空
-        if (activeFile && !fileContent.trim()) {
+        // 注意：如果是新创建的文件（isNewlyCreatedFile），不要立即删除
+        if (activeFile && !fileContent.trim() && !isNewlyCreatedFile) {
             const isUntitled = activeFile.name.startsWith('Untitled_')
             if (isUntitled) {
                 // 默认标题 + 空内容 = 删除
@@ -308,7 +325,17 @@ export function useFileSystem(): UseFileSystemReturn {
             localStorage.removeItem(STORAGE_KEYS.ACTIVE_FOLDER_PATH)
         }
         localStorage.removeItem(STORAGE_KEYS.ACTIVE_FILE_PATH)
-    }, [activeFile, fileContent, refreshTree])
+    }, [activeFile, fileContent, refreshTree, isNewlyCreatedFile])
+
+    /**
+     * 判断文件是否可编辑 (.md / .txt)
+     */
+    const isEditable = useCallback((file: FileNode): boolean => {
+        const ext = file.extension?.toLowerCase() || ''
+        // 支持带点和不带点的扩展名
+        const normalizedExt = ext.startsWith('.') ? ext : `.${ext}`
+        return EDITABLE_EXTENSIONS.includes(normalizedExt)
+    }, [])
 
     /**
      * 递归获取所有文件（不包括文件夹）
@@ -338,8 +365,9 @@ export function useFileSystem(): UseFileSystemReturn {
             return
         }
 
-        // 检查当前文件：如果内容为空，删除该空文件（新建后未编辑）
-        if (activeFile && !fileContent.trim()) {
+        // 检查当前文件：如果内容为空且不是新创建的文件，删除该空文件
+        // 注意：新创建的文件（isNewlyCreatedFile）不应被删除，给用户编辑机会
+        if (activeFile && !fileContent.trim() && !isNewlyCreatedFile) {
             try {
                 await window.fs.deleteFile(activeFile.path)
                 console.log('🗑️ 删除空文件:', activeFile.path)
@@ -383,7 +411,7 @@ export function useFileSystem(): UseFileSystemReturn {
         } catch (error) {
             console.error('打开文件失败:', error)
         }
-    }, [activeFile, fileContent, fileTree, selectFolder])
+    }, [activeFile, fileContent, fileTree, selectFolder, isNewlyCreatedFile])
 
     /**
      * 保存当前文件
@@ -462,11 +490,12 @@ export function useFileSystem(): UseFileSystemReturn {
             setIsNewlyCreatedFile(true)
 
             // 打开新创建的文件
+            const ext = name.split('.').pop()
             const newNode: FileNode = {
                 name,
                 path,
                 isDirectory: false,
-                extension: name.split('.').pop()
+                extension: ext ? `.${ext}` : undefined  // 添加点号前缀，与 EDITABLE_EXTENSIONS 格式一致
             }
             await openFile(newNode)
         } catch (error) {
@@ -578,6 +607,9 @@ export function useFileSystem(): UseFileSystemReturn {
      */
     const renameItem = useCallback(async (oldPath: string, newName: string) => {
         try {
+            // 设置重命名标志，防止文件变化事件清空编辑器
+            isRenamingRef.current = true
+
             // 获取目录路径
             const pathParts = oldPath.split('/')
             pathParts.pop()
@@ -588,11 +620,12 @@ export function useFileSystem(): UseFileSystemReturn {
 
             // 更新引用
             if (activeFile?.path === oldPath) {
+                const ext = newName.split('.').pop()
                 setActiveFile({
                     ...activeFile,
                     path: newPath,
                     name: newName,
-                    extension: newName.split('.').pop()
+                    extension: ext ? `.${ext}` : undefined  // 添加点号前缀
                 })
             }
             if (activeFolder?.path === oldPath) {
@@ -602,7 +635,13 @@ export function useFileSystem(): UseFileSystemReturn {
                     name: newName
                 })
             }
+
+            // 延迟重置重命名标志，确保文件变化事件处理完成
+            setTimeout(() => {
+                isRenamingRef.current = false
+            }, 500)
         } catch (error) {
+            isRenamingRef.current = false
             console.error('重命名失败:', error)
         }
     }, [activeFile, activeFolder])
@@ -872,6 +911,7 @@ export function useFileSystem(): UseFileSystemReturn {
         fileTree,
         activeFile,
         activeFolder,
+        previewFile,
         fileContent,
         isLoading,
         isNewlyCreatedFile,
@@ -879,6 +919,8 @@ export function useFileSystem(): UseFileSystemReturn {
         refreshTree,
         openFile,
         selectFolder,
+        setPreviewFile,
+        isEditable,
         getAllFiles,
         saveFile,
         setFileContent: handleContentChange,

@@ -1,0 +1,87 @@
+.docx-viewer {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background: var(--bg-primary);
+    padding: 2rem 1rem;
+}
+
+.docx-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 3rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    font-size: var(--font-size, 17px);
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
+
+.docx-content * {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.docx-content p {
+    margin-bottom: 1em;
+}
+
+.docx-content h1,
+.docx-content h2,
+.docx-content h3,
+.docx-content h4,
+.docx-content h5,
+.docx-content h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+.docx-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.docx-content table td,
+.docx-content table th {
+    border: 1px solid var(--border-color);
+    padding: 0.5em;
+}
+
+.docx-viewer-loading,
+.docx-viewer-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.docx-viewer-error {
+    color: var(--error-color);
+}
+
+.error-message {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+}

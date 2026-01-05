@@ -310,10 +310,13 @@
     "contextMenu": {
         "newFolder": "New Folder",
         "rename": "Rename",
-        "delete": "Delete"
+        "delete": "Delete",
+        "pin": "Pin",
+        "unpin": "Unpin"
     },
     "gallery": {
-        "newArticle": "New Article"
+        "newArticle": "New Article",
+        "searchPlaceholder": "Search files..."
     },
     "toast": {
         "fileSaved": "File saved",

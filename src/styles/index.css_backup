@@ -71,12 +71,14 @@ body.platform-windows .titlebar-drag-region {
 
 /* Windows 下调整侧边栏顶部间距 */
 body.platform-windows .sidebar-header {
-  padding-top: calc(8px + var(--titlebar-height));
+  padding-top: 8px;
+  height: auto;
+  min-height: 36px;
 }
 
 /* Windows 下调整画廊头部 */
 body.platform-windows .gallery-header {
-  margin-top: var(--titlebar-height);
+  margin-top: 4px;
 }
 
 /* Windows 下调整编辑器工具栏 */
@@ -84,20 +86,41 @@ body.platform-windows .editor-toolbar {
   margin-top: 4px;
 }
 
-/* Windows 下调整布局切换按钮位置 */
-body.platform-windows .layout-toggle-btn {
-  top: calc(8px + var(--titlebar-height));
+/* Windows 下调整聊天面板顶部 */
+body.platform-windows .panel-chat {
+  padding-top: 8px;
 }
 
-/* Windows 平台聊天区顶部渐变遮挡 */
+/* Windows 下调整布局切换按钮位置 */
+body.platform-windows .layout-toggle-btn {
+  top: 8px;
+}
+
+/* Windows 平台聊天区顶部渐变遮挡 - 防止内容与右上角按钮重叠 */
+/* Windows 标题栏高度约 32px，聊天面板需要在这之下显示遮罩 */
+body.platform-windows .chat-panel-v2 {
+  position: relative;
+}
+
+/* 在聊天面板顶部添加固定的渐变遮罩 */
 body.platform-windows .chat-panel-v2::before {
-  top: var(--titlebar-height);
-  /* Move gradient down */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom,
+      var(--bg-chat) 0%,
+      var(--bg-chat) 50%,
+      transparent 100%);
+  pointer-events: none;
+  z-index: 20;
 }
 
 /* 聊天消息区域增加顶部内边距 */
 body.platform-windows .chat-messages {
-  padding-top: calc(40px + var(--titlebar-height));
+  padding-top: 40px;
 }
 
 /* ============ 深色主题 ============ */
@@ -119,10 +142,6 @@ body.platform-windows .chat-messages {
   --text-muted: #8e8e93;
 
   --border-color: rgba(255, 255, 255, 0.1);
-
-  /* Apple Style Frosted Glass - Dark */
-  --bg-glass: rgba(28, 28, 30, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.1);
 
   /* 深色模式使用优雅的浅灰色作为强调色，与茶色模式风格一致 */
   --accent-color: #a1a1a6;
@@ -280,7 +299,7 @@ select:focus {
   background: var(--bg-sidebar);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  /* 移除边框，使用磨砂玻璃效果分隔 */
+  border-right: 1px solid var(--border-color);
   overflow: hidden;
   height: 100%;
   display: flex;
@@ -291,8 +310,7 @@ select:focus {
   flex: 1;
   min-width: 0;
   /* 防止 Flex 子项溢出 */
-  /* 使用透明背景,让内容能透过 TopBar 的磨砂玻璃显示 */
-  background: transparent;
+  background: var(--bg-main);
   position: relative;
   z-index: 1;
   overflow: hidden;
@@ -317,7 +335,7 @@ select:focus {
   /* z-index 必须足够高，因为 backdrop-filter 创建了新的层叠上下文 */
   position: relative;
   z-index: 100;
-  /* 移除边框，使用磨砂玻璃效果分隔 */
+  border-left: 1px solid var(--border-color);
 }
 
 /* Panel 内部容器 */
@@ -474,11 +492,8 @@ select:focus {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  /* 确保子元素拉伸填满宽度 */
   overflow-y: auto;
-  padding: 20px 8px 8px 8px;
-  /* Unified 20px top spacing */
+  padding: 0 8px 8px 8px;
 }
 
 /* 侧边栏空白区域拖拽高亮 */
@@ -661,19 +676,6 @@ select:focus {
   margin: 1px 0;
 }
 
-/* 文件夹项 - 保持背景色 */
-.finder-tree-node>.finder-tree-item {
-  background: var(--bg-sidebar);
-}
-
-/* 根目录项 - 使用 sticky 定位固定在顶部 */
-.finder-tree-item.root-item {
-  position: sticky;
-  top: var(--titlebar-height);
-  z-index: 20;
-  background: var(--bg-sidebar);
-}
-
 .finder-tree-item {
   display: flex;
   align-items: center;
@@ -727,8 +729,6 @@ select:focus {
 
 .finder-name {
   flex: 1;
-  min-width: 0;
-  /* 关键：允许收缩，确保右侧标签不被挤走 */
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -752,8 +752,8 @@ select:focus {
 }
 
 .finder-spacer {
+  min-width: 8px;
   flex-shrink: 0;
-  min-width: 4px;
 }
 
 .finder-count {
@@ -762,9 +762,6 @@ select:focus {
   padding: 1px 5px;
   background: var(--bg-hover);
   border-radius: 6px;
-  flex-shrink: 0;
-  margin-left: auto;
-  /* 推到右边 */
 }
 
 /* 拖拽样式 */
@@ -956,49 +953,6 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* 文件项样式 */
-.finder-file-item {
-  /* 与文件夹项略有不同的视觉层次 */
-  opacity: 0.85;
-}
-
-.finder-file-item .finder-file-icon {
-  color: var(--text-tertiary);
-}
-
-.finder-file-item.active .finder-file-icon {
-  color: var(--accent-color);
-}
-
-/* 文件扩展名标签 */
-.finder-ext {
-  font-size: 9px;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-hover);
-  padding: 1px 4px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-.finder-file-item.active .finder-ext {
-  color: var(--accent-color);
-  background: rgba(0, 122, 255, 0.1);
-}
-
-/* 文件图钉图标 */
-.finder-pin-icon {
-  color: var(--text-tertiary);
-  flex-shrink: 0;
-  margin-right: 2px;
-}
-
-.finder-file-item.active .finder-pin-icon {
-  color: var(--accent-color);
-}
-
-
 /* ============ 主内容区 ============ */
 .main-content {
   flex: 1;
@@ -1014,160 +968,22 @@ select:focus {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
-  /* 为绝对定位的搜索框提供定位上下文 */
 }
 
-/* 画廊滚动容器 - 顶部留出空白 */
-.gallery-scroll-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-top: 52px;
-  /* 跟标题栏下方保持一定距离，同时给搜索框预留空间 */
-}
-
-/* TopBar 内部的搜索容器 - Fixed 定位跳过父级 relative 限制，确保相对于视口绝对居中 */
-.topbar-search-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* bottom: 0; 移除全屏覆盖 */
-  height: 52px;
-  /* 限制高度仅为标题栏高度 */
+/* 画廊头部 - 与侧边栏头部对齐 */
+.gallery-header {
+  height: calc(var(--titlebar-height) + 0px);
+  padding: 0 24px;
+  /* 与网格 padding 对齐 */
   display: flex;
   align-items: center;
-  justify-content: center;
-  /* 恢复居中对齐 */
-  z-index: 100;
-  /* 左右保留 80px 安全距离，避开 Mac 红绿灯 */
-  /* 左右保留 80px 安全距离，避开 Mac 红绿灯 */
-  padding: 0 80px;
-  pointer-events: none;
-  /* 让点击穿透空白区域，从而允许拖动下方的 TopBar */
-}
-
-
-/* 搜索框 - 胶囊风格大圆角 + 高透磨砂 */
-.gallery-search-box {
-  -webkit-app-region: no-drag;
-  /* 搜索框本身不可拖动，保证输入体验 */
-  /* margin: 0 auto; 移除 margin */
-  pointer-events: auto;
-  /* 恢复搜索框的可交互性 */
-  display: flex;
-  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  padding: 5px 20px;
-  /* 初始状态：增加宽度防止图标溢出 */
-  width: 200px;
-  min-width: 0;
-  /* 允许收缩 */
-  max-width: 100%;
-  /* 允许在极窄窗口下收缩 */
-  height: 28px;
-  /* 与 TopBar 按钮高度一致 */
-
-  /* 浅色模式：高透背景 + 超细边框 */
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 0.5px solid rgba(0, 0, 0, 0.08);
-  /* 更细致的边框 */
-  border-radius: 999px;
-  /* 胶囊圆角 */
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  /* 更平滑的弹性动画 */
-  color: var(--text-primary);
-  font-size: 13px;
-  justify-content: center;
-  /* 图标文字居中 */
 }
 
-.gallery-search-box:focus-within {
-  width: 360px;
-  /* 聚焦展开时的宽度 */
-  background: rgba(255, 255, 255, 0.8);
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 1px var(--accent-color), 0 4px 12px rgba(0, 0, 0, 0.08);
-  justify-content: flex-start;
-  /* 聚焦时内容靠左 */
-}
-
-/* 深色模式下的搜索框样式 */
-[data-theme="dark"] .gallery-search-box {
-  background: rgba(0, 0, 0, 0.2);
-  /* 更高透明度 */
-  border: 0.5px solid rgba(255, 255, 255, 0.15);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .gallery-search-box:focus-within {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
-}
-
-/* 茶色模式适配 - 跟随主题色 */
-[data-theme="tea"] .gallery-search-box {
-  background: rgba(255, 255, 255, 0.3);
-  border: 0.5px solid var(--accent-color);
-  /* 主题色边框 */
-}
-
-[data-theme="tea"] .gallery-search-box:focus-within {
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 0 1px var(--accent-color), 0 2px 8px rgba(139, 115, 85, 0.1);
-}
-
-.gallery-search-box .search-icon {
-  color: var(--text-tertiary);
-  flex-shrink: 0;
-}
-
-.gallery-search-input {
-  width: auto;
-  min-width: 0;
-  /* 允许极限收缩 */
-  /* 默认不占满，配合 justify-content: center 实现居中 */
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  color: var(--text-primary);
-  outline: none;
-  text-align: left;
-}
-
-.gallery-search-box:focus-within .gallery-search-input {
-  flex: 1;
-  /* 聚焦时占满剩余空间 */
-}
-
-.gallery-search-input::placeholder {
-  color: var(--text-muted);
-}
-
-.search-clear-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: none;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 50%;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.search-clear-btn:hover {
-  background: rgba(0, 0, 0, 0.12);
-  color: var(--text-secondary);
+/* 专注模式下给布局按钮留出空间 */
+.gallery-header.focus-mode {
+  padding-right: 56px;
 }
 
 .gallery-title {
@@ -1325,13 +1141,7 @@ select:focus {
   border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all var(--transition-normal);
-
-  /* 半透明背景 + 磨砂效果,让卡片能透过 TopBar 显示 */
-  /* 使用米色而非纯白,增加与白色背景的对比,让磨砂效果更明显 */
-  background: rgba(245, 240, 230, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
+  background: var(--bg-card);
   /* 保存标注颜色用于悬停效果 */
   --card-shadow-color: rgba(59, 130, 246, 0.3);
   /* 禁用文字选择，允许拖拽 */
@@ -1385,16 +1195,6 @@ select:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* 图钉图标样式 */
-.card-title .pin-icon {
-  flex-shrink: 0;
-  color: var(--accent-color);
-  opacity: 0.8;
 }
 
 /* 卡片摘要 - 限制行数，显示省略号 */
@@ -1663,8 +1463,6 @@ select:focus {
   color: var(--text-primary);
   background: transparent;
   border: none;
-  margin-top: 20px;
-  /* Unified 20px top spacing */
   margin-bottom: 24px;
   width: 100% !important;
   max-width: 100% !important;
@@ -2258,8 +2056,7 @@ select:focus {
   min-height: 0;
   /* 关键：允许 flex 子项收缩 */
   overflow-y: auto;
-  padding: 20px 16px 16px 16px;
-  /* Unified 20px top spacing */
+  padding: 16px;
 }
 
 .chat-empty {
@@ -2286,7 +2083,7 @@ select:focus {
 }
 
 .bubble-content {
-  max-width: 100%;
+  max-width: 85%;
   padding: 10px 14px;
   font-size: 13px;
   line-height: 1.5;
@@ -2302,63 +2099,11 @@ select:focus {
   border-bottom-right-radius: 4px;
 }
 
-/* 深色模式下用户气泡：卡片风格 */
-[data-theme="dark"] .chat-bubble.user .bubble-content {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-primary);
-}
-
 .chat-bubble.assistant .bubble-content {
   background: var(--bg-sidebar);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
   border: 1px solid var(--border-color);
-}
-
-/* 气泡行布局 - 内容和复制按钮 */
-.bubble-row {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 90%;
-  position: relative;
-}
-
-/* 用户气泡行靠右 */
-.chat-bubble.user .bubble-row {
-  margin-left: auto;
-  align-items: flex-end;
-}
-
-/* AI 气泡的复制按钮 - 右下角 */
-.bubble-copy-icon-btn {
-  position: absolute;
-  right: -32px;
-  bottom: 0;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  font-size: 0;
-  color: var(--text-tertiary);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: all var(--transition-fast);
-}
-
-.bubble-copy-icon-btn:hover {
-  opacity: 1;
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-}
-
-.bubble-copy-icon-btn.copied {
-  opacity: 1;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
 }
 
 .typing-cursor {
@@ -5243,243 +4988,4 @@ select:focus {
     transform: translateY(-3px);
     opacity: 1;
   }
-}
-
-/* ============ Unified TopBar Implementation ============ */
-.app-topbar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--titlebar-height);
-  display: flex;
-  z-index: 1000;
-
-  /* Enhanced Apple-style Liquid Glass Effect */
-  backdrop-filter: blur(20px) saturate(200%) brightness(1.05);
-  -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.05);
-
-  /* Lower opacity to show more underlying colors - creates liquid glass effect */
-  background: linear-gradient(to bottom,
-      rgba(var(--bg-main-rgb), 0.15) 0%,
-      rgba(var(--bg-main-rgb), 0.1) 100%);
-
-  /* Subtle border with slight glow */
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.1) inset,
-    0 1px 3px 0 rgba(0, 0, 0, 0.05);
-
-  /* Make the whole bar draggable */
-  -webkit-app-region: drag;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Dark mode adjustment for TopBar - enhanced liquid glass */
-[data-theme="dark"] .app-topbar {
-  background: linear-gradient(to bottom,
-      rgba(40, 40, 45, 0.25) 0%,
-      rgba(40, 40, 45, 0.2) 100%);
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
-    0 1px 3px 0 rgba(0, 0, 0, 0.2);
-}
-
-.topbar-section {
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  height: 100%;
-  position: relative;
-}
-
-/* Buttons inside topbar must be non-draggable */
-.topbar-section button,
-.topbar-section .format-toggles,
-.topbar-section .topbar-btn,
-.topbar-section .topbar-icon-btn {
-  -webkit-app-region: no-drag;
-}
-
-.topbar-section.left {
-  width: var(--sidebar-width);
-  flex: 0 0 var(--sidebar-width);
-}
-
-/* Mac Traffic Lights Spacer */
-body.platform-mac .window-controls-spacer {
-  width: 70px;
-  height: 1px;
-}
-
-.topbar-section.center {
-  flex: 1;
-  justify-content: space-between;
-  min-width: 0;
-}
-
-.topbar-section.right {
-  width: var(--chat-width);
-  flex: 0 0 var(--chat-width);
-  padding-left: 16px;
-}
-
-/* TopBar 左侧可拖拽区域 */
-.topbar-drag-area {
-  flex: 1;
-  height: 100%;
-  -webkit-app-region: drag;
-}
-
-/* TopBar 右侧控制按钮容器 */
-.topbar-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  -webkit-app-region: no-drag;
-}
-
-/* TopBar 按钮样式 */
-.topbar-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  -webkit-app-region: no-drag;
-}
-
-.topbar-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-}
-
-.topbar-btn.active {
-  color: var(--accent-color);
-}
-
-/* TopBar 图标按钮样式（用于展开式按钮） */
-.topbar-icon-btn {
-  width: 28px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  -webkit-app-region: no-drag;
-}
-
-.topbar-icon-btn:hover {
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-  border-color: var(--text-tertiary);
-}
-
-.topbar-icon-btn.active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
-}
-
-/* 禁用状态的图标按钮 */
-.topbar-icon-btn.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: auto;
-  /* 允许悬停以显示提示 */
-}
-
-.topbar-icon-btn.disabled:hover {
-  color: var(--error-color, #ff6b6b);
-  background: rgba(255, 107, 107, 0.1);
-  border-color: var(--error-color, #ff6b6b);
-  opacity: 0.7;
-}
-
-/* 图标切换容器 */
-.icon-toggles {
-  gap: 4px;
-  padding: 3px;
-}
-
-/* Format Toggles */
-.format-toggles {
-  display: flex;
-  background: var(--bg-hover);
-  border-radius: 6px;
-  padding: 2px;
-  gap: 2px;
-}
-
-/* 单个格式按钮容器 */
-.format-toggle-single {
-  display: flex;
-}
-
-.format-btn {
-  padding: 4px 10px;
-  height: 26px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--text-tertiary);
-  transition: all 0.2s;
-}
-
-.format-btn:hover:not(.disabled) {
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-  border-color: var(--text-tertiary);
-}
-
-.format-btn.active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
-}
-
-.format-btn.disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* 顶部栏分隔线 */
-.topbar-divider {
-  width: 1px;
-  height: 16px;
-  background: var(--border-color);
-  margin: 0 4px;
-}
-
-/* Spacer for content scrolling behind header */
-.topbar-spacer {
-  height: var(--titlebar-height);
-  min-height: var(--titlebar-height);
-  flex-shrink: 0;
-  width: 100%;
-}
-
-/* Overrides for Panels to support unified header */
-.panel-sidebar,
-.panel-chat,
-.panel-main {
-  /* Remove individual internal paddings so content flows to top */
-  padding-top: 0 !important;
-}
-
-.sidebar-header {
-  display: none !important;
 }

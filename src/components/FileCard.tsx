@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react'
-import { Folder, FileText, FileCode } from 'lucide-react'
+import { Folder, FileText, FileCode, Eye, File } from 'lucide-react'
 import { FileNode } from '../hooks/useFileSystem'
 import { TAG_COLORS, ColorKey } from '../hooks/useColorTags'
 
@@ -40,9 +40,47 @@ export const FileCard: React.FC<FileCardProps> = ({
             return <Folder size={32} strokeWidth={1.2} />
         }
         const ext = node.extension?.toLowerCase()
-        if (ext === 'md' || ext === '.md') {
+
+        // PDF 文件 - 使用眼睛图标表示只读
+        if (ext === '.pdf') {
+            return (
+                <div style={{ position: 'relative' }}>
+                    <File size={32} strokeWidth={1.2} />
+                    <Eye size={16} strokeWidth={2} style={{
+                        position: 'absolute',
+                        bottom: -2,
+                        right: -2,
+                        background: 'var(--bg-card)',
+                        borderRadius: '50%',
+                        padding: 2
+                    }} />
+                </div>
+            )
+        }
+
+        // DOCX 文件 - 使用文档+眼睛图标
+        if (ext === '.docx') {
+            return (
+                <div style={{ position: 'relative' }}>
+                    <FileText size={32} strokeWidth={1.2} />
+                    <Eye size={16} strokeWidth={2} style={{
+                        position: 'absolute',
+                        bottom: -2,
+                        right: -2,
+                        background: 'var(--bg-card)',
+                        borderRadius: '50%',
+                        padding: 2
+                    }} />
+                </div>
+            )
+        }
+
+        // Markdown 文件
+        if (ext === 'md' || ext === '.md' || ext === '.markdown') {
             return <FileCode size={32} strokeWidth={1.2} />
         }
+
+        // 其他文本文件
         return <FileText size={32} strokeWidth={1.2} />
     }
 
@@ -69,11 +107,22 @@ export const FileCard: React.FC<FileCardProps> = ({
         setIsDragging(false)
     }
 
-    // 根据颜色生成边框和背景样式
+    // 根据颜色生成边框和背景样式 - 大幅增强可见度以透过模糊玻璃
     const cardStyle = color !== 'none' ? {
         borderColor: colorHex,
-        backgroundColor: `${colorHex}10`,
+        borderWidth: '3px', // 加粗边框
+        backgroundColor: `${colorHex}66`, // 40% 不透明度 - 大幅增强
+        borderTop: `6px solid ${colorHex}`, // 更粗的顶部色带
+        boxShadow: `0 4px 16px ${colorHex}59`, // 35% 不透明度阴影
     } : {}
+
+    // 获取文件类型水印字母
+    const getWatermark = () => {
+        const ext = node.extension?.toLowerCase()
+        if (ext === '.pdf') return 'P'
+        if (ext === '.docx') return 'W'
+        return null
+    }
 
     return (
         <div
@@ -98,6 +147,13 @@ export const FileCard: React.FC<FileCardProps> = ({
                 <span>Created: {formatDate(node.createdAt)}</span>
                 <span>Modified: {formatDate(node.modifiedAt)}</span>
             </div>
+
+            {/* 文件类型水印 */}
+            {getWatermark() && (
+                <div className="file-type-watermark">
+                    {getWatermark()}
+                </div>
+            )}
         </div>
     )
 }

@@ -14,15 +14,12 @@ import {
     Minus,
     Link,
     Unlink,
-    Glasses,
-    Coffee,
     Settings,
-    Pencil,
-    Eye,
-    Columns2
+    Pin
 } from 'lucide-react'
+import { TopBar } from './components/TopBar'
 import FileTree, { ColorKey } from './components/FileTree'
-import Editor from './components/Editor'
+import SmartFileViewer from './components/viewers/SmartFileViewer'
 import ChatPanel from './components/ChatPanel'
 import InputDialog from './components/InputDialog'
 import { ToastProvider, useToast } from './components/Toast'
@@ -203,8 +200,12 @@ const AppContent: React.FC = () => {
     }, [previewMode])
 
     // 三态切换：编辑 → 预览 → 分屏 → 编辑
-    const togglePreviewMode = () => {
+    const togglePreviewMode = (mode?: 'edit' | 'preview' | 'split') => {
         setPreviewMode(prev => {
+            // 如果指定了模式，直接切换到该模式
+            if (mode) return mode
+
+            // 否则循环切换
             if (prev === 'edit') return 'preview'
             if (prev === 'preview') return 'split'
             return 'edit'
@@ -225,6 +226,9 @@ const AppContent: React.FC = () => {
 
     // 文件预览缓存
     const [previews, setPreviews] = useState<Record<string, string>>({})
+
+    // 搜索状态
+    const [searchQuery, setSearchQuery] = useState('')
 
     // 画廊右键菜单
     const [galleryMenu, setGalleryMenu] = useState<{
@@ -256,11 +260,14 @@ const AppContent: React.FC = () => {
         fileTree,
         activeFile,
         activeFolder,
+        previewFile,
         fileContent,
         isNewlyCreatedFile,
         selectVault,
         openFile,
         selectFolder,
+        setPreviewFile,
+        isEditable,
         getAllFiles,
         setFileContent,
         convertFileFormat,
@@ -271,13 +278,24 @@ const AppContent: React.FC = () => {
         moveItem,
     } = fileSystem
 
+    // 双栏布局模式计算
+    const layoutMode = useMemo(() => {
+        return (activeFile && previewFile) ? 'dual' : 'single'
+    }, [activeFile, previewFile])
+
     // 加载文件摘要函数
     const loadFilePreviews = async (files: FileNode[]): Promise<Map<string, string>> => {
         const previewMap = new Map<string, string>();
         const PREVIEW_LENGTH = 80; // 每个文件摘要长度
 
+        // 只预览可编辑的文本文件 (跳过 PDF, DOCX 等二进制文件)
+        const textFiles = files.filter(file => {
+            const ext = file.extension?.toLowerCase() || ''
+            return ['.md', '.txt', '.markdown'].includes(ext)
+        })
+
         // 限制并发数量
-        const filesToLoad = files.slice(0, 15); // 最多加载 15 个文件
+        const filesToLoad = textFiles.slice(0, 15); // 最多加载 15 个文件
 
         await Promise.all(filesToLoad.map(async (file) => {
             try {
@@ -352,6 +370,12 @@ const AppContent: React.FC = () => {
         const loadPreviews = async () => {
             const files = getCurrentFolderFiles()
             for (const file of files) {
+                // 跳过二进制文件 (PDF, DOCX)
+                const ext = file.extension?.toLowerCase() || ''
+                if (!['.md', '.txt', '.markdown'].includes(ext)) {
+                    continue
+                }
+
                 if (!previews[file.path] && window.fs) {
                     try {
                         const content = await window.fs.readFile(file.path.replace(vaultPath + '/', ''))
@@ -374,6 +398,8 @@ const AppContent: React.FC = () => {
 
         // 监听新建文章快捷方式
         const unsubCreateArticle = window.shortcuts.onCreateArticle(async () => {
+            // 强制进入编辑模式
+            setPreviewMode('edit')
             const fileName = generateFileName(settings.defaultFormat)
             await createNewFile(fileName)
         })
@@ -483,10 +509,23 @@ const AppContent: React.FC = () => {
             files = files.filter(f => getColor(f.path) === filterColor)
         }
 
+        // 搜索过滤
+        if (searchQuery.trim()) {
+            const query = searchQuery.trim().toLowerCase()
+            files = files.filter(f => {
+                // 按文件名搜索
+                const nameMatch = f.name.toLowerCase().includes(query)
+                // 按预览内容搜索
+                const contentMatch = previews[f.path]?.toLowerCase().includes(query)
+                return nameMatch || contentMatch
+            })
+        }
+
         // 排序逻辑：
         // 1. 获取保存的顺序列表
         // 2. 新文件（不在列表中的）按时间倒序插入到列表开头
         // 3. 按列表顺序排序
+        // 4. 图钉固定的文件始终排在最前面
         const orderKey = activeFolder?.path || '__root_files__'
         const customOrder = folderOrder.getOrder(orderKey)
 
@@ -495,41 +534,48 @@ const AppContent: React.FC = () => {
             return (b.modifiedAt || 0) - (a.modifiedAt || 0)
         })
 
+        let sortedFiles: typeof files
+
         if (customOrder.length === 0) {
             // 没有自定义顺序，直接按时间倒序
-            return sortedByTime
-        }
+            sortedFiles = sortedByTime
+        } else {
+            // 有自定义顺序：将新文件插入到顺序列表开头
+            const updatedOrder = [...customOrder]
+            const newFiles: FileNode[] = []
 
-        // 有自定义顺序：将新文件插入到顺序列表开头
-        const updatedOrder = [...customOrder]
-        const newFiles: FileNode[] = []
-
-        for (const file of sortedByTime) {
-            if (!customOrder.includes(file.path)) {
-                newFiles.push(file)
+            for (const file of sortedByTime) {
+                if (!customOrder.includes(file.path)) {
+                    newFiles.push(file)
+                }
             }
+
+            // 新文件按时间倒序（已经是了），插入到列表开头
+            for (const file of newFiles) {
+                updatedOrder.unshift(file.path)
+            }
+
+            // 如果有新文件，更新保存的顺序
+            if (newFiles.length > 0) {
+                folderOrder.setOrder(orderKey, updatedOrder)
+            }
+
+            // 按更新后的顺序排序
+            sortedFiles = sortedByTime.sort((a, b) => {
+                const indexA = updatedOrder.indexOf(a.path)
+                const indexB = updatedOrder.indexOf(b.path)
+                if (indexA === -1 && indexB === -1) return 0
+                if (indexA === -1) return 1
+                if (indexB === -1) return -1
+                return indexA - indexB
+            })
         }
 
-        // 新文件按时间倒序（已经是了），插入到列表开头
-        for (const file of newFiles) {
-            updatedOrder.unshift(file.path)
-        }
-
-        // 如果有新文件，更新保存的顺序
-        if (newFiles.length > 0) {
-            folderOrder.setOrder(orderKey, updatedOrder)
-        }
-
-        // 按更新后的顺序排序
-        return sortedByTime.sort((a, b) => {
-            const indexA = updatedOrder.indexOf(a.path)
-            const indexB = updatedOrder.indexOf(b.path)
-            if (indexA === -1 && indexB === -1) return 0
-            if (indexA === -1) return 1
-            if (indexB === -1) return -1
-            return indexA - indexB
-        })
-    }, [currentFiles, filterColor, getColor, activeFolder?.path, folderOrder])
+        // 图钉固定的文件始终排在最前面
+        const pinnedFiles = sortedFiles.filter(f => folderOrder.isPinned(f.path))
+        const unpinnedFiles = sortedFiles.filter(f => !folderOrder.isPinned(f.path))
+        return [...pinnedFiles, ...unpinnedFiles]
+    }, [currentFiles, filterColor, getColor, activeFolder?.path, folderOrder, searchQuery, previews])
 
     // 拖拽时的虚拟排序预览
     const virtualOrderFiles = useMemo(() => {
@@ -573,8 +619,42 @@ const AppContent: React.FC = () => {
     }
 
     const handleQuickCreate = async () => {
+        const currentFile = activeFile
+        const shouldSplit = currentFile && !isEditable(currentFile)
+
         const fileName = generateFileName(settings.defaultFormat)
+
+        // 阅读只读文件时新建 → 原文件移至右栏
+        if (shouldSplit) {
+            setPreviewFile(currentFile)
+        }
+
+        // 强制进入编辑模式
+        setPreviewMode('edit')
+
         await createNewFile(fileName)
+    }
+
+    // T1-3: 点击文件时的双栏逻辑处理
+    const handleFileSelect = (node: FileNode) => {
+        const isNodeEditable = isEditable(node)
+
+        // 场景 A：正在编辑可编辑文件，点击只读文件 → 推入右栏预览
+        if (activeFile && isEditable(activeFile) && !isNodeEditable) {
+            setPreviewFile(node)
+            return
+        }
+
+        // 场景 B：点击可编辑文件 → 清除预览，打开文件
+        if (isNodeEditable) {
+            setPreviewFile(null)
+            openFile(node)
+            return
+        }
+
+        // 默认：作为主文件打开（如阅读只读文件时点击另一个只读文件）
+        setPreviewFile(null)
+        openFile(node)
     }
 
     const handleRename = async (newName: string) => {
@@ -656,43 +736,36 @@ const AppContent: React.FC = () => {
 
     return (
         <div className="app-root">
-            <div className="titlebar-drag-region" />
+            {/* Unified TopBar covering all columns */}
+            <TopBar
+                leftCollapsed={leftCollapsed}
+                rightCollapsed={rightCollapsed}
+                activeFile={activeFile}
+                previewFile={previewFile}
+                fileContent={fileContent}
+                isMarkdown={activeFile?.extension === '.md' || activeFile?.extension === '.markdown'}
+                onFormatToggle={(format) => {
+                    // 根据请求的格式执行转换
+                    if (format === 'md' || format === 'txt') {
+                        convertFileFormat(settings.smartFormatConversion)
+                    }
+                    // PDF 暂不支持转换
+                }}
+                previewMode={previewMode}
+                onPreviewModeChange={togglePreviewMode}
+                focusMode={focusMode}
+                onFocusModeChange={toggleFocusMode}
+                currentEngine={engineStore.currentEngine}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+            />
 
-            {/* 右上角按钮组 */}
-            <div className="layout-toggle-group">
-                {/* 编辑/预览模式切换按钮 */}
-                {activeFile && (activeFile.extension === 'md' || activeFile.extension === '.md') && (
-                    <button
-                        className={`layout-toggle-btn ${previewMode !== 'edit' ? 'active' : ''}`}
-                        onClick={togglePreviewMode}
-                        title={
-                            previewMode === 'edit' ? '预览模式' :
-                                previewMode === 'preview' ? '分屏模式' : '编辑模式'
-                        }
-                    >
-                        {previewMode === 'edit' ? (
-                            <Pencil size={16} strokeWidth={1.5} />
-                        ) : previewMode === 'preview' ? (
-                            <Eye size={16} strokeWidth={1.5} />
-                        ) : (
-                            <Columns2 size={16} strokeWidth={1.5} />
-                        )}
-                    </button>
-                )}
 
-                {/* 专注模式切换按钮 */}
-                <button
-                    className="layout-toggle-btn"
-                    onClick={toggleFocusMode}
-                    title={focusMode ? '恢复边栏' : '专注模式'}
-                >
-                    {focusMode ? (
-                        <Coffee size={16} strokeWidth={1.5} />
-                    ) : (
-                        <Glasses size={16} strokeWidth={1.5} />
-                    )}
-                </button>
-            </div>
+
+            {/* Remove titlebar-drag-region as TopBar handles it */}
+            {/* <div className="titlebar-drag-region" /> */}
+
+            {/* 右上角按钮组已移至 TopBar 中 */}
 
             {/* 对话框 */}
             <InputDialog
@@ -727,10 +800,7 @@ const AppContent: React.FC = () => {
                 {!leftCollapsed && (
                     <div className="panel-sidebar">
                         <div className="sidebar-inner">
-                            {/* 侧边栏头部 - 只保留占位符对齐 */}
-                            <div className="sidebar-header">
-                                <span className="sidebar-spacer" />
-                            </div>
+                            {/* 侧边栏头部已移除，使用 TopBar */}
 
                             {/* 侧边栏内容 - 支持拖拽到空白区域移到根目录 */}
                             <div
@@ -767,8 +837,22 @@ const AppContent: React.FC = () => {
                                         try {
                                             const data = JSON.parse(e.dataTransfer.getData('application/json'))
                                             if (data.path) {
+                                                // 计算新路径和父目录 key
+                                                const name = data.path.split('/').pop() || ''
+                                                const newPath = name
+                                                const oldParentKey = data.path.includes('/')
+                                                    ? data.path.substring(0, data.path.lastIndexOf('/')) || '__root_files__'
+                                                    : '__root_files__'
+
                                                 // 移动到根目录
-                                                await moveItem(data.path, '')
+                                                const success = await moveItem(data.path, '')
+
+                                                // 同步更新属性路径
+                                                if (success) {
+                                                    colorTags.updatePath(data.path, newPath)
+                                                    folderOrder.updatePinnedPath(data.path, newPath)
+                                                    folderOrder.updateOrderPath(data.path, newPath, oldParentKey, '__root_files__')
+                                                }
                                             }
                                         } catch {
                                             console.error('拖拽数据解析失败')
@@ -776,6 +860,7 @@ const AppContent: React.FC = () => {
                                     }
                                 }}
                             >
+                                <div className="topbar-spacer" />
                                 {vaultPath ? (
                                     <>
                                         {/* 根目录项 - 始终显示，支持拖拽放入 */}
@@ -800,8 +885,22 @@ const AppContent: React.FC = () => {
                                                 try {
                                                     const data = JSON.parse(e.dataTransfer.getData('application/json'))
                                                     if (data.path) {
-                                                        // 移动到根目录（空字符串表示根目录）
-                                                        await moveItem(data.path, '')
+                                                        // 计算新路径和父目录 key
+                                                        const name = data.path.split('/').pop() || ''
+                                                        const newPath = name
+                                                        const oldParentKey = data.path.includes('/')
+                                                            ? data.path.substring(0, data.path.lastIndexOf('/')) || '__root_files__'
+                                                            : '__root_files__'
+
+                                                        // 移动到根目录
+                                                        const success = await moveItem(data.path, '')
+
+                                                        // 同步更新属性路径
+                                                        if (success) {
+                                                            colorTags.updatePath(data.path, newPath)
+                                                            folderOrder.updatePinnedPath(data.path, newPath)
+                                                            folderOrder.updateOrderPath(data.path, newPath, oldParentKey, '__root_files__')
+                                                        }
                                                     }
                                                 } catch {
                                                     console.error('拖拽数据解析失败')
@@ -851,10 +950,30 @@ const AppContent: React.FC = () => {
                                                 }}
                                                 onStartEdit={(path) => setEditingFolderPath(path)}
                                                 onMove={async (sourcePath, targetDir) => {
-                                                    await moveItem(sourcePath, targetDir)
+                                                    // 计算新路径和父目录 key
+                                                    const name = sourcePath.split('/').pop() || ''
+                                                    const newPath = targetDir ? `${targetDir}/${name}` : name
+                                                    const oldParentKey = sourcePath.includes('/')
+                                                        ? sourcePath.substring(0, sourcePath.lastIndexOf('/')) || '__root_files__'
+                                                        : '__root_files__'
+                                                    const newParentKey = targetDir || '__root_files__'
+
+                                                    // 移动文件
+                                                    const success = await moveItem(sourcePath, targetDir)
+
+                                                    // 移动成功后同步更新属性路径
+                                                    if (success) {
+                                                        colorTags.updatePath(sourcePath, newPath)
+                                                        folderOrder.updatePinnedPath(sourcePath, newPath)
+                                                        folderOrder.updateOrderPath(sourcePath, newPath, oldParentKey, newParentKey)
+                                                    }
                                                 }}
                                                 orderedPaths={folderOrder.getOrder('__root__')}
                                                 onReorder={(newOrder) => folderOrder.setOrder('__root__', newOrder)}
+                                                isPinned={folderOrder.isPinned}
+                                                onTogglePin={folderOrder.togglePin}
+                                                isExpanded={folderOrder.isExpanded}
+                                                onToggleExpanded={folderOrder.toggleExpanded}
                                             />
                                         ) : (
                                             <div className="sidebar-empty-hint">
@@ -951,22 +1070,59 @@ const AppContent: React.FC = () => {
                 <div className="panel-main">
                     <div className="main-inner">
                         {activeFile ? (
-                            <Editor
-                                content={fileContent}
-                                onChange={setFileContent}
-                                fileName={activeFile.name}
-                                fileExtension={activeFile.extension || 'txt'}
-                                filePath={activeFile.path}
-                                vaultPath={vaultPath || undefined}
-                                onTitleChange={handleTitleChange}
-                                onFormatToggle={() => convertFileFormat(settings.smartFormatConversion)}
-                                focusMode={focusMode}
-                                previewMode={previewMode}
-                                createdAt={activeFile.createdAt}
-                                modifiedAt={activeFile.modifiedAt}
-                                onPreviewModeChange={setPreviewMode}
-                                engineStore={engineStore}
-                            />
+                            layoutMode === 'dual' && previewFile ? (
+                                // 双栏布局
+                                <div className="dual-pane-layout">
+                                    <div className="main-pane">
+                                        <SmartFileViewer
+                                            file={activeFile}
+                                            vaultPath={vaultPath || ''}
+                                            content={fileContent}
+                                            onChange={setFileContent}
+                                            onTitleChange={handleTitleChange}
+                                            onFormatToggle={() => convertFileFormat(settings.smartFormatConversion)}
+                                            focusMode={focusMode}
+                                            previewMode={previewMode}
+                                            createdAt={activeFile.createdAt}
+                                            modifiedAt={activeFile.modifiedAt}
+                                            onPreviewModeChange={setPreviewMode}
+                                            engineStore={engineStore}
+                                        />
+                                    </div>
+                                    <div className="pane-divider" />
+                                    <div className="preview-pane">
+                                        <SmartFileViewer
+                                            file={previewFile}
+                                            vaultPath={vaultPath || ''}
+                                            content={''}  // 预览文件不需要内容（只读模式）
+                                            onChange={() => { }}  // 只读不可编辑
+                                            onTitleChange={() => { }}
+                                            onFormatToggle={() => { }}
+                                            focusMode={false}
+                                            previewMode="preview"
+                                            isPreviewPane={true}  // 标记为预览窗格
+                                            onClose={() => setPreviewFile(null)}  // 关闭预览
+                                            engineStore={engineStore}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                // 单栏布局
+                                <SmartFileViewer
+                                    file={activeFile}
+                                    vaultPath={vaultPath || ''}
+                                    content={fileContent}
+                                    onChange={setFileContent}
+                                    onTitleChange={handleTitleChange}
+                                    onFormatToggle={() => convertFileFormat(settings.smartFormatConversion)}
+                                    focusMode={focusMode}
+                                    previewMode={previewMode}
+                                    createdAt={activeFile.createdAt}
+                                    modifiedAt={activeFile.modifiedAt}
+                                    onPreviewModeChange={setPreviewMode}
+                                    engineStore={engineStore}
+                                />
+                            )
                         ) : (
                             /* 画廊视图 */
                             <div className="gallery-view">
@@ -988,100 +1144,123 @@ const AppContent: React.FC = () => {
                                     </div>
                                 ) : (
                                     <>
-                                        {/* 画廊头部 - 只有操作按钮 */}
-                                        <div className={`gallery-header ${focusMode ? 'focus-mode' : ''}`}>
-                                            {/* gallery-actions 已移除排序按钮 */}
-                                        </div>
+                                        {/* 卡片滚动区域 */}
+                                        <div className="gallery-scroll-container">
+                                            {/* 文件网格 - 第一个永远是新建卡片 */}
+                                            <div className="gallery-grid-square">
+                                                {/* 新建文章卡片 */}
+                                                <div
+                                                    className="file-card-square create-card"
+                                                    onClick={handleQuickCreate}
+                                                >
+                                                    <Plus size={32} strokeWidth={1.2} className="create-card-icon" />
+                                                    <div className="create-card-text">{t('gallery.newArticle')}</div>
+                                                </div>
 
-                                        {/* 文件网格 - 第一个永远是新建卡片 */}
-                                        <div className="gallery-grid-square">
-                                            {/* 新建文章卡片 */}
-                                            <div
-                                                className="file-card-square create-card"
-                                                onClick={handleQuickCreate}
-                                            >
-                                                <Plus size={32} strokeWidth={1.2} className="create-card-icon" />
-                                                <div className="create-card-text">{t('gallery.newArticle')}</div>
-                                            </div>
-
-                                            {/* 文件卡片列表 - 使用虚拟排序 */}
-                                            {virtualOrderFiles.map((file, index) => {
-                                                const style = getCardStyle(file.path)
-                                                const preview = previews[file.path] || ''
-                                                const isDragging = cardDragSort.draggingPath === file.path
-                                                return (
-                                                    <div
-                                                        key={file.path}
-                                                        className={`file-card-square ${isDragging ? 'dragging' : ''}`}
-                                                        draggable
-                                                        onDragStart={(e) => {
-                                                            e.dataTransfer.setData('application/json', JSON.stringify({
-                                                                type: 'file',
-                                                                path: file.path,
-                                                                name: file.name,
-                                                                index
-                                                            }))
-                                                            e.dataTransfer.effectAllowed = 'move'
-                                                            // 设置拖拽状态
-                                                            setCardDragSort({
-                                                                draggingPath: file.path,
-                                                                hoverIndex: index
-                                                            })
-                                                        }}
-                                                        onDragOver={(e) => {
-                                                            e.preventDefault()
-                                                            // 如果悬停在其他卡片上，更新 hoverIndex
-                                                            if (cardDragSort.draggingPath && cardDragSort.draggingPath !== file.path) {
-                                                                const rect = e.currentTarget.getBoundingClientRect()
-                                                                const midX = rect.left + rect.width / 2
-                                                                // 根据鼠标在卡片的左/右半边决定插入位置
-                                                                const newHoverIndex = e.clientX < midX ? index : index + 1
-                                                                if (newHoverIndex !== cardDragSort.hoverIndex) {
-                                                                    setCardDragSort(prev => ({
-                                                                        ...prev,
-                                                                        hoverIndex: newHoverIndex
-                                                                    }))
+                                                {/* 文件卡片列表 - 使用虚拟排序 */}
+                                                {virtualOrderFiles.map((file, index) => {
+                                                    const style = getCardStyle(file.path)
+                                                    const preview = previews[file.path] || ''
+                                                    const isDragging = cardDragSort.draggingPath === file.path
+                                                    return (
+                                                        <div
+                                                            key={file.path}
+                                                            className={`file-card-square ${isDragging ? 'dragging' : ''}`}
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                e.dataTransfer.setData('application/json', JSON.stringify({
+                                                                    type: 'file',
+                                                                    path: file.path,
+                                                                    name: file.name,
+                                                                    index
+                                                                }))
+                                                                e.dataTransfer.effectAllowed = 'move'
+                                                                // 设置拖拽状态
+                                                                setCardDragSort({
+                                                                    draggingPath: file.path,
+                                                                    hoverIndex: index
+                                                                })
+                                                            }}
+                                                            onDragOver={(e) => {
+                                                                e.preventDefault()
+                                                                // 如果悬停在其他卡片上，更新 hoverIndex
+                                                                if (cardDragSort.draggingPath && cardDragSort.draggingPath !== file.path) {
+                                                                    const rect = e.currentTarget.getBoundingClientRect()
+                                                                    const midX = rect.left + rect.width / 2
+                                                                    // 根据鼠标在卡片的左/右半边决定插入位置
+                                                                    const newHoverIndex = e.clientX < midX ? index : index + 1
+                                                                    if (newHoverIndex !== cardDragSort.hoverIndex) {
+                                                                        setCardDragSort(prev => ({
+                                                                            ...prev,
+                                                                            hoverIndex: newHoverIndex
+                                                                        }))
+                                                                    }
                                                                 }
-                                                            }
-                                                        }}
-                                                        onDragEnd={() => {
-                                                            // 应用排序
-                                                            if (cardDragSort.draggingPath && cardDragSort.hoverIndex !== null) {
-                                                                const paths = virtualOrderFiles.map(f => f.path)
-                                                                const orderKey = activeFolder?.path || '__root_files__'
-                                                                folderOrder.setOrder(orderKey, paths)
-                                                            }
-                                                            // 重置拖拽状态
-                                                            setCardDragSort({ draggingPath: null, hoverIndex: null })
-                                                        }}
-                                                        onClick={() => openFile(file)}
-                                                        onContextMenu={(e) => handleCardContextMenu(e, file)}
-                                                        style={{
-                                                            borderColor: style.border,
-                                                            background: style.bg,
-                                                            '--card-shadow-color': style.shadow
-                                                        } as React.CSSProperties}
-                                                    >
-                                                        <div className="card-title">
-                                                            {file.name.replace(/\.[^/.]+$/, '')}
+                                                            }}
+                                                            onDragEnd={() => {
+                                                                // 应用排序
+                                                                if (cardDragSort.draggingPath && cardDragSort.hoverIndex !== null) {
+                                                                    const paths = virtualOrderFiles.map(f => f.path)
+                                                                    const orderKey = activeFolder?.path || '__root_files__'
+                                                                    folderOrder.setOrder(orderKey, paths)
+                                                                }
+                                                                // 重置拖拽状态
+                                                                setCardDragSort({ draggingPath: null, hoverIndex: null })
+                                                            }}
+                                                            onClick={() => handleFileSelect(file)}
+                                                            onContextMenu={(e) => handleCardContextMenu(e, file)}
+                                                            style={{
+                                                                borderColor: style.border,
+                                                                background: style.bg,
+                                                                '--card-shadow-color': style.shadow
+                                                            } as React.CSSProperties}
+                                                        >
+                                                            <div className="card-title">
+                                                                {folderOrder.isPinned(file.path) && (
+                                                                    <Pin size={12} className="pin-icon" />
+                                                                )}
+                                                                {file.name.replace(/\.[^/.]+$/, '')}
+                                                            </div>
+                                                            <div className="card-summary">
+                                                                {(() => {
+                                                                    const ext = file.extension?.toLowerCase()
+                                                                    if (ext === '.pdf' || ext === '.docx') return '只读预览 / 不可编辑'
+                                                                    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext || '')) return '预览图片'
+                                                                    return preview || '...'
+                                                                })()}
+                                                            </div>
+                                                            <div className="card-date">
+                                                                <span>
+                                                                    {file.modifiedAt ? (() => {
+                                                                        const d = new Date(file.modifiedAt)
+                                                                        return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+                                                                    })() : '--'}
+                                                                </span>
+                                                                <span className={`card-type ${file.extension?.toLowerCase() || 'txt'}`}>
+                                                                    {file.extension?.toUpperCase() || 'TXT'}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* 文件类型水印 - 所有文件类型 */}
+                                                            {!file.isDirectory && (() => {
+                                                                const ext = file.extension?.toLowerCase()
+                                                                let watermark = ''
+                                                                if (ext === '.pdf') watermark = 'P'
+                                                                else if (ext === '.docx') watermark = 'W'
+                                                                else if (ext === '.txt') watermark = 'T'
+                                                                else if (ext === '.md' || ext === '.markdown') watermark = 'M'
+                                                                else if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext || '')) watermark = 'I'
+
+                                                                return watermark ? (
+                                                                    <div className="file-type-watermark">
+                                                                        {watermark}
+                                                                    </div>
+                                                                ) : null
+                                                            })()}
                                                         </div>
-                                                        <div className="card-summary">
-                                                            {preview || '...'}
-                                                        </div>
-                                                        <div className="card-date">
-                                                            <span>
-                                                                {file.modifiedAt ? (() => {
-                                                                    const d = new Date(file.modifiedAt)
-                                                                    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-                                                                })() : '--'}
-                                                            </span>
-                                                            <span className={`card-type ${file.extension?.toLowerCase() || 'txt'}`}>
-                                                                {file.extension?.toUpperCase() || 'TXT'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
                                     </>
                                 )}
@@ -1111,6 +1290,20 @@ const AppContent: React.FC = () => {
                         onMouseDown={e => e.stopPropagation()}
                     >
                         <button onClick={() => handleGalleryAction('rename')}>{t('contextMenu.rename')}</button>
+
+                        {/* 图钉按钮 */}
+                        <button
+                            onClick={() => {
+                                if (galleryMenu.node) {
+                                    folderOrder.togglePin(galleryMenu.node.path)
+                                }
+                                setGalleryMenu({ show: false, x: 0, y: 0, node: null })
+                            }}
+                            className={folderOrder.isPinned(galleryMenu.node?.path || '') ? 'active' : ''}
+                        >
+                            <Pin size={14} style={{ marginRight: 6 }} />
+                            {folderOrder.isPinned(galleryMenu.node?.path || '') ? t('contextMenu.unpin') : t('contextMenu.pin')}
+                        </button>
 
                         {/* 红黄绿颜色圆圈 */}
                         <div className="color-circles">
