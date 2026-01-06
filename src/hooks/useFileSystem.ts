@@ -740,7 +740,7 @@ export function useFileSystem(): UseFileSystemReturn {
                     name: newName,
                     path: newPath,
                     isDirectory: false,
-                    extension: newExt
+                    extension: `.${newExt}`
                 }
                 await openFile(newNode)
             } catch (error) {
@@ -765,7 +765,7 @@ export function useFileSystem(): UseFileSystemReturn {
                         name: newName,
                         path: newPath,
                         isDirectory: false,
-                        extension: newExt
+                        extension: `.${newExt}`
                     }
                     await openFile(newNode)
                 } catch (error) {
@@ -854,38 +854,8 @@ export function useFileSystem(): UseFileSystemReturn {
 
         try {
             if (existingFile) {
-                // 目标 TXT 已存在
-                // 检查 MD 是否有修改（与 TXT 内容比较）
-                const existingTxtContent = await window.fs.readFile(existingFile.path)
-
-                // 如果转换后的内容与现有 TXT 相同，说明 MD 没有实质性修改，直接打开
-                if (convertedContent === existingTxtContent.trim()) {
-                    await openFile(existingFile)
-                } else {
-                    // MD 有修改，创建带编号的新 TXT 文件
-                    let counter = 2
-                    let numberedName = `${baseName}_${counter}.txt`
-                    let numberedPath = dir ? `${dir}/${numberedName}` : numberedName
-
-                    // 查找可用的编号
-                    while (findNodeByPath(fileTree, numberedPath)) {
-                        counter++
-                        numberedName = `${baseName}_${counter}.txt`
-                        numberedPath = dir ? `${dir}/${numberedName}` : numberedName
-                    }
-
-                    await window.fs.createFile(numberedPath)
-                    await window.fs.writeFile(numberedPath, convertedContent)
-                    await refreshTree()
-
-                    const newNode: FileNode = {
-                        name: numberedName,
-                        path: numberedPath,
-                        isDirectory: false,
-                        extension: 'txt'
-                    }
-                    await openFile(newNode)
-                }
+                // 目标 TXT 已存在，直接打开（不创建新版本）
+                await openFile(existingFile)
             } else {
                 // 目标 TXT 不存在，创建新文件
                 await window.fs.createFile(newPath)
@@ -896,7 +866,7 @@ export function useFileSystem(): UseFileSystemReturn {
                     name: newName,
                     path: newPath,
                     isDirectory: false,
-                    extension: newExt
+                    extension: `.${newExt}`
                 }
                 await openFile(newNode)
             }

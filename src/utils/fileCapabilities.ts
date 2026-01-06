@@ -46,10 +46,11 @@ export function getFileCapabilities(extension: string): FileCapabilities {
  */
 export function getDisabledModeTooltip(mode: 'edit' | 'preview' | 'split', extension: string): string | null {
     const ext = extension?.toLowerCase()?.replace('.', '') || ''
+    const readOnlyFormats = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp']
 
     if (mode === 'edit') {
         // 只读格式不可编辑
-        if (['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        if (readOnlyFormats.includes(ext)) {
             return '此格式不可编辑'
         }
     }
@@ -61,6 +62,13 @@ export function getDisabledModeTooltip(mode: 'edit' | 'preview' | 'split', exten
         }
     }
 
+    if (mode === 'split') {
+        // 只读格式不支持分屏
+        if (readOnlyFormats.includes(ext)) {
+            return '只读格式不支持分屏'
+        }
+    }
+
     return null
 }
 
@@ -69,10 +77,11 @@ export function getDisabledModeTooltip(mode: 'edit' | 'preview' | 'split', exten
  */
 export function isModeAvailable(mode: 'edit' | 'preview' | 'split', extension: string): boolean {
     const ext = extension?.toLowerCase()?.replace('.', '') || ''
+    const readOnlyFormats = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp']
 
     if (mode === 'edit') {
         // 只读格式不可编辑
-        return !['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
+        return !readOnlyFormats.includes(ext)
     }
 
     if (mode === 'preview') {
@@ -80,6 +89,10 @@ export function isModeAvailable(mode: 'edit' | 'preview' | 'split', extension: s
         return ext !== 'txt'
     }
 
-    // split 模式始终可用
+    if (mode === 'split') {
+        // 只读格式不支持 split 模式（没有编辑区）
+        return !readOnlyFormats.includes(ext)
+    }
+
     return true
 }

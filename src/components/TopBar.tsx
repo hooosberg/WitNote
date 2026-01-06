@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Pencil, Eye, Columns2, Glasses, Coffee, Search, X } from 'lucide-react'
 import { FileNode } from '../hooks/useFileSystem'
 import { useTranslation } from 'react-i18next'
@@ -42,86 +42,158 @@ const FormatToggle: React.FC<{
     onFormatToggle: (format: 'md' | 'txt' | 'pdf') => void
 }> = ({ currentExt, isReadOnly, onFormatToggle }) => {
     const [expanded, setExpanded] = useState(false)
+    const [hoveredDisabled, setHoveredDisabled] = useState<'md' | 'txt' | 'pdf' | null>(null)
+    const [enableTransition, setEnableTransition] = useState(false)
 
-    // 获取显示的格式文字
-    const getDisplayFormat = () => {
-        if (currentExt === 'pdf') return 'PDF'
-        if (currentExt === 'txt') return 'TXT'
-        if (currentExt === 'md' || currentExt === 'markdown') return 'MD'
-        if (currentExt === 'docx') return 'DOCX'
-        // 图片格式
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(currentExt)) {
-            return currentExt.toUpperCase()
+    // Helper to get display format
+    const getDisplayFormat = (ext: string) => {
+        if (ext === 'pdf') return 'PDF'
+        if (ext === 'txt') return 'TXT'
+        if (ext === 'md' || ext === 'markdown') return 'MD'
+        if (ext === 'docx') return 'DOCX'
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+            return ext.toUpperCase()
         }
-        return currentExt.toUpperCase() || 'TXT'
+        return ext.toUpperCase() || 'TXT'
     }
 
     const isTxt = currentExt === 'txt'
     const isMd = currentExt === 'md' || currentExt === 'markdown'
+    const isPdf = currentExt === 'pdf'
 
-    // 只读格式（PDF、DOCX、图片）不可点击展开
-    if (isReadOnly) {
+    // Determine active index for slider positioning (PDF=0, TXT=1, MD=2)
+    // If not one of these, default to 0 (PDF) or hide effect? 
+    // We'll stick to 0 for PDF/Other, 1 for TXT, 2 for MD.
+    const activeIndex = isMd ? 2 : isTxt ? 1 : 0
+
+    // Effect to enable transition after a short delay when expanded
+    useEffect(() => {
+        if (expanded) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setEnableTransition(true)
+                })
+            })
+        } else {
+            setEnableTransition(false)
+        }
+    }, [expanded])
+
+    // For read-only non-PDF files (images/docx), we might want to disable interaction 
+    // but keep the visual consistency of the 3-segment control, 
+    // OR just show a single disabled state if it significantly differs?
+    // User requested "size specification should be exactly the same".
+    // So even for readonly, we should probably keep the 3-segment look but maybe lock it?
+    // However, for images/docx, "PDF/TXT/MD" options don't make sense.
+    // Let's keep the special single-read-only state for exotic files, 
+    // BUT for PDF (which is one of the toggles), we might want it in the toggle group?
+    // Actually, PDF is usually just a target format. The current file IS PDF.
+    // So if file is PDF, Pdf button is active.
+
+    // If the file is strictly read-only (like an image), showing PDF/TXT/MD toggles is confusing.
+    // We will keep the generic read-only single state for purely non-convertible things (images),
+    // but for text-based things (even if currently read-only like PDF in some contexts), 
+    // we might want the toggle if it's about *converting*?
+    // The previous logic had `if (isReadOnly) return ...`.
+    // Let's stick to that for Images/DOCX to avoid confusion.
+    // PDF is technically "read only" in this app's context (can't edit text), but it IS one of the formats in the toggle.
+    // So if current is PDF, we should show the toggle with PDF selected?
+    // Re-reading logic: `isReadOnly` is passed in.
+    // If `isReadOnly` is true, simple view. 
+    // But wait, the user wants "size specification exactly the same".
+    // If I show a single button for PDF, it won't match the 3-button size.
+    // The user's screenshot showed "PDF TXT MD" with MD selected.
+    // So likely they want the full control even if it's just indicating state.
+
+    // Let's try to render the full control even for `isReadOnly`, but disable buttons?
+    // If it is an image, "PDF TXT MD" makes no sense.
+    // I will assume for "PDF", "TXT", "MD" files, we show the full control.
+    // For Image/DOCX, we might still have to use the single tag, or maybe a full width tag?
+    // Let's optimize for the common case (MD/TXT/PDF) to match the requested look.
+
+    const isIMAGEorDOCX = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'docx'].includes(currentExt)
+
+    // For non-convertible files, always use simple display
+    if (isIMAGEorDOCX) {
         return (
-            <div className="format-toggle-single">
-                <button
-                    className="format-btn active disabled"
-                    disabled
-                    title="只读格式，无法转换"
-                >
-                    {getDisplayFormat()}
-                </button>
+            <div className="segmented-control simple-display">
+                <div className="segmented-control-btn active disabled" style={{ width: '100%', fontWeight: 600 }}>
+                    {getDisplayFormat(currentExt)}
+                </div>
             </div>
         )
     }
 
-    // MD 或 TXT - 悬停展开
+    // Collapsed state: Single button that looks EXACTLY like the active segment
+    // We use .segmented-control-single which we styled to match the slider thumb
     if (!expanded) {
         return (
             <div
-                className="format-toggle-single"
+                className="segmented-control-single"
                 onMouseEnter={() => setExpanded(true)}
+                style={{ width: '44px' }} // Approximate width of one segment
             >
-                <button className="format-btn active">
-                    {getDisplayFormat()}
-                </button>
+                <div className="segmented-control-btn">
+                    {getDisplayFormat(currentExt)}
+                </div>
             </div>
         )
     }
 
-    // 展开状态 - 显示三个选项
+    // Expanded state
     return (
-        <div
-            className="format-toggles"
-            onMouseLeave={() => setExpanded(false)}
+        <div className="segmented-control"
+            onMouseLeave={() => {
+                setExpanded(false)
+                setHoveredDisabled(null)
+            }}
+            style={{
+                minWidth: '140px',
+                // Animation origin could be set in CSS or here
+            }}
         >
+            {/* Background Slider */}
+            <div
+                className="segmented-control-slider"
+                style={{
+                    transform: `translateX(calc(${activeIndex * 100}% + ${activeIndex * 2}px))`,
+                    transition: enableTransition ? undefined : 'none'
+                }}
+            />
+
+            {/* PDF Button */}
             <button
-                className="format-btn disabled"
+                className={`segmented-control-btn ${isPdf ? 'active' : ''} disabled`}
                 disabled
-                title="PDF 导出暂不支持"
+                title={isPdf ? '当前格式' : 'PDF 导出暂不支持'}
+                onMouseEnter={() => setHoveredDisabled('pdf')}
+                onMouseLeave={() => setHoveredDisabled(null)}
+                style={{ cursor: 'not-allowed', opacity: isPdf ? 1 : 0.5 }}
             >
                 PDF
             </button>
+
+            {/* TXT Button */}
             <button
-                className={`format-btn ${isTxt ? 'active' : ''}`}
+                className={`segmented-control-btn ${isTxt ? 'active' : ''}`}
                 onClick={() => {
                     if (!isTxt) {
                         onFormatToggle('txt')
+                        // Keep expanded on click to allow rapid changes or see feedback?
+                        // User said "Mouse not up -> not expanded" which implies "mouse up -> expanded"
+                        // If I click, I am still hovering.
                     }
-                    setExpanded(false)
                 }}
-                title="TXT"
+                title="转换为 TXT"
             >
                 TXT
             </button>
+
+            {/* MD Button */}
             <button
-                className={`format-btn ${isMd ? 'active' : ''}`}
-                onClick={() => {
-                    if (!isMd) {
-                        onFormatToggle('md')
-                    }
-                    setExpanded(false)
-                }}
-                title="MD"
+                className={`segmented-control-btn ${isMd ? 'active' : ''}`}
+                onClick={() => !isMd && onFormatToggle('md')}
+                title="转换为 Markdown"
             >
                 MD
             </button>
@@ -149,31 +221,20 @@ const FormatIndicator: React.FC<{ ext: string }> = ({ ext }) => {
 }
 
 // 编辑模式切换按钮 - 悬停展开风格
+// 编辑模式切换按钮 - 分段控制器风格 (Segmented Control)
 const EditModeToggle: React.FC<{
     previewMode: 'edit' | 'preview' | 'split'
     onPreviewModeChange: (mode?: 'edit' | 'preview' | 'split') => void
     currentExt: string  // 当前文件扩展名，用于判断模式可用性
 }> = ({ previewMode, onPreviewModeChange, currentExt }) => {
-    const [expanded, setExpanded] = useState(false)
     const [hoveredDisabled, setHoveredDisabled] = useState<'edit' | 'preview' | 'split' | null>(null)
 
     // 检查各模式是否可用
+    // 注意：DOCX 文件虽然是只读，但应该允许 Preview 和 Split 模式（Split 时右侧显示）
+    // 当前 isModeAvailable 对 DOCX 的 edit 返回 false, preview 返回 true, split 返回 true (如果未特别限制)
     const editAvailable = isModeAvailable('edit', currentExt)
     const previewAvailable = isModeAvailable('preview', currentExt)
     const splitAvailable = isModeAvailable('split', currentExt)
-
-    // 获取当前模式的图标（禁用悬停时显示叉号）
-    const getModeIcon = (mode: 'edit' | 'preview' | 'split', isDisabled: boolean, isHovered: boolean) => {
-        // 如果是禁用模式且正在悬停，显示叉号
-        if (isDisabled && isHovered) {
-            return <X size={14} strokeWidth={1.5} />
-        }
-        switch (mode) {
-            case 'edit': return <Pencil size={14} strokeWidth={1.5} />
-            case 'preview': return <Eye size={14} strokeWidth={1.5} />
-            case 'split': return <Columns2 size={14} strokeWidth={1.5} />
-        }
-    }
 
     // 获取禁用提示
     const getTooltip = (mode: 'edit' | 'preview' | 'split', isDisabled: boolean) => {
@@ -181,82 +242,74 @@ const EditModeToggle: React.FC<{
             return getDisabledModeTooltip(mode, currentExt) || '此模式不可用'
         }
         switch (mode) {
-            case 'edit': return '编辑模式'
-            case 'preview': return '预览模式'
-            case 'split': return '分屏模式'
+            case 'edit': return '编辑'
+            case 'preview': return '预览'
+            case 'split': return '分屏'
         }
     }
 
-    if (!expanded) {
-        return (
-            <div
-                className="format-toggle-single"
-                onMouseEnter={() => setExpanded(true)}
-            >
-                <button
-                    className="topbar-icon-btn active"
-                    onClick={() => onPreviewModeChange()} // 默认行为：循环切换
-                    title={previewMode === 'edit' ? '编辑模式' : previewMode === 'preview' ? '预览模式' : '分屏模式'}
-                >
-                    {getModeIcon(previewMode, false, false)}
-                </button>
-            </div>
-        )
+    // Determine active index for slider positioning
+    const activeIndex = previewMode === 'edit' ? 0 : previewMode === 'preview' ? 1 : 2;
+
+    // Icon helper
+    const renderIcon = (mode: 'edit' | 'preview' | 'split', available: boolean) => {
+        if (!available && hoveredDisabled === mode) {
+            return <X size={14} strokeWidth={2.5} style={{ opacity: 0.7 }} />
+        }
+
+        const strokeWidth = previewMode === mode ? 2 : 1.5;
+
+        switch (mode) {
+            case 'edit': return <Pencil size={15} strokeWidth={strokeWidth} />
+            case 'preview': return <Eye size={15} strokeWidth={strokeWidth} />
+            case 'split': return <Columns2 size={15} strokeWidth={strokeWidth} />
+        }
     }
 
-    // 展开状态 - 显示三个模式选项
     return (
-        <div
-            className="format-toggles icon-toggles"
-            onMouseLeave={() => {
-                setExpanded(false)
-                setHoveredDisabled(null)
-            }}
-        >
-            <button
-                className={`topbar-icon-btn ${previewMode === 'edit' ? 'active' : ''} ${!editAvailable ? 'disabled' : ''}`}
-                onClick={() => {
-                    if (editAvailable) {
-                        onPreviewModeChange('edit')
-                        setExpanded(false)
-                    }
+        <div className="segmented-control">
+            {/* Background Slider */}
+            <div
+                className="segmented-control-slider"
+                style={{
+                    transform: `translateX(calc(${activeIndex * 100}% + ${activeIndex * 2}px))`
                 }}
-                onMouseEnter={() => !editAvailable && setHoveredDisabled('edit')}
-                onMouseLeave={() => setHoveredDisabled(null)}
+            />
+
+            {/* Edit Button */}
+            <button
+                className={`segmented-control-btn ${previewMode === 'edit' ? 'active' : ''} ${!editAvailable ? 'disabled' : ''}`}
+                onClick={() => editAvailable && onPreviewModeChange('edit')}
                 title={getTooltip('edit', !editAvailable)}
                 disabled={!editAvailable}
-            >
-                {getModeIcon('edit', !editAvailable, hoveredDisabled === 'edit')}
-            </button>
-            <button
-                className={`topbar-icon-btn ${previewMode === 'preview' ? 'active' : ''} ${!previewAvailable ? 'disabled' : ''}`}
-                onClick={() => {
-                    if (previewAvailable) {
-                        onPreviewModeChange('preview')
-                        setExpanded(false)
-                    }
-                }}
-                onMouseEnter={() => !previewAvailable && setHoveredDisabled('preview')}
+                onMouseEnter={() => !editAvailable && setHoveredDisabled('edit')}
                 onMouseLeave={() => setHoveredDisabled(null)}
+            >
+                {renderIcon('edit', editAvailable)}
+            </button>
+
+            {/* Preview Button */}
+            <button
+                className={`segmented-control-btn ${previewMode === 'preview' ? 'active' : ''} ${!previewAvailable ? 'disabled' : ''}`}
+                onClick={() => previewAvailable && onPreviewModeChange('preview')}
                 title={getTooltip('preview', !previewAvailable)}
                 disabled={!previewAvailable}
-            >
-                {getModeIcon('preview', !previewAvailable, hoveredDisabled === 'preview')}
-            </button>
-            <button
-                className={`topbar-icon-btn ${previewMode === 'split' ? 'active' : ''} ${!splitAvailable ? 'disabled' : ''}`}
-                onClick={() => {
-                    if (splitAvailable) {
-                        onPreviewModeChange('split')
-                        setExpanded(false)
-                    }
-                }}
-                onMouseEnter={() => !splitAvailable && setHoveredDisabled('split')}
+                onMouseEnter={() => !previewAvailable && setHoveredDisabled('preview')}
                 onMouseLeave={() => setHoveredDisabled(null)}
+            >
+                {renderIcon('preview', previewAvailable)}
+            </button>
+
+            {/* Split Button */}
+            <button
+                className={`segmented-control-btn ${previewMode === 'split' ? 'active' : ''} ${!splitAvailable ? 'disabled' : ''}`}
+                onClick={() => splitAvailable && onPreviewModeChange('split')}
                 title={getTooltip('split', !splitAvailable)}
                 disabled={!splitAvailable}
+                onMouseEnter={() => !splitAvailable && setHoveredDisabled('split')}
+                onMouseLeave={() => setHoveredDisabled(null)}
             >
-                {getModeIcon('split', !splitAvailable, hoveredDisabled === 'split')}
+                {renderIcon('split', splitAvailable)}
             </button>
         </div>
     )

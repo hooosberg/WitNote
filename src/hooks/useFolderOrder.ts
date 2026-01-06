@@ -96,17 +96,32 @@ export function useFolderOrder() {
         return folderOrder[parentPath] || []
     }, [folderOrder])
 
-    // 切换图钉状态
-    const togglePin = useCallback((filePath: string) => {
-        setPinnedFiles(prev => {
-            const newPinned = prev.includes(filePath)
-                ? prev.filter(p => p !== filePath)
-                : [...prev, filePath]
+    // 切换图钉状态（同时更新排序列表，置顶时移至首位）
+    const togglePin = useCallback((filePath: string, parentKey?: string) => {
+        const isPinning = !pinnedFiles.includes(filePath)
+
+        // 更新图钉列表
+        const newPinned = isPinning
+            ? [filePath, ...pinnedFiles.filter(p => p !== filePath)]  // 置顶到首位
+            : pinnedFiles.filter(p => p !== filePath)
+        setPinnedFiles(newPinned)
+
+        // 如果是置顶操作且有 parentKey，同时更新排序列表
+        if (isPinning && parentKey) {
+            setFolderOrder(prevOrder => {
+                const order = prevOrder[parentKey] || []
+                // 将文件移至排序列表首位
+                const newOrderList = [filePath, ...order.filter(p => p !== filePath)]
+                const newOrder = { ...prevOrder, [parentKey]: newOrderList }
+                saveData(newOrder, newPinned, expandedFolders)
+                console.log('📌 图钉置顶:', filePath, '→ 移至', parentKey, '首位')
+                return newOrder
+            })
+        } else {
             saveData(folderOrder, newPinned, expandedFolders)
-            console.log('📌 图钉切换:', filePath, newPinned.includes(filePath) ? '固定' : '取消固定')
-            return newPinned
-        })
-    }, [saveData, folderOrder, expandedFolders])
+            console.log('📌 图钉切换:', filePath, isPinning ? '固定' : '取消固定')
+        }
+    }, [saveData, folderOrder, pinnedFiles, expandedFolders])
 
     // 检查是否固定
     const isPinned = useCallback((filePath: string): boolean => {
@@ -189,6 +204,42 @@ export function useFolderOrder() {
         })
     }, [saveData, folderOrder, pinnedFiles])
 
+    // 展开指定文件夹（确保展开，不是切换）
+    const expandFolder = useCallback((folderPath: string) => {
+        setExpandedFolders(prev => {
+            if (prev.includes(folderPath)) {
+                return prev  // 已展开，不变
+            }
+            const newExpanded = [...prev, folderPath]
+            saveData(folderOrder, pinnedFiles, newExpanded)
+            return newExpanded
+        })
+    }, [saveData, folderOrder, pinnedFiles])
+
+    // 展开到指定文件路径（展开所有父级文件夹）
+    const expandToPath = useCallback((filePath: string) => {
+        // 从文件路径提取所有父文件夹路径
+        const parts = filePath.split('/')
+        const parentPaths: string[] = []
+
+        // 构建所有父路径（不包括文件本身）
+        for (let i = 1; i < parts.length; i++) {
+            parentPaths.push(parts.slice(0, i).join('/'))
+        }
+
+        if (parentPaths.length === 0) return  // 根目录文件无需展开
+
+        setExpandedFolders(prev => {
+            const needToExpand = parentPaths.filter(p => !prev.includes(p))
+            if (needToExpand.length === 0) {
+                return prev  // 所有父级已展开
+            }
+            const newExpanded = [...prev, ...needToExpand]
+            saveData(folderOrder, pinnedFiles, newExpanded)
+            return newExpanded
+        })
+    }, [saveData, folderOrder, pinnedFiles])
+
     return {
         folderOrder,
         pinnedFiles,
@@ -203,5 +254,7 @@ export function useFolderOrder() {
         updateOrderPath,
         isExpanded,
         toggleExpanded,
+        expandFolder,
+        expandToPath,
     }
 }

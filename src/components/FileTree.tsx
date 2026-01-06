@@ -42,6 +42,7 @@ interface ContextMenuState {
 interface FileTreeProps {
     nodes: FileNode[]
     activeFilePath: string | null
+    openedFilePaths?: string[]  // 当前打开的文件路径列表（用于高亮显示）
     onFileSelect: (node: FileNode) => void
     onRename?: (node: FileNode) => void
     onDelete?: (node: FileNode) => void
@@ -56,21 +57,27 @@ interface FileTreeProps {
     editingPath?: string | null
     onEditComplete?: (path: string, newName: string) => void
     onStartEdit?: (path: string) => void
-    onMove?: (sourcePath: string, targetDir: string) => void  // 拖拽移动回调
+    onMove?: (sourcePath: string, targetDir: string, insertAfter?: string) => void  // 拖拽移动回调，insertAfter 指定插入位置
     // 排序相关
     orderedPaths?: string[]  // 已排序的路径数组
     onReorder?: (newOrder: string[]) => void  // 排序变化回调
+    onFileReorder?: (folderPath: string, newOrder: string[]) => void  // 基于文件夹路径的文件排序回调
+    getOrder?: (folderPath: string) => string[]  // 获取文件夹的排序列表
     // 图钉固定相关
     isPinned?: (path: string) => boolean
-    onTogglePin?: (path: string) => void
+    onTogglePin?: (path: string, parentKey?: string) => void  // 支持传递父文件夹路径
     // 展开状态相关
     isExpanded?: (path: string) => boolean
     onToggleExpanded?: (path: string) => void
+    // 文件拖拽回调
+    onFileDragStart?: (file: { path: string; name: string; parentPath: string }) => void
+    onFileDragEnd?: () => void
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({
     nodes,
     activeFilePath,
+    openedFilePaths,
     onFileSelect,
     onRename,
     onDelete,
@@ -86,10 +93,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
     onMove,
     orderedPaths,
     onReorder,
+    onFileReorder,
+    getOrder,
     isPinned,
     onTogglePin,
     isExpanded,
-    onToggleExpanded
+    onToggleExpanded,
+    onFileDragStart,
+    onFileDragEnd
 }) => {
     const { t } = useTranslation()
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -264,6 +275,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     key={node.path}
                     node={node}
                     activeFilePath={activeFilePath}
+                    openedFilePaths={openedFilePaths}
                     onFileSelect={onFileSelect}
                     onContextMenu={openContextMenu}
                     getColor={getColor}
@@ -274,9 +286,13 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     onMove={onMove}
                     siblings={folderNodes}
                     onReorder={onReorder}
+                    onFileReorder={onFileReorder}
+                    getOrder={getOrder}
                     isPinned={isPinned}
                     isExpanded={isExpanded}
                     onToggleExpanded={onToggleExpanded}
+                    onFileDragStart={onFileDragStart}
+                    onFileDragEnd={onFileDragEnd}
                 />
             ))}
 
@@ -301,7 +317,11 @@ export const FileTree: React.FC<FileTreeProps> = ({
                         <button
                             onClick={() => {
                                 if (contextMenu.node) {
-                                    onTogglePin(contextMenu.node.path)
+                                    // 计算父文件夹路径
+                                    const parentPath = contextMenu.node.path.includes('/')
+                                        ? contextMenu.node.path.substring(0, contextMenu.node.path.lastIndexOf('/'))
+                                        : '__root_files__'
+                                    onTogglePin(contextMenu.node.path, parentPath)
                                 }
                                 closeMenu()
                             }}
@@ -392,6 +412,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
 interface FileTreeItemProps {
     node: FileNode
     activeFilePath: string | null
+    openedFilePaths?: string[]  // 当前打开的文件路径列表
     onFileSelect: (node: FileNode) => void
     onContextMenu: (e: React.MouseEvent, node: FileNode) => void
     getColor?: (path: string) => ColorKey
@@ -399,20 +420,25 @@ interface FileTreeItemProps {
     editingPath?: string | null
     onEditComplete?: (path: string, newName: string) => void
     onStartEdit?: (path: string) => void
-    onMove?: (sourcePath: string, targetPath: string) => void  // 拖拽移动回调
+    onMove?: (sourcePath: string, targetPath: string, insertAfter?: string) => void  // 拖拽移动回调，insertAfter 指定插入位置
     // 排序相关
     siblings?: FileNode[]  // 同级节点列表
     onReorder?: (newOrder: string[]) => void  // 排序变化回调
-    // 图钉相关
+    onFileReorder?: (folderPath: string, newOrder: string[]) => void  // 基于文件夹路径的文件排序回调
+    getOrder?: (folderPath: string) => string[]  // 获取文件夹的排序列表
     isPinned?: (path: string) => boolean
     // 展开状态相关
     isExpanded?: (path: string) => boolean
     onToggleExpanded?: (path: string) => void
+    // 文件拖拽回调
+    onFileDragStart?: (file: { path: string; name: string; parentPath: string }) => void
+    onFileDragEnd?: () => void
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
     node,
     activeFilePath,
+    openedFilePaths,
     onFileSelect,
     onContextMenu,
     getColor,
@@ -423,9 +449,13 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     onMove,
     siblings,
     onReorder,
+    onFileReorder,
+    getOrder,
     isPinned,
     isExpanded: isExpandedProp,
-    onToggleExpanded
+    onToggleExpanded,
+    onFileDragStart,
+    onFileDragEnd
 }) => {
     // 如果有外部展开状态控制则使用，否则回退到本地状态
     const [localExpanded, setLocalExpanded] = useState(false)
@@ -602,8 +632,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                     onReorder(currentPaths)
                 }
             } else if ((currentDragOver === 'top' || currentDragOver === 'bottom') && onMove) {
-                // 跨层级移动：移动到当前节点的父目录
-                onMove(data.path, targetParent)
+                // 跨层级移动：移动到当前节点的父目录，并指定插入位置
+                // currentDragOver === 'top' 表示插入在目标节点之前，'bottom' 表示插入在目标节点之后
+                const insertAfter = currentDragOver === 'bottom' ? node.path : undefined
+                onMove(data.path, targetParent, insertAfter)
             }
         } catch {
             console.error('拖拽数据解析失败')
@@ -703,6 +735,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                             key={child.path}
                             node={child}
                             activeFilePath={activeFilePath}
+                            openedFilePaths={openedFilePaths}
                             onFileSelect={onFileSelect}
                             onContextMenu={onContextMenu}
                             getColor={getColor}
@@ -713,28 +746,60 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                             onMove={onMove}
                             isExpanded={isExpandedProp}
                             onToggleExpanded={onToggleExpanded}
+                            onFileReorder={onFileReorder}
+                            getOrder={getOrder}
                             isPinned={isPinned}
+                            onFileDragStart={onFileDragStart}
+                            onFileDragEnd={onFileDragEnd}
                         />
                     ))}
                     {/* 文件 */}
-                    {node.children.filter(c => !c.isDirectory).map((child) => (
-                        <FileTreeFileItem
-                            key={child.path}
-                            node={child}
-                            activeFilePath={activeFilePath}
-                            onFileSelect={onFileSelect}
-                            onContextMenu={onContextMenu}
-                            getColor={getColor}
-                            level={level + 1}
-                            editingPath={editingPath}
-                            onEditComplete={onEditComplete}
-                            onStartEdit={onStartEdit}
-                            onMove={onMove}
-                            isPinned={isPinned}
-                            siblings={node.children?.filter(c => !c.isDirectory)}
-                            onReorder={onReorder}
-                        />
-                    ))}
+                    {(() => {
+                        const files = node.children?.filter(c => !c.isDirectory) || []
+                        // 应用排序
+                        const orderedFiles = getOrder ? (() => {
+                            const order = getOrder(node.path)
+                            if (order.length === 0) return files
+                            return [...files].sort((a, b) => {
+                                const indexA = order.indexOf(a.path)
+                                const indexB = order.indexOf(b.path)
+                                if (indexA === -1 && indexB === -1) return 0
+                                if (indexA === -1) return 1
+                                if (indexB === -1) return -1
+                                return indexA - indexB
+                            })
+                        })() : files
+
+                        // 图钉文件置顶
+                        const sortedFiles = isPinned ? (() => {
+                            const pinned = orderedFiles.filter(f => isPinned(f.path))
+                            const unpinned = orderedFiles.filter(f => !isPinned(f.path))
+                            return [...pinned, ...unpinned]
+                        })() : orderedFiles
+
+
+                        return sortedFiles.map((child) => (
+                            <FileTreeFileItem
+                                key={child.path}
+                                node={child}
+                                activeFilePath={activeFilePath}
+                                openedFilePaths={openedFilePaths}
+                                onFileSelect={onFileSelect}
+                                onContextMenu={onContextMenu}
+                                getColor={getColor}
+                                level={level + 1}
+                                editingPath={editingPath}
+                                onEditComplete={onEditComplete}
+                                onStartEdit={onStartEdit}
+                                onMove={onMove}
+                                isPinned={isPinned}
+                                siblings={sortedFiles}
+                                onReorder={onFileReorder ? (newOrder) => onFileReorder(node.path, newOrder) : undefined}
+                                onFileDragStart={onFileDragStart}
+                                onFileDragEnd={onFileDragEnd}
+                            />
+                        ))
+                    })()}
                 </div>
             )}
         </div>
@@ -745,6 +810,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 interface FileTreeFileItemProps {
     node: FileNode
     activeFilePath: string | null
+    openedFilePaths?: string[]  // 当前打开的文件路径列表
     onFileSelect: (node: FileNode) => void
     onContextMenu: (e: React.MouseEvent, node: FileNode) => void
     getColor?: (path: string) => ColorKey
@@ -752,16 +818,20 @@ interface FileTreeFileItemProps {
     editingPath?: string | null
     onEditComplete?: (path: string, newName: string) => void
     onStartEdit?: (path: string) => void
-    onMove?: (sourcePath: string, targetPath: string) => void
+    onMove?: (sourcePath: string, targetPath: string, insertAfter?: string) => void
     isPinned?: (path: string) => boolean
     // 拖拽排序相关
     siblings?: FileNode[]  // 同级文件列表
     onReorder?: (newOrder: string[]) => void  // 排序变化回调
+    // 文件拖拽回调
+    onFileDragStart?: (file: { path: string; name: string; parentPath: string }) => void
+    onFileDragEnd?: () => void
 }
 
 const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
     node,
     activeFilePath,
+    openedFilePaths,
     onFileSelect,
     onContextMenu,
     getColor,
@@ -772,7 +842,9 @@ const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
     onMove,
     isPinned,
     siblings,
-    onReorder
+    onReorder,
+    onFileDragStart,
+    onFileDragEnd
 }) => {
     const [isDragging, setIsDragging] = useState(false)
     const [dragOver, setDragOver] = useState<'top' | 'bottom' | null>(null)
@@ -781,6 +853,7 @@ const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
 
     const isEditing = editingPath === node.path
     const isActive = activeFilePath === node.path
+    const isOpened = openedFilePaths?.includes(node.path) || false  // 检查文件是否在打开列表中
     const color = getColor ? getColor(node.path) : 'none'
     const colorHex = COLORS.find(c => c.key === color)?.hex || 'transparent'
 
@@ -841,17 +914,28 @@ const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
     // 拖拽处理
     const handleDragStart = (e: React.DragEvent) => {
         setIsDragging(true)
+        const parentPath = node.path.includes('/')
+            ? node.path.substring(0, node.path.lastIndexOf('/'))
+            : ''
         e.dataTransfer.setData('application/json', JSON.stringify({
             type: 'file',
             path: node.path,
             name: node.name
         }))
         e.dataTransfer.effectAllowed = 'move'
+        // 通知父组件拖拽开始
+        if (onFileDragStart) {
+            onFileDragStart({ path: node.path, name: node.name, parentPath })
+        }
     }
 
     const handleDragEnd = () => {
         setIsDragging(false)
         setDragOver(null)
+        // 通知父组件拖拽结束
+        if (onFileDragEnd) {
+            onFileDragEnd()
+        }
     }
 
     // 文件支持拖拽排序（上/下插入）
@@ -907,9 +991,11 @@ const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
                     onReorder(currentPaths)
                 }
             } else if (onMove) {
-                // 跨层级移动：移动到当前文件的父目录
-                onMove(data.path, targetParent)
+                // 跨层级移动：移动到当前文件的父目录，并指定插入位置
+                const insertAfter = currentDragOver === 'bottom' ? node.path : undefined
+                onMove(data.path, targetParent, insertAfter)
             }
+
         } catch {
             console.error('拖拽数据解析失败')
         }
@@ -920,7 +1006,8 @@ const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
 
     return (
         <div
-            className={`finder-tree-item finder-file-item ${isActive ? 'active' : ''} ${dragClass} ${dropClass}`}
+            className={`finder-tree-item finder-file-item ${isActive ? 'active' : ''} ${isOpened ? 'opened' : ''} ${dragClass} ${dropClass}`}
+            data-file-path={node.path}
             draggable={!isEditing}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}

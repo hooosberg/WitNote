@@ -41,6 +41,12 @@
   --warning-color: #ff9f0a;
   --error-color: #ff453a;
 
+  /* Tag colors - improved visibility */
+  --tag-bg: rgba(0, 0, 0, 0.08);
+  /* Darker than hover */
+  --tag-text: #6e6e73;
+  /* Darker grey */
+
   --transition-fast: 0.1s ease;
   --transition-normal: 0.2s ease;
 
@@ -128,6 +134,9 @@ body.platform-windows .chat-messages {
   --accent-color: #a1a1a6;
   --accent-rgb: 161, 161, 166;
   --success-color: #86868b;
+
+  --tag-bg: rgba(255, 255, 255, 0.12);
+  --tag-text: #a1a1a6;
 }
 
 /* ============ 禅意茶色主题 ============ */
@@ -151,6 +160,9 @@ body.platform-windows .chat-messages {
   --border-color: rgba(139, 115, 85, 0.12);
   --accent-color: #8b7355;
   --accent-rgb: 139, 115, 85;
+
+  --tag-bg: rgba(139, 115, 85, 0.2);
+  --tag-text: #6b5d4d;
 }
 
 /* ============ 基础重置 ============ */
@@ -359,7 +371,9 @@ select:focus {
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
+  padding-top: var(--titlebar-height);
 }
+
 
 .pane-divider {
   width: 4px;
@@ -372,6 +386,123 @@ select:focus {
 .pane-divider:hover {
   background: var(--accent-color);
 }
+
+/* ============ 拖拽放置区覆盖层 ============ */
+.drop-zone-overlay {
+  position: absolute;
+  top: var(--titlebar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 1000;
+  pointer-events: auto;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(var(--bg-main-rgb), 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.drop-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 2px dashed rgba(var(--accent-rgb), 0.3);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent-color);
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.drop-zone:hover .drop-zone-content,
+.drop-zone.drag-over .drop-zone-content {
+  opacity: 1;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: var(--accent-color);
+  border-style: solid;
+  transform: scale(1.01);
+}
+
+/* 拖拽时禁用 iframe/embed 的指针事件，避免阻挡拖拽 */
+.panel-main.dragging-over iframe,
+.panel-main.dragging-over embed,
+.panel-main.dragging-over object,
+.panel-main.dragging-over .pdf-viewer {
+  pointer-events: none !important;
+}
+
+/* 卡片区域拖拽提示覆盖层 */
+.gallery-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-drop-overlay {
+  position: absolute;
+  top: var(--titlebar-height);
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--bg-main-rgb), 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px dashed rgba(var(--accent-rgb), 0.4);
+  border-radius: var(--radius-lg);
+  z-index: 100;
+  pointer-events: none;
+  animation: galleryDropFadeIn 0.2s ease;
+}
+
+@keyframes galleryDropFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gallery-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent-color);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.gallery-drop-content strong {
+  color: var(--text-primary);
+}
+
 
 .resize-handle {
   width: 1px;
@@ -472,10 +603,8 @@ select:focus {
 
 .sidebar-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  /* 确保子元素拉伸填满宽度 */
+  display: block;
+  /* 使用 block 布局让内容自然流动，确保整体可滚动 */
   overflow-y: auto;
   padding: 20px 8px 8px 8px;
   /* Unified 20px top spacing */
@@ -650,9 +779,8 @@ select:focus {
   border-radius: var(--radius-md);
 }
 
-/* 空白填充区域 - 占据剩余空间并可点击 */
+/* 空白填充区域 - 固定最小高度，不撑开容器 */
 .finder-tree-blank {
-  flex: 1;
   min-height: 100px;
   cursor: pointer;
 }
@@ -666,11 +794,8 @@ select:focus {
   background: var(--bg-sidebar);
 }
 
-/* 根目录项 - 使用 sticky 定位固定在顶部 */
+/* 根目录项 - 与文件夹树整体滚动 */
 .finder-tree-item.root-item {
-  position: sticky;
-  top: var(--titlebar-height);
-  z-index: 20;
   background: var(--bg-sidebar);
 }
 
@@ -974,8 +1099,8 @@ select:focus {
 .finder-ext {
   font-size: 9px;
   font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-hover);
+  color: var(--tag-text);
+  background: var(--tag-bg);
   padding: 1px 4px;
   border-radius: 3px;
   text-transform: uppercase;
@@ -996,6 +1121,28 @@ select:focus {
 
 .finder-file-item.active .finder-pin-icon {
   color: var(--accent-color);
+}
+
+/* 已打开文件的激活状态 - 类似悬停效果，指示文件正在编辑区打开 */
+.finder-file-item.opened {
+  background: var(--bg-hover);
+  opacity: 1;
+}
+
+.finder-file-item.opened .finder-name {
+  color: var(--text-primary);
+}
+
+.finder-file-item.opened .finder-file-icon {
+  color: var(--text-secondary);
+}
+
+.finder-file-item.opened .finder-ext {
+  color: var(--text-secondary);
+}
+
+.finder-file-item.opened .finder-pin-icon {
+  color: var(--text-secondary);
 }
 
 
@@ -1302,6 +1449,7 @@ select:focus {
 
 /* 正方形卡片网格 */
 .gallery-grid-square {
+  position: relative;
   flex: 1;
   display: grid;
   /* 固定卡片大小，保持一致性 */
@@ -1312,6 +1460,7 @@ select:focus {
   align-content: start;
   justify-content: center;
 }
+
 
 /* 正方形卡片 */
 .file-card-square {
@@ -3372,7 +3521,7 @@ select:focus {
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3394,16 +3543,37 @@ select:focus {
   width: 680px;
   max-width: 90vw;
   max-height: 85vh;
-  background: rgba(var(--bg-main-rgb), 0.9);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--border-color);
+
+  /* Enhanced Apple-style Liquid Glass Effect matching TopBar */
+  backdrop-filter: blur(20px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(1.05);
+
+  /* Lower opacity to show more underlying colors - increased transparency for glass effect */
+  background: linear-gradient(to bottom,
+      rgba(var(--bg-main-rgb), 0.65) 0%,
+      rgba(var(--bg-main-rgb), 0.55) 100%);
+
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+
+  /* Modal shadow + inset glow - reduced shadow opacity */
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15),
+    0 1px 0 0 rgba(255, 255, 255, 0.1) inset;
+
   display: flex;
   flex-direction: column;
   animation: slideUp 0.2s ease;
   overflow: hidden;
+}
+
+/* Dark mode adjustment for Settings Panel */
+[data-theme="dark"] .settings-panel {
+  background: linear-gradient(to bottom,
+      rgba(40, 40, 45, 0.25) 0%,
+      rgba(40, 40, 45, 0.2) 100%);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5),
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
 }
 
 @keyframes slideUp {
@@ -3714,7 +3884,8 @@ select:focus {
   align-items: center;
   gap: 8px;
   padding: 16px 12px;
-  background: var(--bg-sidebar);
+  background: rgba(0, 0, 0, 0.05);
+  /* Slightly darker than glass background */
   border: 2px solid transparent;
   border-radius: var(--radius-lg);
   cursor: pointer;
@@ -5482,4 +5653,147 @@ body.platform-mac .window-controls-spacer {
 
 .sidebar-header {
   display: none !important;
+}
+
+/* ============ Segmented Control (Premium 3-way switch) ============ */
+.segmented-control {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px;
+  border-radius: 8px;
+  height: 30px;
+  min-width: 100px;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  -webkit-app-region: no-drag;
+}
+
+/* Single state - looks like the "active" chip but standalone */
+.segmented-control-single {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  /* Mimic padding of container */
+  -webkit-app-region: no-drag;
+}
+
+/* When collapsed, the button inside looks like the slider */
+.segmented-control-single .segmented-control-btn {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  padding: 0 12px;
+  min-width: 44px;
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 11px;
+}
+
+[data-theme="dark"] .segmented-control-single .segmented-control-btn {
+  background: #636366;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+}
+
+[data-theme="tea"] .segmented-control-single .segmented-control-btn {
+  background: #fdfbf7;
+  box-shadow: 0 1px 2px rgba(139, 115, 85, 0.15), 0 0 0 0.5px rgba(139, 115, 85, 0.1);
+  color: #5c4d3c;
+}
+
+/* Hover effect for single button - suggest it is clickable/interactive */
+.segmented-control-single .segmented-control-btn:hover {
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+
+.segmented-control-single.readonly .segmented-control-btn {
+  opacity: 0.8;
+  cursor: default;
+  box-shadow: none;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .segmented-control-single.readonly .segmented-control-btn {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .segmented-control {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="tea"] .segmented-control {
+  background: rgba(139, 115, 85, 0.1);
+  box-shadow: inset 0 0 0 0.5px rgba(139, 115, 85, 0.1);
+}
+
+.segmented-control-slider {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  /* Width calculation: (100% - 2*padding - 2*gap) / 3 */
+  /* padding=2, gap=2. Total H extra = 4+4=8px */
+  width: calc((100% - 8px) / 3);
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .segmented-control-slider {
+  background: #636366;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="tea"] .segmented-control-slider {
+  background: #fdfbf7;
+  box-shadow: 0 1px 2px rgba(139, 115, 85, 0.15), 0 0 0 0.5px rgba(139, 115, 85, 0.1);
+}
+
+.segmented-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  z-index: 2;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 0;
+  border-radius: 6px;
+  outline: none;
+}
+
+.segmented-control-btn:hover:not(.disabled) {
+  color: var(--text-secondary);
+}
+
+.segmented-control-btn.active {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .segmented-control-btn.active {
+  color: #ffffff;
+}
+
+[data-theme="tea"] .segmented-control-btn.active {
+  color: #5c4d3c;
+}
+
+.segmented-control-btn.disabled {
+  opacity: 0.4;
+  cursor: default;
 }

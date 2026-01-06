@@ -56,6 +56,14 @@ export class WebLLMEngine {
     }
 
     /**
+     * 暴露内部引擎的 chat 对象供外部直接调用
+     * 用于 autocomplete 等场景需要直接访问 completions API
+     */
+    get chat() {
+        return this.engine?.chat;
+    }
+
+    /**
      * 流式聊天
      */
     async streamChat(

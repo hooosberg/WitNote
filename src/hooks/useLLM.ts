@@ -891,10 +891,12 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         setModelName(model);
         // 保存到 localStorage
         localStorage.setItem('zen-selected-ollama-model', model);
+        // 同步更新 engineStore，确保 Vault 持久化和全局状态一致
+        engineStore.selectModel(model);
         if (ollamaServiceRef.current) {
             ollamaServiceRef.current.setModel(model);
         }
-    }, []);
+    }, [engineStore]);
 
     /**
      * 卸载模型
