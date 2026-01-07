@@ -3,7 +3,7 @@
  * Phase 8: 可调整三栏布局 + 增强画廊
  */
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { useTranslation } from 'react-i18next'
 // 使用 CSS Flexbox 布局替代 react-resizable-panels
@@ -277,6 +277,10 @@ const AppContent: React.FC = () => {
     // 搜索状态
     const [searchQuery, setSearchQuery] = useState('')
 
+    // 双栏模式右侧文件内容状态
+    const [previewFileContent, setPreviewFileContent] = useState('')
+    const previewFileSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
+
     // 画廊右键菜单
     const [galleryMenu, setGalleryMenu] = useState<{
         show: boolean
@@ -467,6 +471,77 @@ const AppContent: React.FC = () => {
     const layoutMode = useMemo(() => {
         return (activeFile && previewFile) ? 'dual' : 'single'
     }, [activeFile, previewFile])
+
+    // 当 previewFile 变化时，加载其内容（仅可编辑文件）
+    useEffect(() => {
+        const loadPreviewContent = async () => {
+            if (previewFile && isEditable(previewFile)) {
+                try {
+                    const content = await window.fs.readFile(previewFile.path)
+                    setPreviewFileContent(content)
+                } catch (error) {
+                    console.error('加载预览文件内容失败:', error)
+                    setPreviewFileContent('')
+                }
+            } else {
+                setPreviewFileContent('')
+            }
+        }
+        loadPreviewContent()
+    }, [previewFile, isEditable])
+
+    // 右侧文件自动保存（防抖）
+    useEffect(() => {
+        if (!previewFile || !isEditable(previewFile)) return
+        if (!previewFileContent) return
+
+        // 清除之前的定时器
+        if (previewFileSaveTimerRef.current) {
+            clearTimeout(previewFileSaveTimerRef.current)
+        }
+
+        previewFileSaveTimerRef.current = setTimeout(async () => {
+            try {
+                await window.fs.writeFile(previewFile.path, previewFileContent)
+                console.log('💾 右侧文件自动保存:', previewFile.path)
+            } catch (error) {
+                console.error('右侧文件保存失败:', error)
+            }
+        }, 1000)
+
+        return () => {
+            if (previewFileSaveTimerRef.current) {
+                clearTimeout(previewFileSaveTimerRef.current)
+            }
+        }
+    }, [previewFileContent, previewFile, isEditable])
+
+    // 自动根据文件类型切换编辑模式
+    // 当切换到不同类型的文件时，自动调整 previewMode 到合适的模式
+    useEffect(() => {
+        if (!activeFile) return
+
+        // 获取当前文件扩展名
+        const ext = activeFile.extension?.toLowerCase()?.replace('.', '') || ''
+        const readOnlyFormats = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp']
+        const isReadOnly = readOnlyFormats.includes(ext)
+
+        // 根据文件类型主动切换到最佳模式
+        if (isReadOnly) {
+            // 只读文件（PDF/图片/DOCX）→ 必须使用 preview 模式
+            if (previewMode !== 'preview') {
+                setPreviewMode('preview')
+            }
+        } else {
+            // 可编辑文件（MD/TXT）→ 优先使用 edit 模式
+            // 但如果当前在 split 模式，保持 split（用户可能在双栏编辑）
+            if (previewMode === 'preview') {
+                // 从 preview 切换到 edit（因为可编辑文件默认应该是编辑模式）
+                setPreviewMode('edit')
+            }
+            // 如果是 edit 或 split，保持不变
+        }
+    }, [activeFile?.path, previewMode]) // 监听文件路径和当前模式
 
     // 加载文件摘要函数
     const loadFilePreviews = async (files: FileNode[]): Promise<Map<string, string>> => {
@@ -1224,12 +1299,18 @@ const AppContent: React.FC = () => {
                                 const { baseName, dir } = getPathParts()
                                 const pdfPath = dir ? `${dir}/${baseName}.pdf` : `${baseName}.pdf`
 
-                                await fileSystem.refreshTree()
-                                setTimeout(async () => {
-                                    const allFiles = getAllFiles()
-                                    const pdfFile = allFiles.find(f => f.path === pdfPath)
-                                    if (pdfFile) await openFile(pdfFile)
-                                }, 100)
+                                // 立即刷新文件列表以确保侧边栏更新
+                                fileSystem.refreshTree()
+
+                                // 手动构造 PDF 文件节点并立即打开，不等待 refreshTree 的结果（因为可能有延迟）
+                                const pdfNode: FileNode = {
+                                    name: `${baseName}.pdf`,
+                                    path: pdfPath,
+                                    isDirectory: false,
+                                    extension: '.pdf',
+                                    modifiedAt: Date.now()
+                                }
+                                await openFile(pdfNode)
                             } else {
                                 showToast('error', `❌ 导出失败: ${result.error || '未知错误'}`)
                             }
@@ -1759,14 +1840,14 @@ const AppContent: React.FC = () => {
                                         <SmartFileViewer
                                             file={previewFile}
                                             vaultPath={vaultPath || ''}
-                                            content={''}  // 预览文件不需要内容（只读模式）
-                                            onChange={() => { }}  // 只读不可编辑
-                                            onTitleChange={() => { }}
-                                            onFormatToggle={() => { }}
+                                            content={isEditable(previewFile) ? previewFileContent : ''}
+                                            onChange={isEditable(previewFile) ? setPreviewFileContent : () => { }}
+                                            onTitleChange={() => { }}  // 右侧暂不支持标题编辑
+                                            onFormatToggle={() => { }}  // 右侧暂不支持格式切换
                                             focusMode={false}
-                                            previewMode="preview"
-                                            isPreviewPane={true}  // 标记为预览窗格
-                                            onClose={() => setPreviewFile(null)}  // 关闭预览
+                                            previewMode={isEditable(previewFile) ? 'edit' : 'preview'}
+                                            isPreviewPane={true}
+                                            onClose={() => setPreviewFile(null)}
                                             engineStore={engineStore}
                                         />
                                     </div>

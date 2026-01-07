@@ -63,6 +63,10 @@ export function getDisabledModeTooltip(mode: 'edit' | 'preview' | 'split', exten
     }
 
     if (mode === 'split') {
+        // TXT 不支持分屏（没有预览功能）
+        if (ext === 'txt') {
+            return 'TXT 格式无预览，不支持分屏'
+        }
         // 只读格式不支持分屏
         if (readOnlyFormats.includes(ext)) {
             return '只读格式不支持分屏'
@@ -90,8 +94,9 @@ export function isModeAvailable(mode: 'edit' | 'preview' | 'split', extension: s
     }
 
     if (mode === 'split') {
-        // 只读格式不支持 split 模式（没有编辑区）
-        return !readOnlyFormats.includes(ext)
+        // TXT 不支持 split 模式（没有预览功能）
+        // 只读格式也不支持 split 模式（没有编辑区）
+        return ext !== 'txt' && !readOnlyFormats.includes(ext)
     }
 
     return true
