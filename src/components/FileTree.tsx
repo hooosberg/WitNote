@@ -72,6 +72,8 @@ interface FileTreeProps {
     // 文件拖拽回调
     onFileDragStart?: (file: { path: string; name: string; parentPath: string }) => void
     onFileDragEnd?: () => void
+    // 外部文件导入回调
+    onExternalFileDrop?: (files: FileList, targetDir: string) => void
 }
 
 export const FileTree: React.FC<FileTreeProps> = ({
@@ -100,7 +102,8 @@ export const FileTree: React.FC<FileTreeProps> = ({
     isExpanded,
     onToggleExpanded,
     onFileDragStart,
-    onFileDragEnd
+    onFileDragEnd,
+    onExternalFileDrop
 }) => {
     const { t } = useTranslation()
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -117,22 +120,45 @@ export const FileTree: React.FC<FileTreeProps> = ({
         y: 0
     })
 
-    // 只显示文件夹，并根据 orderedPaths 排序
-    const folderNodes = useMemo(() => {
+    // 分离文件夹和文件，并分别排序
+    const { folderNodes, fileNodes } = useMemo(() => {
         const folders = nodes.filter(n => n.isDirectory)
+        const files = nodes.filter(n => !n.isDirectory)
+
         if (!orderedPaths || orderedPaths.length === 0) {
-            return folders
+            return { folderNodes: folders, fileNodes: files }
         }
-        // 根据保存的顺序排序
-        return [...folders].sort((a, b) => {
-            const indexA = orderedPaths.indexOf(a.path)
-            const indexB = orderedPaths.indexOf(b.path)
-            if (indexA === -1 && indexB === -1) return 0
-            if (indexA === -1) return 1
-            if (indexB === -1) return -1
-            return indexA - indexB
-        })
+
+        const sortNodes = (list: FileNode[]) => {
+            return [...list].sort((a, b) => {
+                const indexA = orderedPaths.indexOf(a.path)
+                const indexB = orderedPaths.indexOf(b.path)
+                if (indexA === -1 && indexB === -1) return 0
+                if (indexA === -1) return 1
+                if (indexB === -1) return -1
+                return indexA - indexB
+            })
+        }
+
+        return {
+            folderNodes: sortNodes(folders),
+            fileNodes: sortNodes(files)
+        }
     }, [nodes, orderedPaths])
+
+    // 处理文件夹重排序
+    const handleFolderReorder = useCallback((newFolderOrder: string[]) => {
+        if (!onReorder) return
+        const currentFilePaths = fileNodes.map(f => f.path)
+        onReorder([...newFolderOrder, ...currentFilePaths])
+    }, [onReorder, fileNodes])
+
+    // 处理文件重排序
+    const handleFileReorderCallback = useCallback((newFileOrder: string[]) => {
+        if (!onReorder) return
+        const currentFolderPaths = folderNodes.map(f => f.path)
+        onReorder([...currentFolderPaths, ...newFileOrder])
+    }, [onReorder, folderNodes])
 
     // 点击外部关闭
     useEffect(() => {
@@ -224,6 +250,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
             onDrop={(e) => {
                 e.preventDefault()
                 e.currentTarget.classList.remove('drag-over-blank')
+
+                // 检查是否为外部文件（来自 Finder/桌面）
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && onExternalFileDrop) {
+                    onExternalFileDrop(e.dataTransfer.files, '')
+                    return
+                }
+
+                // 内部拖拽
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('application/json'))
                     if (data.path && onMove) {
@@ -250,6 +284,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     onDrop={(e) => {
                         e.preventDefault()
                         e.currentTarget.classList.remove('drag-over-inside')
+
+                        // 检查是否为外部文件
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && onExternalFileDrop) {
+                            onExternalFileDrop(e.dataTransfer.files, '')
+                            return
+                        }
+
+                        // 内部拖拽
                         try {
                             const data = JSON.parse(e.dataTransfer.getData('application/json'))
                             if (data.path && onMove) {
@@ -285,12 +327,35 @@ export const FileTree: React.FC<FileTreeProps> = ({
                     onStartEdit={onStartEdit}
                     onMove={onMove}
                     siblings={folderNodes}
-                    onReorder={onReorder}
+                    onReorder={handleFolderReorder}
                     onFileReorder={onFileReorder}
                     getOrder={getOrder}
                     isPinned={isPinned}
                     isExpanded={isExpanded}
                     onToggleExpanded={onToggleExpanded}
+                    onFileDragStart={onFileDragStart}
+                    onFileDragEnd={onFileDragEnd}
+                />
+            ))}
+
+            {/* 根目录下的文件列表 */}
+            {fileNodes.map((node) => (
+                <FileTreeFileItem
+                    key={node.path}
+                    node={node}
+                    activeFilePath={activeFilePath}
+                    openedFilePaths={openedFilePaths}
+                    onFileSelect={onFileSelect}
+                    onContextMenu={openContextMenu}
+                    getColor={getColor}
+                    level={rootName ? 1 : 0}
+                    editingPath={editingPath}
+                    onEditComplete={onEditComplete}
+                    onStartEdit={onStartEdit}
+                    onMove={onMove}
+                    siblings={fileNodes}
+                    onReorder={handleFileReorderCallback}
+                    isPinned={isPinned}
                     onFileDragStart={onFileDragStart}
                     onFileDragEnd={onFileDragEnd}
                 />
@@ -378,6 +443,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
                 onDrop={(e) => {
                     e.preventDefault()
                     e.currentTarget.classList.remove('drag-over-blank')
+
+                    // 检查是否为外部文件
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && onExternalFileDrop) {
+                        onExternalFileDrop(e.dataTransfer.files, '')
+                        return
+                    }
+
+                    // 内部拖拽
                     try {
                         const data = JSON.parse(e.dataTransfer.getData('application/json'))
                         if (data.path && onMove) {
@@ -593,6 +666,11 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     }
 
     const handleDrop = (e: React.DragEvent) => {
+        // 如果是外部文件拖拽，不阻止冒泡，由父组件 App.tsx 处理
+        if (e.dataTransfer.types.includes('Files')) {
+            return
+        }
+
         e.preventDefault()
         e.stopPropagation()
         const currentDragOver = dragOver  // 保存当前值因为 setDragOver 后会清空
@@ -960,6 +1038,11 @@ const FileTreeFileItem: React.FC<FileTreeFileItemProps> = ({
     }
 
     const handleDrop = (e: React.DragEvent) => {
+        // 如果是外部文件拖拽，不阻止冒泡，由父组件 App.tsx 处理
+        if (e.dataTransfer.types.includes('Files')) {
+            return
+        }
+
         e.preventDefault()
         e.stopPropagation()
         const currentDragOver = dragOver

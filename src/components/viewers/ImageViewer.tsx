@@ -16,6 +16,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ filePath, vaultPath }) => {
     const [position, setPosition] = useState({ x: 0, y: 0 })
     const [isDragging, setIsDragging] = useState(false)
     const lastMousePos = useRef({ x: 0, y: 0 })
+    const contentRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const loadImage = async () => {
@@ -91,24 +92,34 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ filePath, vaultPath }) => {
         setIsDragging(false)
     }, [])
 
-    // Handle wheel zoom (滚轮/触控板缩放)
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-        // 阻止默认滚动行为
-        e.preventDefault()
-        e.stopPropagation()
+    // Handle wheel zoom (滚轮/触控板缩放) - manually attached for { passive: false }
+    useEffect(() => {
+        const content = contentRef.current
+        if (!content) return
 
-        // 计算缩放增量（考虑触控板的精细滚动）
-        const delta = -e.deltaY * 0.002
+        const onWheel = (e: WheelEvent) => {
+            // 阻止默认滚动行为
+            e.preventDefault()
+            e.stopPropagation()
 
-        setScale(prev => {
-            const newScale = Math.max(0.5, Math.min(5, prev + delta))
-            // 如果缩放回 100% 以下，重置位置
-            if (newScale <= 1) {
-                setPosition({ x: 0, y: 0 })
-            }
-            return newScale
-        })
-    }, [])
+            // 计算缩放增量（考虑触控板的精细滚动）
+            const delta = -e.deltaY * 0.002
+
+            setScale(prev => {
+                const newScale = Math.max(0.5, Math.min(5, prev + delta))
+                // 如果缩放回 100% 以下，重置位置
+                if (newScale <= 1) {
+                    setPosition({ x: 0, y: 0 })
+                }
+                return newScale
+            })
+        }
+
+        content.addEventListener('wheel', onWheel, { passive: false })
+        return () => {
+            content.removeEventListener('wheel', onWheel)
+        }
+    }, [imageUrl])
 
     if (loading) {
         return <div className="image-viewer-loading">加载中...</div>
@@ -127,12 +138,12 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ filePath, vaultPath }) => {
             >
                 <div className="topbar-spacer" />
                 <div
+                    ref={contentRef}
                     className={`image-viewer-content ${scale > 1 ? 'zoomed' : ''} ${isDragging ? 'dragging' : ''}`}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
-                    onWheel={handleWheel}
                 >
                     {imageUrl && (
                         <img

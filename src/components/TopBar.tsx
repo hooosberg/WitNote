@@ -22,6 +22,8 @@ interface TopBarProps {
 
     // Editor actions
     onFormatToggle: (format: 'md' | 'txt' | 'pdf') => void
+    hasSiblingMd?: boolean  // PDF是否有同名MD文件
+    hasSiblingPdf?: boolean // TXT是否有同名PDF文件
     isMarkdown: boolean
 
     // Chat state
@@ -39,10 +41,11 @@ interface TopBarProps {
 const FormatToggle: React.FC<{
     currentExt: string
     isReadOnly: boolean
+    hasSiblingMd?: boolean  // PDF是否有同名MD
+    hasSiblingPdf?: boolean // TXT是否有同名PDF
     onFormatToggle: (format: 'md' | 'txt' | 'pdf') => void
-}> = ({ currentExt, isReadOnly, onFormatToggle }) => {
+}> = ({ currentExt, isReadOnly, hasSiblingMd, hasSiblingPdf, onFormatToggle }) => {
     const [expanded, setExpanded] = useState(false)
-    const [hoveredDisabled, setHoveredDisabled] = useState<'md' | 'txt' | 'pdf' | null>(null)
     const [enableTransition, setEnableTransition] = useState(false)
 
     // Helper to get display format
@@ -77,7 +80,10 @@ const FormatToggle: React.FC<{
         }
     }, [expanded])
 
-    const isIMAGEorDOCX = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'docx'].includes(currentExt)
+    // 只读格式：图片、DOCX、无同名MD的PDF
+    // MD和TXT始终可以切换（不是只读）
+    const isReadOnlyFormat = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'docx'].includes(currentExt) ||
+        (currentExt === 'pdf' && !hasSiblingMd)
 
     // Unified container for all file types to prevent layout shifts
     return (
@@ -89,28 +95,25 @@ const FormatToggle: React.FC<{
                 height: '30px',
                 zIndex: expanded ? 100 : 1
             }}
-            onMouseEnter={() => !isIMAGEorDOCX && setExpanded(true)}
-            onMouseLeave={() => {
-                setExpanded(false)
-                setHoveredDisabled(null)
-            }}
+            onMouseEnter={() => !isReadOnlyFormat && setExpanded(true)}
+            onMouseLeave={() => setExpanded(false)}
         >
             {/* Collapsed state: Single button */}
             <div
-                className={`segmented-control-single ${isIMAGEorDOCX ? 'readonly' : ''}`}
+                className={`segmented-control-single ${isReadOnlyFormat ? 'readonly' : ''}`}
                 style={{
                     width: '100%',
                     opacity: expanded ? 0 : 1,
                     pointerEvents: expanded ? 'none' : 'auto'
                 }}
             >
-                <div className={`segmented-control-btn ${isIMAGEorDOCX ? 'active disabled' : ''}`} style={isIMAGEorDOCX ? { width: '100%', fontWeight: 600, cursor: 'default' } : undefined}>
+                <div className={`segmented-control-btn ${isReadOnlyFormat ? 'active disabled' : ''}`} style={isReadOnlyFormat ? { width: '100%', fontWeight: 600, cursor: 'default' } : undefined}>
                     {getDisplayFormat(currentExt)}
                 </div>
             </div>
 
             {/* Expanded state: Overlay (Only for convertible types) */}
-            {expanded && !isIMAGEorDOCX && (
+            {expanded && !isReadOnlyFormat && (
                 <div className="segmented-control"
                     style={{
                         position: 'absolute',
@@ -131,12 +134,15 @@ const FormatToggle: React.FC<{
 
                     {/* PDF Button */}
                     <button
-                        className={`segmented-control-btn ${isPdf ? 'active' : ''} disabled`}
-                        disabled
-                        title={isPdf ? '当前格式' : 'PDF 导出暂不支持'}
-                        onMouseEnter={() => setHoveredDisabled('pdf')}
-                        onMouseLeave={() => setHoveredDisabled(null)}
-                        style={{ cursor: 'not-allowed', opacity: isPdf ? 1 : 0.5, fontSize: '11px' }}
+                        className={`segmented-control-btn ${isPdf ? 'active' : ''}`}
+                        onClick={() => {
+                            if (!isPdf) {
+                                // MD 模式下点击 PDF 执行导出
+                                onFormatToggle('pdf')
+                            }
+                        }}
+                        title={isPdf ? '当前格式' : (isMd ? '导出为 PDF' : '切换到 PDF')}
+                        style={{ fontSize: '11px', cursor: isPdf ? 'default' : 'pointer' }}
                     >
                         PDF
                     </button>
@@ -180,11 +186,27 @@ const FormatIndicator: React.FC<{ ext: string }> = ({ ext }) => {
         return ext.toUpperCase() || 'TXT'
     }
 
+    const isReadOnlyType = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
+
     return (
-        <div className="format-toggle-single">
-            <button className="format-btn active disabled" disabled>
+        <div
+            className={`segmented-control-single ${isReadOnlyType ? 'readonly' : ''}`}
+            style={{
+                width: '44px',
+                height: '30px'
+            }}
+        >
+            <div
+                className="segmented-control-btn active disabled"
+                style={{
+                    width: '100%',
+                    fontWeight: 600,
+                    cursor: 'default',
+                    opacity: 1 // Ensure visibility matches active state
+                }}
+            >
                 {getDisplayFormat()}
-            </button>
+            </div>
         </div>
     )
 }
@@ -312,6 +334,8 @@ export const TopBar: React.FC<TopBarProps> = ({
     activeFile,
     previewFile,
     onFormatToggle,
+    hasSiblingMd,
+    hasSiblingPdf,
     searchQuery = '',
     onSearchChange,
     className = ''
@@ -367,6 +391,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         {/* 左侧留空用于拖拽 */}
                         <div className="topbar-drag-area" />
 
+
                         {/* 右侧：格式切换按钮 (非专注模式下显示在中间) */}
                         {!focusMode && (
                             <div className="topbar-controls">
@@ -374,6 +399,8 @@ export const TopBar: React.FC<TopBarProps> = ({
                                 <FormatToggle
                                     currentExt={currentExt}
                                     isReadOnly={isReadOnly}
+                                    hasSiblingMd={hasSiblingMd}
+                                    hasSiblingPdf={hasSiblingPdf}
                                     onFormatToggle={onFormatToggle}
                                 />
 

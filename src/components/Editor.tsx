@@ -316,10 +316,54 @@ export const Editor: React.FC<EditorProps> = ({
         const textarea = textareaRef.current
         if (!textarea || !isMarkdown || !filePath) return
 
+        // 辅助函数：判断是否为图片 URL
+        const isImageUrl = (url: string): boolean => {
+            try {
+                const u = new URL(url)
+                // 检查常见图片扩展名
+                if (/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(u.pathname)) {
+                    return true
+                }
+                // 检查常见图床域名
+                const imageHosts = ['imgur.com', 'i.imgur.com', 'unsplash.com', 'images.unsplash.com',
+                    'picsum.photos', 'placekitten.com', 'via.placeholder.com',
+                    'raw.githubusercontent.com', 'cdn.jsdelivr.net']
+                if (imageHosts.some(host => u.hostname.includes(host))) {
+                    return true
+                }
+                return false
+            } catch {
+                return false
+            }
+        }
+
+        // 辅助函数：插入图片 Markdown
+        const insertImageMarkdown = (imagePath: string) => {
+            const pos = textarea.selectionStart
+            const beforeCursor = content.substring(0, pos)
+            const afterCursor = content.substring(pos)
+            const imageMarkdown = `![](${imagePath})`
+
+            onChange(beforeCursor + imageMarkdown + afterCursor)
+
+            // 移动光标到图片后
+            setTimeout(() => {
+                const newPos = pos + imageMarkdown.length
+                textarea.setSelectionRange(newPos, newPos)
+                textarea.focus()
+            }, 0)
+        }
+
         const handlePaste = async (e: ClipboardEvent) => {
             const items = e.clipboardData?.items
             if (!items) return
 
+            // 获取文件所在目录
+            const dirPath = filePath.includes('/')
+                ? filePath.substring(0, filePath.lastIndexOf('/'))
+                : ''
+
+            // 1. 首先检查是否有图片 blob（优先处理）
             for (const item of items) {
                 if (item.type.startsWith('image/')) {
                     e.preventDefault()
@@ -334,34 +378,34 @@ export const Editor: React.FC<EditorProps> = ({
                             const base64Data = event.target?.result as string
                             if (!base64Data) return
 
-                            // 获取文件所在目录
-                            const dirPath = filePath.includes('/')
-                                ? filePath.substring(0, filePath.lastIndexOf('/'))
-                                : ''
-
                             // 保存图片到本地
                             const imagePath = await window.fs.saveImage(dirPath, base64Data)
-
-                            // 插入 Markdown 图片语法
-                            const pos = textarea.selectionStart
-                            const beforeCursor = content.substring(0, pos)
-                            const afterCursor = content.substring(pos)
-                            const imageMarkdown = `![](${imagePath})`
-
-                            onChange(beforeCursor + imageMarkdown + afterCursor)
-
-                            // 移动光标到图片后
-                            setTimeout(() => {
-                                const newPos = pos + imageMarkdown.length
-                                textarea.setSelectionRange(newPos, newPos)
-                                textarea.focus()
-                            }, 0)
+                            insertImageMarkdown(imagePath)
                         }
                         reader.readAsDataURL(file)
                     } catch (error) {
                         console.error('粘贴图片失败:', error)
                     }
-                    break
+                    return // 已处理图片 blob，退出
+                }
+            }
+
+            // 2. 检查粘贴的文本是否为图片 URL
+            const text = e.clipboardData?.getData('text/plain')?.trim()
+            if (text && isImageUrl(text)) {
+                e.preventDefault()
+                console.log('📥 检测到图片 URL:', text)
+
+                try {
+                    const imagePath = await window.fs.downloadAndSaveImage(text, dirPath)
+                    if (imagePath) {
+                        insertImageMarkdown(imagePath)
+                        console.log('✅ 网络图片已本地化:', imagePath)
+                    }
+                } catch (error) {
+                    console.error('下载网络图片失败:', error)
+                    // 下载失败时，插入原始 URL 作为图片链接
+                    insertImageMarkdown(text)
                 }
             }
         }
@@ -477,8 +521,19 @@ export const Editor: React.FC<EditorProps> = ({
     const handleBodyFocus = () => {
     }
 
+    // 处理外部文件拖拽，确保事件冒泡到 App.tsx
+    const handleExternalDrag = (e: React.DragEvent) => {
+        if (e.dataTransfer.types.includes('Files')) {
+            e.preventDefault()
+        }
+    }
+
     return (
-        <div className="editor-container">
+        <div
+            className="editor-container"
+            onDragOver={handleExternalDrag}
+            onDrop={handleExternalDrag}
+        >
             {/* 顶部工具栏已移除，功能移动到 TopBar */}
 
             {/* 编辑区域 - 可滚动，支持分屏模式 */}

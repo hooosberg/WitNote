@@ -15,12 +15,22 @@ electron.contextBridge.exposeInMainWorld("fs", {
   deleteFile: (path) => electron.ipcRenderer.invoke("fs:deleteFile", path),
   renameFile: (oldPath, newPath) => electron.ipcRenderer.invoke("fs:renameFile", oldPath, newPath),
   readFileBuffer: (path) => electron.ipcRenderer.invoke("fs:readFileBuffer", path),
+  // 外部文件导入
+  copyExternalFile: (externalPath, targetDir) => electron.ipcRenderer.invoke("fs:copyExternalFile", externalPath, targetDir),
   // 图片操作
   saveImage: (relativeDirPath, base64Data, fileName) => electron.ipcRenderer.invoke("fs:saveImage", relativeDirPath, base64Data, fileName),
   selectAndCopyImage: (relativeDirPath) => electron.ipcRenderer.invoke("fs:selectAndCopyImage", relativeDirPath),
+  // 下载网络图片并保存到本地
+  downloadAndSaveImage: (imageUrl, relativeDirPath) => electron.ipcRenderer.invoke("fs:downloadAndSaveImage", imageUrl, relativeDirPath),
   // 图片引用检查与清理
   isImageReferenced: (imageRelativePath, excludeFilePath) => electron.ipcRenderer.invoke("fs:isImageReferenced", imageRelativePath, excludeFilePath),
   deleteUnreferencedImage: (imageRelativePath) => electron.ipcRenderer.invoke("fs:deleteUnreferencedImage", imageRelativePath),
+  // PDF 导出
+  exportMarkdownToPdf: (htmlContent, outputPath, title) => electron.ipcRenderer.invoke("export-markdown-to-pdf", {
+    htmlContent,
+    outputPath,
+    title
+  }),
   // 文件监听
   watch: (path) => electron.ipcRenderer.invoke("fs:watch", path),
   unwatch: () => electron.ipcRenderer.invoke("fs:unwatch"),

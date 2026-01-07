@@ -61,6 +61,10 @@ contextBridge.exposeInMainWorld('fs', {
     readFileBuffer: (path: string): Promise<ArrayBuffer> =>
         ipcRenderer.invoke('fs:readFileBuffer', path),
 
+    // 外部文件导入
+    copyExternalFile: (externalPath: string, targetDir: string): Promise<string | null> =>
+        ipcRenderer.invoke('fs:copyExternalFile', externalPath, targetDir),
+
     // 图片操作
     saveImage: (relativeDirPath: string, base64Data: string, fileName?: string): Promise<string> =>
         ipcRenderer.invoke('fs:saveImage', relativeDirPath, base64Data, fileName),
@@ -68,12 +72,28 @@ contextBridge.exposeInMainWorld('fs', {
     selectAndCopyImage: (relativeDirPath: string): Promise<string | null> =>
         ipcRenderer.invoke('fs:selectAndCopyImage', relativeDirPath),
 
+    // 下载网络图片并保存到本地
+    downloadAndSaveImage: (imageUrl: string, relativeDirPath: string): Promise<string | null> =>
+        ipcRenderer.invoke('fs:downloadAndSaveImage', imageUrl, relativeDirPath),
+
     // 图片引用检查与清理
     isImageReferenced: (imageRelativePath: string, excludeFilePath?: string): Promise<boolean> =>
         ipcRenderer.invoke('fs:isImageReferenced', imageRelativePath, excludeFilePath),
 
     deleteUnreferencedImage: (imageRelativePath: string): Promise<boolean> =>
         ipcRenderer.invoke('fs:deleteUnreferencedImage', imageRelativePath),
+
+    // PDF 导出
+    exportMarkdownToPdf: (
+        htmlContent: string,
+        outputPath: string,
+        title: string
+    ): Promise<{ success: boolean, error?: string }> =>
+        ipcRenderer.invoke('export-markdown-to-pdf', {
+            htmlContent,
+            outputPath,
+            title
+        }),
 
     // 文件监听
     watch: (path?: string): Promise<boolean> =>

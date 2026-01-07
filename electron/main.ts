@@ -800,6 +800,86 @@ function setupIpcHandlers() {
         return buffer.buffer // 返回 ArrayBuffer
     })
 
+    // ============ 外部文件导入操作 ============
+
+    // 复制外部文件到 Vault（用于拖拽导入）
+    ipcMain.handle('fs:copyExternalFile', async (_event, externalPath: string, targetDir: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) throw new Error('未设置 Vault 路径')
+
+        console.log('📥 复制外部文件:', externalPath)
+        console.log('  - 目标目录:', targetDir)
+
+        // 验证文件格式
+        const fileName = basename(externalPath)
+        const ext = extname(fileName).toLowerCase()
+        const allowedExtensions = [
+            '.txt', '.md', '.markdown',  // 文本
+            '.pdf', '.docx',              // 文档
+            '.jpg', '.jpeg', '.png', '.gif', '.webp'  // 图片
+        ]
+
+        if (!allowedExtensions.includes(ext)) {
+            console.log('  - ❌ 不支持的文件格式:', ext)
+            throw new Error(`不支持的文件格式: ${ext}`)
+        }
+
+        // 检查文件是否已在 Vault 内
+        const normalizedExternalPath = externalPath.replace(/\\/g, '/')
+        const normalizedVaultPath = vaultPath.replace(/\\/g, '/')
+
+        if (normalizedExternalPath.startsWith(normalizedVaultPath + '/')) {
+            console.log('  - 文件已在 Vault 内，返回相对路径')
+            return relative(vaultPath, externalPath)
+        }
+
+        // 确定目标目录
+        const destDir = targetDir ? join(vaultPath, targetDir) : vaultPath
+        if (!existsSync(destDir)) {
+            mkdirSync(destDir, { recursive: true })
+        }
+
+        // 读取源文件用于去重检查
+        const sourceBuffer = await fs.readFile(externalPath)
+        const sourceHash = createHash('md5').update(sourceBuffer).digest('hex').substring(0, 8)
+        console.log('  - 源文件 hash:', sourceHash)
+
+        // 检查目标目录中是否已存在相同文件
+        const baseNameWithoutExt = basename(fileName, ext)
+        let destFileName = fileName
+        let destPath = join(destDir, destFileName)
+
+        // 如果文件名已存在，检查内容是否相同
+        if (existsSync(destPath)) {
+            const existingBuffer = await fs.readFile(destPath)
+            const existingHash = createHash('md5').update(existingBuffer).digest('hex').substring(0, 8)
+
+            if (sourceHash === existingHash) {
+                console.log('  - ✨ 文件已存在且内容相同，跳过复制')
+                return targetDir ? `${targetDir}/${destFileName}` : destFileName
+            }
+
+            // 内容不同，使用 hash 后缀避免覆盖
+            destFileName = `${baseNameWithoutExt}_${sourceHash}${ext}`
+            destPath = join(destDir, destFileName)
+            console.log('  - 文件名冲突，使用新名称:', destFileName)
+        }
+
+        // 复制文件
+        try {
+            await fs.copyFile(externalPath, destPath)
+            console.log('  - ✅ 复制成功:', destFileName)
+        } catch (error) {
+            console.error('  - ❌ 复制失败:', error)
+            throw error
+        }
+
+        // 返回相对路径
+        const relativePath = targetDir ? `${targetDir}/${destFileName}` : destFileName
+        console.log('  - 返回路径:', relativePath)
+        return relativePath
+    })
+
     // ============ 图片相关操作 ============
 
     // 保存 Base64 图片到本地 (用于粘贴图片)
@@ -940,6 +1020,85 @@ function setupIpcHandlers() {
         return imagePath
     })
 
+    // 下载网络图片并保存到本地 (用于粘贴网络图片 URL)
+    ipcMain.handle('fs:downloadAndSaveImage', async (_event, imageUrl: string, relativeDirPath: string) => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) throw new Error('未设置 Vault 路径')
+
+        console.log('📥 下载网络图片:', imageUrl)
+        console.log('  - 目标目录:', relativeDirPath)
+
+        try {
+            // 使用 Electron 的 net 模块下载图片
+            const response = await net.fetch(imageUrl)
+            if (!response.ok) {
+                throw new Error(`下载失败: HTTP ${response.status}`)
+            }
+
+            // 获取图片 Buffer
+            const arrayBuffer = await response.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+
+            // 从 URL 推断扩展名，或从 Content-Type 推断
+            let ext = 'jpg' // 默认
+            const contentType = response.headers.get('content-type')
+            if (contentType) {
+                if (contentType.includes('png')) ext = 'png'
+                else if (contentType.includes('gif')) ext = 'gif'
+                else if (contentType.includes('webp')) ext = 'webp'
+                else if (contentType.includes('svg')) ext = 'svg'
+            } else {
+                // 尝试从 URL 路径推断
+                const urlPath = new URL(imageUrl).pathname
+                const urlExt = extname(urlPath).toLowerCase().replace('.', '')
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(urlExt)) {
+                    ext = urlExt === 'jpeg' ? 'jpg' : urlExt
+                }
+            }
+
+            // 确保图片目录存在
+            const imageDir = join(vaultPath, relativeDirPath, '.images')
+            if (!existsSync(imageDir)) {
+                mkdirSync(imageDir, { recursive: true })
+            }
+
+            // 计算 hash 用于去重
+            const imageHash = createHash('md5').update(buffer).digest('hex').substring(0, 8)
+            console.log('  - 图片 hash:', imageHash)
+
+            // 检查是否已存在相同 hash 的图片
+            try {
+                const existingImages = await fs.readdir(imageDir)
+                for (const img of existingImages) {
+                    const imgPath = join(imageDir, img)
+                    const imgBuffer = await fs.readFile(imgPath)
+                    const imgHash = createHash('md5').update(imgBuffer).digest('hex').substring(0, 8)
+                    if (imageHash === imgHash) {
+                        console.log('  - ✨ 找到相同内容图片，复用:', img)
+                        return `.images/${img}`
+                    }
+                }
+            } catch (e) {
+                // 目录为空或读取失败，继续保存
+                console.log('  - 检查现有图片失败，继续保存:', e)
+            }
+
+            // 生成基于 hash 的文件名
+            const timestamp = Date.now()
+            const newFileName = `web_${timestamp}_${imageHash}.${ext}`
+            const destPath = join(imageDir, newFileName)
+
+            // 写入文件
+            await fs.writeFile(destPath, buffer)
+            console.log('  - ✅ 保存成功:', newFileName)
+
+            return `.images/${newFileName}`
+        } catch (error) {
+            console.error('  - ❌ 下载失败:', error)
+            throw error
+        }
+    })
+
     // ============ 图片引用检查与清理 ============
 
     // 检查图片是否被其他文件引用
@@ -1038,6 +1197,189 @@ function setupIpcHandlers() {
 
         await fs.writeFile(chatPath, JSON.stringify(messages, null, 2), 'utf-8')
         return true
+    })
+
+    // ============ PDF 导出功能 ============
+
+    /**
+     * 导出 Markdown 为 PDF
+     * - 接收: HTML 内容、目标 PDF 路径、文件标题
+     * - 使用隐藏 BrowserWindow + printToPDF
+     * - 返回: 成功/失败
+     */
+    ipcMain.handle('export-markdown-to-pdf', async (_event, args: {
+        htmlContent: string,
+        outputPath: string,
+        title: string
+    }): Promise<{ success: boolean, error?: string }> => {
+        const { htmlContent, outputPath, title } = args
+
+        // 创建隐藏窗口用于渲染
+        const printWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            show: false, // 隐藏窗口
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true
+            }
+        })
+
+        try {
+            // 构建完整 HTML 文档（包含样式）
+            const fullHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>
+        /* PDF 导出样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+        h1, h2, h3, h4, h5, h6 { 
+            margin-top: 24px; 
+            margin-bottom: 16px; 
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        h1 { font-size: 2em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+        h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+        h3 { font-size: 1.25em; }
+        h4 { font-size: 1em; }
+        h5 { font-size: 0.875em; }
+        h6 { font-size: 0.85em; color: #6a737d; }
+        code { 
+            background: #f6f8fa; 
+            padding: 2px 6px; 
+            border-radius: 3px; 
+            font-family: 'SF Mono', Monaco, 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+            font-size: 85%;
+        }
+        pre { 
+            background: #f6f8fa; 
+            padding: 16px; 
+            border-radius: 6px; 
+            overflow-x: auto;
+            line-height: 1.45;
+        }
+        pre code { 
+            background: none; 
+            padding: 0; 
+        }
+        blockquote { 
+            border-left: 4px solid #dfe2e5; 
+            padding: 0 16px; 
+            color: #6a737d; 
+            margin: 16px 0;
+        }
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin: 16px 0;
+            display: table;
+        }
+        th, td { 
+            border: 1px solid #dfe2e5; 
+            padding: 8px 13px; 
+            text-align: left;
+        }
+        th { 
+            background: #f6f8fa; 
+            font-weight: 600;
+        }
+        img { 
+            max-width: 100%; 
+            height: auto; 
+            display: block;
+            margin: 16px 0;
+        }
+        a { 
+            color: #0366d6; 
+            text-decoration: none; 
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+        ul, ol { 
+            padding-left: 2em; 
+            margin: 16px 0;
+        }
+        li { 
+            margin: 4px 0; 
+        }
+        hr { 
+            border: 0; 
+            border-top: 2px solid #eaecef; 
+            margin: 24px 0; 
+        }
+        p { 
+            margin: 16px 0; 
+        }
+        /* 任务列表样式 */
+        input[type="checkbox"] {
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    ${htmlContent}
+</body>
+</html>`
+
+            // 加载 HTML 内容
+            await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`)
+
+            // 等待页面渲染完成
+            await new Promise(resolve => setTimeout(resolve, 500))
+
+            // 生成 PDF
+            const pdfData = await printWindow.webContents.printToPDF({
+                printBackground: true,
+                pageSize: 'A4',
+                margins: {
+                    top: 0.5,      // 英寸
+                    bottom: 0.5,
+                    left: 0.5,
+                    right: 0.5
+                }
+            })
+
+            // 获取完整输出路径
+            const vaultPath = store.get('vaultPath')
+            if (!vaultPath) throw new Error('未设置 Vault 路径')
+            
+            const fullOutputPath = join(vaultPath, outputPath)
+
+            // 确保父目录存在
+            const parentDir = dirname(fullOutputPath)
+            if (!existsSync(parentDir)) {
+                mkdirSync(parentDir, { recursive: true })
+            }
+
+            // 写入 PDF 文件
+            await fs.writeFile(fullOutputPath, pdfData)
+
+            console.log('✅ PDF 导出成功:', fullOutputPath)
+            return { success: true }
+
+        } catch (error) {
+            console.error('❌ PDF 导出失败:', error)
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : '导出失败'
+            }
+        } finally {
+            // 关闭隐藏窗口
+            printWindow.close()
+        }
     })
 
     // 启动文件监听

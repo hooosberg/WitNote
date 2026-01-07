@@ -29,12 +29,18 @@ interface FileSystemAPI {
     deleteFile(path: string): Promise<boolean>
     renameFile(oldPath: string, newPath: string): Promise<boolean>
     readFileBuffer(path: string): Promise<ArrayBuffer>
+    // 外部文件导入
+    copyExternalFile(externalPath: string, targetDir: string): Promise<string | null>
     // 图片操作
     saveImage(relativeDirPath: string, base64Data: string, fileName?: string): Promise<string>
     selectAndCopyImage(relativeDirPath: string): Promise<string | null>
+    // 下载网络图片并保存到本地
+    downloadAndSaveImage(imageUrl: string, relativeDirPath: string): Promise<string | null>
     // 图片引用检查与清理
     isImageReferenced(imageRelativePath: string, excludeFilePath?: string): Promise<boolean>
     deleteUnreferencedImage(imageRelativePath: string): Promise<boolean>
+    // PDF 导出
+    exportMarkdownToPdf(htmlContent: string, outputPath: string, title: string): Promise<{ success: boolean, error?: string }>
     watch(path?: string): Promise<boolean>
     unwatch(): Promise<boolean>
     onFileChange(callback: (event: FileChangeEvent) => void): () => void

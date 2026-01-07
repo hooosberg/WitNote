@@ -338,6 +338,7 @@ select:focus {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .main-inner {
@@ -578,6 +579,56 @@ select:focus {
 
 .gallery-drop-content strong {
   color: var(--text-primary);
+}
+
+/* 外部文件拖入遮罩提示 - 绿色主题 */
+.external-drop-overlay {
+  position: absolute;
+  top: var(--titlebar-height);
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(52, 199, 89, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px dashed rgba(52, 199, 89, 0.5);
+  border-radius: var(--radius-lg);
+  z-index: 200;
+  pointer-events: none;
+  animation: externalDropFadeIn 0.2s ease;
+}
+
+@keyframes externalDropFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.external-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #34c759;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 侧边栏的外部拖入遮罩 - 适应侧边栏尺寸 */
+.sidebar-inner .external-drop-overlay {
+  top: calc(var(--titlebar-height) + 8px);
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
 }
 
 
@@ -5790,15 +5841,26 @@ body.platform-mac .window-controls-spacer {
 }
 
 .segmented-control-single.readonly .segmented-control-btn {
-  opacity: 0.8;
+  /* Keep cursor default to indicate no menu */
   cursor: default;
-  box-shadow: none;
-  background: rgba(0, 0, 0, 0.05);
+  /* Darker outline as requested, but keeping the shadow for depth */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme="dark"] .segmented-control-single.readonly .segmented-control-btn {
-  background: rgba(255, 255, 255, 0.1);
+/* Allow hover effect to work same as normal buttons */
+/*
+.segmented-control-single.readonly .segmented-control-btn:hover {
+  transform: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
+*/
+
+[data-theme="dark"] .segmented-control-single.readonly .segmented-control-btn {
+  /* Darker outline for dark mode */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+
 
 [data-theme="dark"] .segmented-control {
   background: rgba(255, 255, 255, 0.1);

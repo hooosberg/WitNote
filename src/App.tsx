@@ -75,7 +75,7 @@ const AppContent: React.FC = () => {
     const fileSystem = useFileSystem()
     const engineStore = useEngineStore()
     const llm = useLLM(engineStore)
-    const { } = useToast()
+    const { showToast } = useToast()
     const folderOrder = useFolderOrder()
     const { settings, setSetting } = useSettings()
     const colorTags = useColorTags()
@@ -316,6 +316,14 @@ const AppContent: React.FC = () => {
         targetFolder: string
     }>({ visible: false, fileName: '', targetFolder: '' })
 
+    // 外部文件拖入状态（来自 Finder/桌面）
+    const [externalFileDragInfo, setExternalFileDragInfo] = useState<{
+        visible: boolean
+        area: 'sidebar' | 'gallery' | null
+        targetFolder: string  // 目标文件夹名称
+        targetPath: string    // 目标文件夹路径
+    }>({ visible: false, area: null, targetFolder: '', targetPath: '' })
+
     // 双栏布局宽度比例 (左侧宽度百分比 0.2 - 0.8)
     const [mainPaneRatio, setMainPaneRatio] = useState(0.5)
     const [isDraggingDivider, setIsDraggingDivider] = useState(false)
@@ -452,6 +460,7 @@ const AppContent: React.FC = () => {
         renameItem,
         deleteFile,
         moveItem,
+        exportToPdf,
     } = fileSystem
 
     // 双栏布局模式计算
@@ -872,6 +881,42 @@ const AppContent: React.FC = () => {
         await createNewFile(fileName)
     }
 
+    /**
+     * 获取外部文件拖拽的目标目录
+     * 优先级:
+     * 1. 当前激活的文件夹(activeFolder)
+     * 2. 当前打开文件所在的目录(activeFile)
+     * 3. 根目录
+     */
+    const getTargetDropDirectory = (): { path: string; name: string } => {
+        // 优先级1: 如果有激活的文件夹,使用该文件夹
+        if (activeFolder) {
+            return {
+                path: activeFolder.path,
+                name: activeFolder.name
+            }
+        }
+
+        // 优先级2: 如果正在编辑某个文件,使用该文件所在的目录
+        if (activeFile) {
+            const filePath = activeFile.path
+            if (filePath.includes('/')) {
+                const dirPath = filePath.substring(0, filePath.lastIndexOf('/'))
+                const dirName = dirPath.split('/').pop() || t('gallery.rootFolder', '根目录')
+                return {
+                    path: dirPath,
+                    name: dirName
+                }
+            }
+        }
+
+        // 优先级3: 默认使用根目录
+        return {
+            path: '',
+            name: vaultPath?.split('/').pop() || t('gallery.rootFolder', '根目录')
+        }
+    }
+
     // T1-3: 点击文件时的双栏逻辑处理
     const handleFileSelect = (node: FileNode) => {
         const isNodeEditable = isEditable(node)
@@ -1121,12 +1166,97 @@ const AppContent: React.FC = () => {
                 previewFile={previewFile}
                 fileContent={fileContent}
                 isMarkdown={activeFile?.extension === '.md' || activeFile?.extension === '.markdown'}
-                onFormatToggle={(format) => {
-                    // 根据请求的格式执行转换
-                    if (format === 'md' || format === 'txt') {
-                        convertFileFormat(settings.smartFormatConversion)
+                hasSiblingMd={(() => {
+                    // 检测当前PDF是否有同名MD文件
+                    if (activeFile?.extension?.toLowerCase() !== '.pdf') return false
+                    const baseName = activeFile.name.replace(/\.pdf$/i, '')
+                    const dir = activeFile.path.includes('/')
+                        ? activeFile.path.substring(0, activeFile.path.lastIndexOf('/'))
+                        : ''
+                    const mdPath = dir ? `${dir}/${baseName}.md` : `${baseName}.md`
+                    return getAllFiles().some(f => f.path === mdPath)
+                })()}
+                hasSiblingPdf={(() => {
+                    // 检测当前TXT是否有同名PDF文件
+                    if (activeFile?.extension?.toLowerCase() !== '.txt') return false
+                    const baseName = activeFile.name.replace(/\.txt$/i, '')
+                    const dir = activeFile.path.includes('/')
+                        ? activeFile.path.substring(0, activeFile.path.lastIndexOf('/'))
+                        : ''
+                    const pdfPath = dir ? `${dir}/${baseName}.pdf` : `${baseName}.pdf`
+                    return getAllFiles().some(f => f.path === pdfPath)
+                })()}
+                onFormatToggle={async (format) => {
+                    const currentExt = activeFile?.extension?.toLowerCase()?.replace('.', '')
+
+                    // 辅助函数：获取目录和基础文件名
+                    const getPathParts = () => {
+                        const baseName = activeFile!.name.replace(/\.(md|txt|pdf)$/i, '')
+                        const dir = activeFile!.path.includes('/')
+                            ? activeFile!.path.substring(0, activeFile!.path.lastIndexOf('/'))
+                            : ''
+                        return { baseName, dir }
                     }
-                    // PDF 暂不支持转换
+
+                    // 辅助函数：切换到同名文件
+                    const switchToSiblingFile = async (targetExt: string) => {
+                        const { baseName, dir } = getPathParts()
+                        const targetPath = dir ? `${dir}/${baseName}.${targetExt}` : `${baseName}.${targetExt}`
+                        const allFiles = getAllFiles()
+                        const targetFile = allFiles.find(f => f.path === targetPath)
+
+                        if (targetFile) {
+                            await openFile(targetFile)
+                            return true
+                        } else {
+                            showToast('warning', `⚠️ 未找到同名 ${targetExt.toUpperCase()} 文件`)
+                            return false
+                        }
+                    }
+
+                    // ===== MD模式 =====
+                    if (currentExt === 'md') {
+                        if (format === 'pdf') {
+                            // MD → PDF: 执行导出并切换
+                            const result = await exportToPdf()
+                            if (result.success) {
+                                showToast('success', '✅ PDF 导出成功')
+                                const { baseName, dir } = getPathParts()
+                                const pdfPath = dir ? `${dir}/${baseName}.pdf` : `${baseName}.pdf`
+
+                                await fileSystem.refreshTree()
+                                setTimeout(async () => {
+                                    const allFiles = getAllFiles()
+                                    const pdfFile = allFiles.find(f => f.path === pdfPath)
+                                    if (pdfFile) await openFile(pdfFile)
+                                }, 100)
+                            } else {
+                                showToast('error', `❌ 导出失败: ${result.error || '未知错误'}`)
+                            }
+                        } else if (format === 'txt') {
+                            // MD → TXT: 格式转换
+                            convertFileFormat(settings.smartFormatConversion)
+                        }
+                        return
+                    }
+
+                    // ===== TXT模式 =====
+                    if (currentExt === 'txt') {
+                        if (format === 'md') {
+                            // TXT → MD: 格式转换
+                            convertFileFormat(settings.smartFormatConversion)
+                        } else if (format === 'pdf') {
+                            // TXT → PDF: 切换到同名PDF（如果存在）
+                            await switchToSiblingFile('pdf')
+                        }
+                        return
+                    }
+
+                    // ===== PDF模式 =====
+                    if (currentExt === 'pdf') {
+                        // PDF → MD/TXT: 切换到同名文件
+                        await switchToSiblingFile(format)
+                    }
                 }}
                 previewMode={previewMode}
                 onPreviewModeChange={togglePreviewMode}
@@ -1177,7 +1307,64 @@ const AppContent: React.FC = () => {
                 {/* 左侧边栏 */}
                 {!leftCollapsed && (
                     <div className="panel-sidebar" style={{ width: sidebarWidth, flexBasis: sidebarWidth }}>
-                        <div className="sidebar-inner">
+                        <div
+                            className="sidebar-inner"
+                            onDragOver={(e) => {
+                                e.preventDefault()
+                                // 检测是否为外部文件（来自 Finder/桌面）
+                                if (e.dataTransfer.types.includes('Files') && !draggingFile) {
+                                    const targetDir = getTargetDropDirectory()
+                                    if (!externalFileDragInfo.visible || externalFileDragInfo.area !== 'sidebar' || externalFileDragInfo.targetFolder !== targetDir.name) {
+                                        setExternalFileDragInfo({
+                                            visible: true,
+                                            area: 'sidebar',
+                                            targetFolder: targetDir.name,
+                                            targetPath: targetDir.path
+                                        })
+                                    }
+                                }
+                            }}
+                            onDragLeave={(e) => {
+                                // 检查是否真正离开了 sidebar-inner
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                const x = e.clientX
+                                const y = e.clientY
+                                if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                                    setExternalFileDragInfo({ visible: false, area: null, targetFolder: '', targetPath: '' })
+                                }
+                            }}
+                            onDrop={async (e) => {
+                                e.preventDefault()
+                                setExternalFileDragInfo({ visible: false, area: null, targetFolder: '', targetPath: '' })
+
+                                // 检查是否为外部文件
+                                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                    const targetDir = getTargetDropDirectory()
+                                    console.log('📥 外部文件拖入侧边栏:', e.dataTransfer.files.length, '个文件, 目标目录:', targetDir.name)
+                                    for (const file of Array.from(e.dataTransfer.files)) {
+                                        const filePath = (file as File & { path?: string }).path
+                                        if (filePath) {
+                                            try {
+                                                const relativePath = await window.fs.copyExternalFile(filePath, targetDir.path)
+                                                console.log('✅ 导入成功:', relativePath)
+                                            } catch (error) {
+                                                console.error('❌ 导入失败:', error)
+                                            }
+                                        }
+                                    }
+                                    fileSystem.refreshTree()
+                                }
+                            }}
+                        >
+                            {/* 外部文件拖入遮罩提示 */}
+                            {externalFileDragInfo.visible && externalFileDragInfo.area === 'sidebar' && (
+                                <div className="external-drop-overlay">
+                                    <div className="external-drop-content">
+                                        <Plus size={32} strokeWidth={1.5} />
+                                        <span>{t('sidebar.importFileHint', '导入到')} <strong>{externalFileDragInfo.targetFolder}</strong></span>
+                                    </div>
+                                </div>
+                            )}
                             {/* 侧边栏头部已移除，使用 TopBar */}
 
                             {/* 侧边栏内容 - 支持拖拽到空白区域移到根目录 */}
@@ -1384,6 +1571,23 @@ const AppContent: React.FC = () => {
                                                 onToggleExpanded={folderOrder.toggleExpanded}
                                                 onFileDragStart={(file) => setDraggingFile(file)}
                                                 onFileDragEnd={() => setDraggingFile(null)}
+                                                onExternalFileDrop={async (files: FileList, targetDir: string) => {
+                                                    console.log('📥 外部文件拖入:', files.length, '个文件, 目标目录:', targetDir)
+                                                    for (const file of Array.from(files)) {
+                                                        // 在 Electron 中，外部拖入的文件有 path 属性
+                                                        const filePath = (file as File & { path?: string }).path
+                                                        if (filePath) {
+                                                            try {
+                                                                const relativePath = await window.fs.copyExternalFile(filePath, targetDir)
+                                                                console.log('✅ 导入成功:', relativePath)
+                                                            } catch (error) {
+                                                                console.error('❌ 导入失败:', error)
+                                                            }
+                                                        }
+                                                    }
+                                                    // 刷新文件列表
+                                                    fileSystem.refreshTree()
+                                                }}
                                             />
                                         ) : (
                                             <div className="sidebar-empty-hint">
@@ -1607,9 +1811,24 @@ const AppContent: React.FC = () => {
                                     <div
                                         className="gallery-wrapper"
                                         onDragOver={(e) => {
-                                            // 允许接收从文件树拖拽的文件
+                                            // 允许接收拖拽
                                             e.preventDefault()
-                                            // 使用 draggingFile 状态检测跨文件夹拖拽
+
+                                            // 检测外部文件（来自 Finder/桌面）
+                                            if (e.dataTransfer.types.includes('Files') && !draggingFile) {
+                                                const targetDir = getTargetDropDirectory()
+                                                if (!externalFileDragInfo.visible || externalFileDragInfo.area !== 'gallery' || externalFileDragInfo.targetFolder !== targetDir.name) {
+                                                    setExternalFileDragInfo({
+                                                        visible: true,
+                                                        area: 'gallery',
+                                                        targetFolder: targetDir.name,
+                                                        targetPath: targetDir.path
+                                                    })
+                                                }
+                                                return
+                                            }
+
+                                            // 内部文件拖拽提示
                                             if (draggingFile && !galleryDragInfo.visible) {
                                                 const currentFolderPath = activeFolder?.path || ''
                                                 if (draggingFile.parentPath !== currentFolderPath) {
@@ -1642,13 +1861,35 @@ const AppContent: React.FC = () => {
                                             const y = e.clientY
                                             if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
                                                 setGalleryDragInfo({ visible: false, fileName: '', targetFolder: '' })
+                                                setExternalFileDragInfo({ visible: false, area: null, targetFolder: '', targetPath: '' })
                                             }
                                         }}
                                         onDrop={async (e) => {
                                             e.preventDefault()
                                             // 隐藏提示
                                             setGalleryDragInfo({ visible: false, fileName: '', targetFolder: '' })
-                                            // 检查是否是从文件树拖拽的外部文件（不同文件夹）
+                                            setExternalFileDragInfo({ visible: false, area: null, targetFolder: '', targetPath: '' })
+
+                                            // 检查是否为外部文件
+                                            if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && !draggingFile) {
+                                                const targetDir = getTargetDropDirectory()
+                                                console.log('📥 外部文件拖入卡片区:', e.dataTransfer.files.length, '个文件, 目标目录:', targetDir.name)
+                                                for (const file of Array.from(e.dataTransfer.files)) {
+                                                    const filePath = (file as File & { path?: string }).path
+                                                    if (filePath) {
+                                                        try {
+                                                            const relativePath = await window.fs.copyExternalFile(filePath, targetDir.path)
+                                                            console.log('✅ 导入成功:', relativePath)
+                                                        } catch (error) {
+                                                            console.error('❌ 导入失败:', error)
+                                                        }
+                                                    }
+                                                }
+                                                fileSystem.refreshTree()
+                                                return
+                                            }
+
+                                            // 检查是否是从文件树拖拽的内部文件（不同文件夹）
                                             try {
                                                 const data = JSON.parse(e.dataTransfer.getData('application/json'))
                                                 if (data.type === 'file' && data.path) {
@@ -1684,6 +1925,16 @@ const AppContent: React.FC = () => {
                                                 <div className="gallery-drop-content">
                                                     <FolderInput size={32} strokeWidth={1.5} />
                                                     <span>{t('gallery.moveFileHint', '移动到')} <strong>{galleryDragInfo.targetFolder}</strong></span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 外部文件拖入遮罩提示 */}
+                                        {externalFileDragInfo.visible && externalFileDragInfo.area === 'gallery' && (
+                                            <div className="external-drop-overlay">
+                                                <div className="external-drop-content">
+                                                    <Plus size={32} strokeWidth={1.5} />
+                                                    <span>{t('gallery.importFileHint', '导入到')} <strong>{externalFileDragInfo.targetFolder}</strong></span>
                                                 </div>
                                             </div>
                                         )}

@@ -72,6 +72,7 @@ export interface UseFileSystemReturn {
     renameItem: (oldPath: string, newName: string) => Promise<void>
     convertFileFormat: (smartConversion?: boolean) => Promise<void>
     moveItem: (sourcePath: string, targetDir: string) => Promise<boolean>  // 移动文件/文件夹
+    exportToPdf: () => Promise<{ success: boolean, error?: string }>  // 导出 MD 为 PDF
 }
 
 // localStorage 键名
@@ -875,6 +876,54 @@ export function useFileSystem(): UseFileSystemReturn {
         }
     }, [activeFile, fileContent, fileTree, refreshTree, openFile])
 
+    /**
+     * 导出当前 Markdown 文件为 PDF
+     * 保存到源文件同目录下，文件名相同
+     */
+    const exportToPdf = useCallback(async (): Promise<{ success: boolean, error?: string }> => {
+        if (!activeFile) {
+            return { success: false, error: '没有活动文件' }
+        }
+
+        const ext = activeFile.extension?.toLowerCase()
+        if (ext !== '.md') {
+            return { success: false, error: '只支持 Markdown 文件导出' }
+        }
+
+        try {
+            // 1. 使用 marked 将 Markdown 转换为 HTML
+            const { marked } = await import('marked')
+            const htmlContent = await marked.parse(fileContent)
+
+            // 2. 计算输出路径（同目录，同名 .pdf）
+            const baseName = activeFile.name.replace(/\.md$/i, '')
+            const dir = activeFile.path.includes('/')
+                ? activeFile.path.substring(0, activeFile.path.lastIndexOf('/'))
+                : ''
+            const outputPath = dir ? `${dir}/${baseName}.pdf` : `${baseName}.pdf`
+
+            // 3. 调用 Electron 导出
+            const result = await window.fs.exportMarkdownToPdf(
+                htmlContent,
+                outputPath,
+                baseName
+            )
+
+            if (result.success) {
+                // 刷新文件树以显示新的 PDF 文件
+                await refreshTree()
+            }
+
+            return result
+        } catch (error) {
+            console.error('导出 PDF 失败:', error)
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : '导出失败'
+            }
+        }
+    }, [activeFile, fileContent, refreshTree])
+
     return {
         vaultPath,
         isInitialized,
@@ -899,7 +948,8 @@ export function useFileSystem(): UseFileSystemReturn {
         deleteFile,
         renameItem,
         convertFileFormat,
-        moveItem
+        moveItem,
+        exportToPdf
     }
 }
 
