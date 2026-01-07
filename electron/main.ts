@@ -511,6 +511,42 @@ let mainWindow: BrowserWindow | null = null
 // 智能续写状态（用于动态更新菜单显示）
 let smartAutocompleteEnabled: boolean = true
 
+// ============ 外部文件打开支持 ============
+
+// 待打开的外部文件路径（在窗口就绪前接收到的文件）
+let pendingFilePath: string | null = null
+
+// 支持通过文件关联打开的文件扩展名
+const SUPPORTED_FILE_EXTENSIONS = [
+    '.md', '.markdown', '.txt',    // 文本
+    '.pdf', '.docx',               // 文档
+    '.jpg', '.jpeg', '.png', '.gif', '.webp'  // 图片
+]
+
+/**
+ * 从命令行参数获取待打开文件（Windows/Linux）
+ */
+function getFileFromArgs(): string | null {
+    // 开发模式下跳过（Vite 会传入额外参数）
+    if (VITE_DEV_SERVER_URL) return null
+
+    const args = process.argv.slice(1)
+    for (const arg of args) {
+        // 跳过以 - 开头的参数（如 --inspect）
+        if (arg.startsWith('-')) continue
+
+        // 检查文件是否存在且扩展名受支持
+        if (existsSync(arg)) {
+            const ext = extname(arg).toLowerCase()
+            if (SUPPORTED_FILE_EXTENSIONS.includes(ext)) {
+                console.log('📂 从命令行参数获取文件:', arg)
+                return arg
+            }
+        }
+    }
+    return null
+}
+
 // ============ 文件系统类型 ============
 
 interface FileNode {
@@ -798,6 +834,14 @@ function setupIpcHandlers() {
         const fullPath = join(vaultPath, relativePath)
         const buffer = await fs.readFile(fullPath)
         return buffer.buffer // 返回 ArrayBuffer
+    })
+
+    // ============ 外部文件打开支持 ============
+
+    // 获取启动时的外部文件路径（用于文件关联功能）
+    ipcMain.handle('fs:getExternalFilePath', () => {
+        const filePath = pendingFilePath || getFileFromArgs()
+        return filePath
     })
 
     // ============ 外部文件导入操作 ============
@@ -1355,7 +1399,7 @@ function setupIpcHandlers() {
             // 获取完整输出路径
             const vaultPath = store.get('vaultPath')
             if (!vaultPath) throw new Error('未设置 Vault 路径')
-            
+
             const fullOutputPath = join(vaultPath, outputPath)
 
             // 确保父目录存在
@@ -2037,6 +2081,14 @@ function createWindow() {
 
     mainWindow.webContents.on('did-finish-load', () => {
         console.log('✅ 页面加载完成')
+
+        // 发送待打开的外部文件
+        const filePath = pendingFilePath || getFileFromArgs()
+        if (filePath && mainWindow) {
+            console.log('📤 发送外部文件给渲染进程:', filePath)
+            mainWindow.webContents.send('open-external-file', filePath)
+            pendingFilePath = null
+        }
     })
 }
 
@@ -2073,6 +2125,20 @@ app.whenReady().then(async () => {
             createWindow()
         }
     })
+})
+
+// macOS: 处理通过文件关联或拖拽打开文件的事件
+app.on('open-file', (event, filePath) => {
+    event.preventDefault()
+    console.log('📂 macOS open-file 事件:', filePath)
+
+    if (mainWindow && mainWindow.webContents) {
+        // 窗口已就绪，直接发送文件路径
+        mainWindow.webContents.send('open-external-file', filePath)
+    } else {
+        // 窗口未就绪，记录路径待后续发送
+        pendingFilePath = filePath
+    }
 })
 
 app.on('window-all-closed', () => {

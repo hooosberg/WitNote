@@ -2,7 +2,8 @@
     "app": {
         "name": "WitNote",
         "tagline": "Smart Core, Simple Form",
-        "description": "WitNote는 개인 정보 보호에 중점을 둔 로컬 AI 노트 앱입니다. 내장된 Ollama 엔진과 미니멀한 UI로 바로 사용할 수 있습니다. 클라우드 의존 없음, 프라이버시 걱정 없음."
+        "description": "WitNote는 개인 정보 보호에 중점을 둔 로컬 AI 노트 앱입니다. 내장된 Ollama 엔진과 미니멀한 UI로 바로 사용할 수 있습니다. 클라우드 의존 없음, 프라이버시 걱정 없음.",
+        "noSiblingFile": "동일한 이름의 {{ext}} 파일을 찾을 수 없습니다"
     },
     "sidebar": {
         "files": "파일",
@@ -20,7 +21,8 @@
         "disconnectMessage": "로컬 폴더와의 연결을 해제합니다. 파일은 삭제되지 않습니다.",
         "disconnectDetail": "모든 노트와 파일은 안전하게 보존됩니다.",
         "emptyFolderHint": "아래에 폴더 생성",
-        "emptyGuide": "아래 버튼을 클릭하여 로컬 폴더를 생성하거나 연결하세요"
+        "emptyGuide": "아래 버튼을 클릭하여 로컬 폴더를 생성하거나 연결하세요",
+        "importFileHint": "가져오기 위치"
     },
     "emptyState": {
         "poem": {
@@ -281,7 +283,10 @@
         "delete": "삭제"
     },
     "gallery": {
-        "newArticle": "새 글"
+        "newArticle": "새 글",
+        "moveFileHint": "이동 위치",
+        "importFileHint": "가져오기 위치",
+        "rootFolder": "루트 폴더"
     },
     "toast": {
         "fileSaved": "저장되었습니다",
@@ -466,5 +471,34 @@
         "noInsightData": "데이터 없음. 자동 완성을 실행하여 확인하세요.",
         "time": "시간",
         "chars": "자"
+    },
+    "viewer": {
+        "loadingPdf": "PDF 로드 중...",
+        "loadingDoc": "문서 로드 중...",
+        "loadingImage": "이미지 로드 중...",
+        "unsupportedFormat": "지원되지 않는 파일 형식:"
+    },
+    "dropZone": {
+        "left": "왼쪽으로 이동",
+        "right": "오른쪽으로 이동",
+        "top": "위쪽으로 이동",
+        "bottom": "아래쪽으로 이동",
+        "center": "가운데로 이동"
+    },
+    "file": {
+        "untitledFolder": "제목 없는 폴더",
+        "readOnlyPreview": "읽기 전용 미리보기",
+        "previewImage": "이미지 미리보기",
+        "moveErrorSubdirectory": "폴더를 자신의 하위 디렉터리로 이동할 수 없습니다",
+        "moveErrorDuplicate": "대상 위치에 같은 이름의 파일이나 폴더가 이미 있습니다",
+        "dragParseFailed": "드래그 데이터 파싱 실패"
+    },
+    "export": {
+        "noActiveFile": "활성 파일 없음",
+        "onlyMarkdownSupported": "내보내기는 Markdown 파일만 지원됩니다",
+        "pdfExportFailed": "PDF 내보내기 실패:",
+        "exportFailed": "내보내기 실패",
+        "pdfExportSuccess": "PDF 내보내기 성공",
+        "exportFailedWithReason": "내보내기 실패: {{error}}"
     }
 }

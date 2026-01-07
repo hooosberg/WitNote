@@ -26,45 +26,65 @@ export function useFolderOrder() {
     const [expandedFolders, setExpandedFolders] = useState<string[]>([])
     const [isLoaded, setIsLoaded] = useState(false)
 
-    // 加载排序数据
-    useEffect(() => {
-        const loadOrder = async () => {
-            try {
-                if (window.fs) {
-                    const vaultPath = await window.fs.getVaultPath()
-                    if (vaultPath) {
-                        try {
-                            const content = await window.fs.readFile(ORDER_FILE)
-                            const data = JSON.parse(content)
-                            // 兼容旧格式
-                            if (data.folderOrder) {
-                                setFolderOrder(data.folderOrder)
-                                setPinnedFiles(data.pinnedFiles || [])
-                                setExpandedFolders(data.expandedFolders || [])
-                            } else {
-                                // 旧格式：直接是 folderOrder 对象
-                                setFolderOrder(data)
-                                setPinnedFiles([])
-                                setExpandedFolders([])
-                            }
-                        } catch {
-                            // 文件不存在，使用空对象
-                            setFolderOrder({})
+    // 加载排序数据的核心逻辑
+    const loadOrder = useCallback(async () => {
+        try {
+            if (window.fs) {
+                const vaultPath = await window.fs.getVaultPath()
+                if (vaultPath) {
+                    try {
+                        const content = await window.fs.readFile(ORDER_FILE)
+                        const data = JSON.parse(content)
+                        // 兼容旧格式
+                        if (data.folderOrder) {
+                            setFolderOrder(data.folderOrder)
+                            setPinnedFiles(data.pinnedFiles || [])
+                            setExpandedFolders(data.expandedFolders || [])
+                        } else {
+                            // 旧格式：直接是 folderOrder 对象
+                            setFolderOrder(data)
                             setPinnedFiles([])
                             setExpandedFolders([])
                         }
+                        console.log('📌 图钉和排序数据已加载')
+                    } catch {
+                        // 文件不存在，使用空对象
+                        setFolderOrder({})
+                        setPinnedFiles([])
+                        setExpandedFolders([])
                     }
+                } else {
+                    // 没有连接 vault，清空状态
+                    setFolderOrder({})
+                    setPinnedFiles([])
+                    setExpandedFolders([])
                 }
-            } catch (error) {
-                console.error('加载排序数据失败:', error)
-                setFolderOrder({})
-                setPinnedFiles([])
-                setExpandedFolders([])
             }
-            setIsLoaded(true)
+        } catch (error) {
+            console.error('加载排序数据失败:', error)
+            setFolderOrder({})
+            setPinnedFiles([])
+            setExpandedFolders([])
         }
-        loadOrder()
+        setIsLoaded(true)
     }, [])
+
+    // 初始加载
+    useEffect(() => {
+        loadOrder()
+    }, [loadOrder])
+
+    // 监听 vault 变化事件
+    useEffect(() => {
+        const handleVaultChange = () => {
+            console.log('🔄 检测到 Vault 变化，重新加载图钉和排序数据')
+            loadOrder()
+        }
+        window.addEventListener('vault-changed', handleVaultChange)
+        return () => {
+            window.removeEventListener('vault-changed', handleVaultChange)
+        }
+    }, [loadOrder])
 
     // 保存排序数据
     const saveData = useCallback(async (order: FolderOrderState, pinned: string[], expanded: string[]) => {
@@ -240,6 +260,11 @@ export function useFolderOrder() {
         })
     }, [saveData, folderOrder, pinnedFiles])
 
+    // 手动重新加载（供外部调用）
+    const reload = useCallback(() => {
+        loadOrder()
+    }, [loadOrder])
+
     return {
         folderOrder,
         pinnedFiles,
@@ -256,5 +281,6 @@ export function useFolderOrder() {
         toggleExpanded,
         expandFolder,
         expandToPath,
+        reload,
     }
 }

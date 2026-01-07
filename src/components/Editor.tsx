@@ -156,7 +156,7 @@ export const Editor: React.FC<EditorProps> = ({
     filePath,
     vaultPath,
     onTitleChange,
-    onFormatToggle,
+    onFormatToggle: _,
     focusMode = false,
     createdAt,
     modifiedAt,

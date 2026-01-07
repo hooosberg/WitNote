@@ -9,7 +9,7 @@
   <title>WitNote</title>
   <script>
     // 立即应用缓存的主题，避免 FOUC (Flash of Unstyled Content)
-    (function() {
+    (function () {
       try {
         const cachedTheme = localStorage.getItem('zen-theme-cache');
         if (cachedTheme) {
@@ -20,9 +20,145 @@
       }
     })();
   </script>
+  <style>
+    :root {
+      --splash-bg: #ffffff;
+      --splash-text: #1d1d1f;
+    }
+
+    [data-theme='dark'] {
+      --splash-bg: #1c1c1e;
+      --splash-text: #f5f5f7;
+    }
+
+    [data-theme='tea'] {
+      --splash-bg: #f5f0e8;
+      --splash-text: #3c3630;
+    }
+
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--splash-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
+    }
+
+    .splash-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .splash-logo {
+      width: 50px;
+      height: 50px;
+      color: var(--splash-text);
+      opacity: 0.9;
+    }
+
+    /* Floating dots container - positioned above the cup */
+    /* Adjust 'left' or 'margin-left' to align with the cup body, excluding the handle */
+    .splash-dots {
+      position: absolute;
+      top: 5px;
+      left: calc(50% - 6px);
+      /* Shift left to align with cup body (excluding handle) */
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+    }
+
+    .splash-dot {
+      width: 5px;
+      height: 5px;
+      background-color: var(--splash-text);
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: splash-bounce 1.4s infinite ease-in-out both;
+    }
+
+    .splash-dot:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .splash-dot:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    .splash-dot:nth-child(3) {
+      animation-delay: 0s;
+    }
+
+    @keyframes splash-bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0);
+        opacity: 0.5;
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .splash-hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none;
+    }
+  </style>
 </head>
 
 <body>
+  <div id="splash-screen">
+    <div class="splash-content">
+      <!-- Three floating dots -->
+      <div class="splash-dots">
+        <div class="splash-dot"></div>
+        <div class="splash-dot"></div>
+        <div class="splash-dot"></div>
+      </div>
+      <!-- Coffee Cup Logo (Steam removed) -->
+      <svg class="splash-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Check if this is a refresh (sessionStorage persists on refresh, clears on close)
+      // BUT electron behavior might vary. Usually sessionStorage is good for "per session".
+      // The user specifically said "Never show on refresh... only when app closed and restarted".
+      try {
+        if (sessionStorage.getItem('witnote_splash_shown')) {
+          var splash = document.getElementById('splash-screen');
+          if (splash) {
+            splash.style.display = 'none'; // Hide immediately without animation
+          }
+        } else {
+          sessionStorage.setItem('witnote_splash_shown', 'true');
+        }
+      } catch (e) {
+        console.warn('Splash screen logic failed', e);
+      }
+    })();
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

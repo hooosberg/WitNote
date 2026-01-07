@@ -2,7 +2,8 @@
     "app": {
         "name": "WitNote",
         "tagline": "Smart Core, Simple Form",
-        "description": "WitNote is a privacy-focused local note-taking app with built-in AI assistant to help you organize thoughts, polish articles, and answer questions. All data is stored locally, and AI models can run completely offline."
+        "description": "WitNote is a privacy-focused local note-taking app with built-in AI assistant to help you organize thoughts, polish articles, and answer questions. All data is stored locally, and AI models can run completely offline.",
+        "noSiblingFile": "No sibling {{ext}} file found"
     },
     "sidebar": {
         "files": "Files",
@@ -20,7 +21,8 @@
         "disconnectMessage": "This will disconnect the app from the local folder context, but will NOT delete any files.",
         "disconnectDetail": "All your notes and files will remain safe locally.",
         "emptyFolderHint": "Create a folder below",
-        "emptyGuide": "Please click below to create or link a local folder as your data storage location"
+        "emptyGuide": "Please click below to create or link a local folder as your data storage location",
+        "importFileHint": "Import to"
     },
     "emptyState": {
         "poem": {
@@ -320,7 +322,10 @@
     },
     "gallery": {
         "newArticle": "New Article",
-        "searchPlaceholder": "Search files..."
+        "searchPlaceholder": "Search files...",
+        "moveFileHint": "Move to",
+        "importFileHint": "Import to",
+        "rootFolder": "Root Directory"
     },
     "toast": {
         "fileSaved": "File saved",
@@ -478,5 +483,40 @@
         "noInsightData": "No data available. Trigger autocomplete to view.",
         "time": "Time",
         "chars": "chars"
+    },
+    "viewer": {
+        "loading": "Loading...",
+        "pdfLoading": "Loading PDF...",
+        "docxLoading": "Loading Document...",
+        "loadingPdf": "Loading PDF...",
+        "loadingDoc": "Loading Document...",
+        "loadingImage": "Loading Image...",
+        "loadError": "Load Failed",
+        "unsupportedFormat": "Unsupported file format:",
+        "readOnly": "Read-only",
+        "preview": "Preview"
+    },
+    "dropZone": {
+        "left": "Drop to Left",
+        "right": "Drop to Right"
+    },
+    "file": {
+        "readOnlyPreview": "Read-only Preview / Not Editable",
+        "previewImage": "Preview Image",
+        "moveErrorSubdirectory": "Cannot move a folder into its own subdirectory",
+        "moveErrorDuplicate": "A file or folder with the same name already exists at the target location",
+        "dragParseFailed": "Failed to parse drag data",
+        "untitledFolder": "Untitled Folder"
+    },
+    "export": {
+        "noActiveFile": "No active file",
+        "onlyMarkdownSupported": "Only Markdown files are supported for export",
+        "pdfExportFailed": "Export to PDF failed:",
+        "exportFailed": "Export failed",
+        "pdfExportSuccess": "PDF Export Successful",
+        "exportFailedWithReason": "Export failed: {{error}}"
+    },
+    "error": {
+        "unknown": "Unknown error"
     }
 }

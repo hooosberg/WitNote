@@ -1,7 +1,7 @@
 {
   "name": "witnote",
   "private": true,
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "智简笔记本 - 大智若简的本地化 AI 写作伴侣 (WitNote)",
   "main": "dist-electron/main.js",
   "author": "hooosberg <zikedece@proton.me>",
@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:mas": "tsc && vite build && electron-builder --mac mas",
+    "build:mac:dmg-test": "tsc && vite build && SKIP_NOTARIZE=true electron-builder --mac dmg",
     "build:win": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --win",
     "build:linux": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --linux",
     "preview": "vite preview",
@@ -65,6 +66,77 @@
       "!dist/models",
       "dist-electron/**/*",
       "package.json"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "md",
+        "name": "Markdown Document",
+        "description": "Markdown text file",
+        "role": "Viewer",
+        "mimeType": "text/markdown"
+      },
+      {
+        "ext": "markdown",
+        "name": "Markdown Document",
+        "description": "Markdown text file",
+        "role": "Viewer"
+      },
+      {
+        "ext": "txt",
+        "name": "Text File",
+        "description": "Plain text file",
+        "role": "Viewer",
+        "mimeType": "text/plain"
+      },
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "description": "Portable Document Format",
+        "role": "Viewer",
+        "mimeType": "application/pdf"
+      },
+      {
+        "ext": "docx",
+        "name": "Word Document",
+        "description": "Microsoft Word Document",
+        "role": "Viewer",
+        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      {
+        "ext": "jpg",
+        "name": "JPEG Image",
+        "description": "JPEG image file",
+        "role": "Viewer",
+        "mimeType": "image/jpeg"
+      },
+      {
+        "ext": "jpeg",
+        "name": "JPEG Image",
+        "description": "JPEG image file",
+        "role": "Viewer",
+        "mimeType": "image/jpeg"
+      },
+      {
+        "ext": "png",
+        "name": "PNG Image",
+        "description": "PNG image file",
+        "role": "Viewer",
+        "mimeType": "image/png"
+      },
+      {
+        "ext": "webp",
+        "name": "WebP Image",
+        "description": "WebP image file",
+        "role": "Viewer",
+        "mimeType": "image/webp"
+      },
+      {
+        "ext": "gif",
+        "name": "GIF Image",
+        "description": "GIF image file",
+        "role": "Viewer",
+        "mimeType": "image/gif"
+      }
     ],
     "mac": {
       "target": [

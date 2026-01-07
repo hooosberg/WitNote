@@ -2,7 +2,8 @@
     "app": {
         "name": "WitNote",
         "tagline": "Smart Core, Simple Form",
-        "description": "WitNote ist eine datenschutzorientierte lokale KI-Notiz-App. Mit integrierter Ollama-Engine und minimalistischer Benutzeroberfläche sind Sie sofort startklar. Keine Cloud-Abhängigkeit, keine Datenschutzsorgen."
+        "description": "WitNote ist eine datenschutzorientierte lokale KI-Notiz-App. Mit integrierter Ollama-Engine und minimalistischer Benutzeroberfläche sind Sie sofort startklar. Keine Cloud-Abhängigkeit, keine Datenschutzsorgen.",
+        "noSiblingFile": "Keine gleichnamige {{ext}}-Datei gefunden"
     },
     "sidebar": {
         "files": "Dateien",
@@ -20,7 +21,8 @@
         "disconnectMessage": "Dies trennt die App vom lokalen Ordner, löscht aber KEINE Dateien.",
         "disconnectDetail": "Alle Ihre Notizen und Dateien bleiben lokal sicher.",
         "emptyFolderHint": "Ordner unten erstellen",
-        "emptyGuide": "Klicken Sie unten, um einen lokalen Ordner zu erstellen oder zu verknüpfen"
+        "emptyGuide": "Klicken Sie unten, um einen lokalen Ordner zu erstellen oder zu verknüpfen",
+        "importFileHint": "Importieren nach"
     },
     "emptyState": {
         "poem": {
@@ -307,7 +309,10 @@
         "delete": "Löschen"
     },
     "gallery": {
-        "newArticle": "Neuer Artikel"
+        "newArticle": "Neuer Artikel",
+        "moveFileHint": "Verschieben nach",
+        "importFileHint": "Importieren nach",
+        "rootFolder": "Stammverzeichnis"
     },
     "toast": {
         "fileSaved": "Datei gespeichert",
@@ -465,5 +470,34 @@
         "noInsightData": "Keine Daten verfügbar. Lösen Sie die Autovervollständigung aus.",
         "time": "Zeit",
         "chars": "Zeichen"
+    },
+    "viewer": {
+        "loadingPdf": "PDF wird geladen...",
+        "loadingDoc": "Dokument wird geladen...",
+        "loadingImage": "Bild wird geladen...",
+        "unsupportedFormat": "Nicht unterstütztes Dateiformat:"
+    },
+    "dropZone": {
+        "left": "Nach links verschieben",
+        "right": "Nach rechts verschieben",
+        "top": "Nach oben verschieben",
+        "bottom": "Nach unten verschieben",
+        "center": "In die Mitte verschieben"
+    },
+    "file": {
+        "untitledFolder": "Unbenannter Ordner",
+        "readOnlyPreview": "Schreibgeschützte Vorschau",
+        "previewImage": "Bildvorschau",
+        "moveErrorSubdirectory": "Ordner kann nicht in sein eigenes Unterverzeichnis verschoben werden",
+        "moveErrorDuplicate": "Am Zielort existiert bereits eine Datei oder ein Ordner mit demselben Namen",
+        "dragParseFailed": "Parsen der Drag-Daten fehlgeschlagen"
+    },
+    "export": {
+        "noActiveFile": "Keine aktive Datei",
+        "onlyMarkdownSupported": "Nur Markdown-Dateien werden für den Export unterstützt",
+        "pdfExportFailed": "PDF-Export fehlgeschlagen:",
+        "exportFailed": "Export fehlgeschlagen",
+        "pdfExportSuccess": "PDF-Export erfolgreich",
+        "exportFailedWithReason": "Export fehlgeschlagen: {{error}}"
     }
 }

@@ -549,7 +549,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                                 className={`status-btn ${(engineStore?.currentEngine === 'openai' && engineStore.cloudApiStatus === 'error') ||
                                     (engineStore?.currentEngine === 'ollama' && !engineStore.ollamaAvailable)
                                     ? 'error'
-                                    : engineStore?.currentEngine === 'openai' && engineStore.cloudApiStatus === 'untested'
+                                    : engineStore?.currentEngine === 'openai' && engineStore.cloudApiStatus === 'idle'
                                         ? 'untested'
                                         : 'disconnected'
                                     }`}

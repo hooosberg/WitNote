@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splash Screen Preview</title>
+    <style>
+        /* =========================================
+     * 调节参数区域
+     * 您可以在这里修改数值来调整布局
+     * ========================================= */
+        :root {
+            /* 背景和颜色 */
+            --splash-bg: #ffffff;
+            --splash-text: #1d1d1f;
+
+            /* 咖啡杯大小 */
+            --logo-size: 50px;
+
+            /* 动画点点的位置 */
+            /* 垂直位置：负数越小越靠上 */
+            --dots-top-offset: 5px;
+
+            /* 水平偏移：为了对齐杯身而不是把手 */
+            /* 如果觉得偏右，减小这个值；偏左，增大这个值 */
+            /* 50% 是绝对居中，-6px 是向左微调以抵消把手的宽度 */
+            --dots-left-offset: calc(50% - 6px);
+
+            /* 动画点点的大小和间距 */
+            --dot-size: 5px;
+            --dot-gap: 5px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            /* 预览页背景灰色，方便看白色画布 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        #splash-preview-container {
+            width: 400px;
+            height: 300px;
+            background-color: var(--splash-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .splash-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .splash-logo {
+            width: var(--logo-size);
+            height: var(--logo-size);
+            color: var(--splash-text);
+            opacity: 0.9;
+        }
+
+        /* Floating dots container */
+        .splash-dots {
+            position: absolute;
+            top: var(--dots-top-offset);
+            left: var(--dots-left-offset);
+            transform: translateX(-50%);
+            display: flex;
+            gap: var(--dot-gap);
+        }
+
+        .splash-dot {
+            width: var(--dot-size);
+            height: var(--dot-size);
+            background-color: var(--splash-text);
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: splash-bounce 1.4s infinite ease-in-out both;
+        }
+
+        .splash-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .splash-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        .splash-dot:nth-child(3) {
+            animation-delay: 0s;
+        }
+
+        @keyframes splash-bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: -60px;
+            color: #666;
+            text-align: center;
+            width: 100%;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="splash-preview-container">
+        <div class="splash-content">
+            <!-- Three floating dots -->
+            <div class="splash-dots">
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+            </div>
+            <!-- Coffee Cup Logo (Steam removed) -->
+            <svg class="splash-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+                <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="instruction">
+        编辑 <code>public/splash_preview.html</code> 文件中的 CSS 变量来调节位置。<br>
+        保存文件后刷新此页面即可看到效果。
+    </div>
+
+</body>
+
+</html>

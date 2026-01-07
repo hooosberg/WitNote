@@ -184,13 +184,34 @@ export function useEngineStore(options: UseEngineStoreOptions = {}): UseEngineSt
                 console.log('📦 已缓存的模型列表:', cached);
                 setWebllmCachedModels(cached);
 
-                // 自动初始化：如果当前引擎是 WebLLM 且选中的模型已缓存
+                // 自动初始化逻辑
                 const savedEngine = localStorage.getItem(STORAGE_KEYS.CURRENT_ENGINE);
                 const savedModel = localStorage.getItem(STORAGE_KEYS.WEBLLM_MODEL);
 
+                let modelToInit: string | null = null;
+
+                // 情况1: 用户上次使用的是 WebLLM 且模型在缓存中
                 if (savedEngine === 'webllm' && savedModel && cached.includes(savedModel)) {
                     console.log('🚀 自动初始化 WebLLM 引擎:', savedModel);
+                    modelToInit = savedModel;
+                }
+                // 情况2: 新安装(无偏好设置)但检测到有缓存的内置模型 -> 优先使用内置模型
+                else if (!savedEngine && cached.length > 0) {
+                    const firstCachedModel = cached[0];
+                    console.log('🚀 检测到内置模型缓存，自动切换至 WebLLM:', firstCachedModel);
 
+                    // 切换状态
+                    setEngine('webllm');
+
+                    // 选择模型(这会更新 localStorage)
+                    // 注意：setEngine 会触发 selectModel，但这里我们需要显式确保选中缓存的模型
+                    // 并且由于 React 状态更新是异步的，我们在下面初始化时直接使用 modelToInit
+                    selectModel(firstCachedModel);
+
+                    modelToInit = firstCachedModel;
+                }
+
+                if (modelToInit) {
                     // 创建并初始化引擎
                     const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
 
@@ -198,7 +219,7 @@ export function useEngineStore(options: UseEngineStoreOptions = {}): UseEngineSt
                     setWebllmProgress({ progress: 0, text: '正在加载模型...' });
 
                     try {
-                        const engine = await CreateMLCEngine(savedModel, {
+                        const engine = await CreateMLCEngine(modelToInit, {
                             initProgressCallback: (report) => {
                                 setWebllmProgress({
                                     progress: report.progress,
@@ -208,7 +229,7 @@ export function useEngineStore(options: UseEngineStoreOptions = {}): UseEngineSt
                         });
 
                         // 创建 WebLLMEngine 包装器并设置内部引擎
-                        const webllmEngine = new WebLLMEngine(savedModel);
+                        const webllmEngine = new WebLLMEngine(modelToInit);
                         (webllmEngine as any).engine = engine;
                         (webllmEngine as any)._isReady = true;
 

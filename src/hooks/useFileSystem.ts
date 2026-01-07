@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // 文件类型常量
 export const EDITABLE_EXTENSIONS = ['.md', '.txt']
@@ -82,6 +83,7 @@ const STORAGE_KEYS = {
 }
 
 export function useFileSystem(): UseFileSystemReturn {
+    const { t } = useTranslation()
     // Vault 状态
     const [vaultPath, setVaultPath] = useState<string | null>(null)
     const [isInitialized, setIsInitialized] = useState(false)
@@ -278,6 +280,9 @@ export function useFileSystem(): UseFileSystemReturn {
             if (path) {
                 setVaultPath(path)
                 await window.fs.watch(path)
+                // 派发 vault 变化事件，通知其他 hooks 重新加载设置
+                window.dispatchEvent(new CustomEvent('vault-changed'))
+                console.log('📂 Vault 已连接，派发 vault-changed 事件')
                 return true
             }
             return false
@@ -665,14 +670,14 @@ export function useFileSystem(): UseFileSystemReturn {
             // 检查是否移动到自身或子目录（防止循环引用）
             if (sourcePath === newPath) return false
             if (newPath.startsWith(sourcePath + '/')) {
-                console.error('不能将文件夹移动到其子目录中')
+                console.error(t('file.moveErrorSubdirectory'))
                 return false
             }
 
             // 检查目标是否已存在同名文件
             const existingItem = findNodeByPath(fileTree, newPath)
             if (existingItem) {
-                console.error('目标位置已存在同名文件或文件夹')
+                console.error(t('file.moveErrorDuplicate'))
                 return false
             }
 
@@ -882,12 +887,12 @@ export function useFileSystem(): UseFileSystemReturn {
      */
     const exportToPdf = useCallback(async (): Promise<{ success: boolean, error?: string }> => {
         if (!activeFile) {
-            return { success: false, error: '没有活动文件' }
+            return { success: false, error: t('export.noActiveFile') }
         }
 
         const ext = activeFile.extension?.toLowerCase()
         if (ext !== '.md') {
-            return { success: false, error: '只支持 Markdown 文件导出' }
+            return { success: false, error: t('export.onlyMarkdownSupported') }
         }
 
         try {
@@ -919,7 +924,7 @@ export function useFileSystem(): UseFileSystemReturn {
             console.error('导出 PDF 失败:', error)
             return {
                 success: false,
-                error: error instanceof Error ? error.message : '导出失败'
+                error: error instanceof Error ? error.message : t('export.exportFailed')
             }
         }
     }, [activeFile, fileContent, refreshTree])

@@ -105,6 +105,12 @@ interface VaultAPI {
     loadEngineConfig(): Promise<Record<string, unknown> | null>
 }
 
+// 外部文件打开 API（用于文件关联功能）
+interface ExternalFileAPI {
+    onOpenExternalFile(callback: (filePath: string) => void): () => void
+    getExternalFilePath(): Promise<string | null>
+}
+
 // 全局 Window 接口扩展
 declare global {
     interface Window {
@@ -117,6 +123,7 @@ declare global {
         ollama: OllamaAPI
         shortcuts: ShortcutsAPI
         vault: VaultAPI
+        externalFile: ExternalFileAPI
     }
 }
 

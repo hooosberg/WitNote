@@ -6,7 +6,7 @@ interface ImageViewerProps {
     vaultPath: string
 }
 
-const ImageViewer: React.FC<ImageViewerProps> = ({ filePath, vaultPath }) => {
+const ImageViewer: React.FC<ImageViewerProps> = ({ filePath, vaultPath: _ }) => {
     const [imageUrl, setImageUrl] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)

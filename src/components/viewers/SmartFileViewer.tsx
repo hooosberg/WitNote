@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react'
 import Editor from '../Editor'
 import { FileNode } from '../../hooks/useFileSystem'
 import { EDITABLE_EXTENSIONS, IMAGE_EXTENSIONS } from '../../hooks/useFileSystem'
+import { useTranslation } from 'react-i18next'
 
 // 懒加载 Viewers
 const PdfViewer = lazy(() => import('./PdfViewer'))
@@ -25,6 +26,7 @@ const SmartFileViewer: React.FC<SmartFileViewerProps> = ({
     previewMode,
     ...editorProps
 }) => {
+    const { t } = useTranslation()
     const extension = file.extension?.toLowerCase() || ''
 
     // 可编辑文件 → Editor
@@ -47,7 +49,7 @@ const SmartFileViewer: React.FC<SmartFileViewerProps> = ({
     // PDF → PdfViewer
     if (extension === '.pdf') {
         return (
-            <Suspense fallback={<div className="viewer-loading">加载 PDF 中...</div>}>
+            <Suspense fallback={<div className="viewer-loading">{t('viewer.loadingPdf')}</div>}>
                 <PdfViewer filePath={file.path} />
             </Suspense>
         )
@@ -56,7 +58,7 @@ const SmartFileViewer: React.FC<SmartFileViewerProps> = ({
     // DOCX → DocxViewer
     if (extension === '.docx') {
         return (
-            <Suspense fallback={<div className="viewer-loading">加载文档中...</div>}>
+            <Suspense fallback={<div className="viewer-loading">{t('viewer.loadingDoc')}</div>}>
                 <DocxViewer filePath={file.path} />
             </Suspense>
         )
@@ -65,7 +67,7 @@ const SmartFileViewer: React.FC<SmartFileViewerProps> = ({
     // 图片 → ImageViewer
     if (IMAGE_EXTENSIONS.includes(extension)) {
         return (
-            <Suspense fallback={<div className="viewer-loading">加载图片中...</div>}>
+            <Suspense fallback={<div className="viewer-loading">{t('viewer.loadingImage')}</div>}>
                 <ImageViewer filePath={file.path} vaultPath={vaultPath} />
             </Suspense>
         )
@@ -74,7 +76,7 @@ const SmartFileViewer: React.FC<SmartFileViewerProps> = ({
     // 不支持的格式
     return (
         <div className="unsupported-file">
-            <p>不支持的文件格式: {extension}</p>
+            <p>{t('viewer.unsupportedFormat')} {extension}</p>
         </div>
     )
 }

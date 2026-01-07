@@ -17724,6 +17724,37 @@ const IGNORED_PATTERNS = [
 ];
 let mainWindow = null;
 let smartAutocompleteEnabled = true;
+let pendingFilePath = null;
+const SUPPORTED_FILE_EXTENSIONS = [
+  ".md",
+  ".markdown",
+  ".txt",
+  // 文本
+  ".pdf",
+  ".docx",
+  // 文档
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp"
+  // 图片
+];
+function getFileFromArgs() {
+  if (VITE_DEV_SERVER_URL) return null;
+  const args = process.argv.slice(1);
+  for (const arg of args) {
+    if (arg.startsWith("-")) continue;
+    if (fs$1.existsSync(arg)) {
+      const ext = path.extname(arg).toLowerCase();
+      if (SUPPORTED_FILE_EXTENSIONS.includes(ext)) {
+        console.log("📂 从命令行参数获取文件:", arg);
+        return arg;
+      }
+    }
+  }
+  return null;
+}
 function shouldIgnore(name) {
   if (name.startsWith(".")) return true;
   return IGNORED_PATTERNS.some((pattern2) => {
@@ -17936,6 +17967,10 @@ function setupIpcHandlers() {
     const fullPath = path.join(vaultPath, relativePath);
     const buffer = await fs$1.promises.readFile(fullPath);
     return buffer.buffer;
+  });
+  electron.ipcMain.handle("fs:getExternalFilePath", () => {
+    const filePath = pendingFilePath || getFileFromArgs();
+    return filePath;
   });
   electron.ipcMain.handle("fs:copyExternalFile", async (_event, externalPath, targetDir) => {
     const vaultPath = store.get("vaultPath");
@@ -18906,6 +18941,12 @@ function createWindow() {
   });
   mainWindow.webContents.on("did-finish-load", () => {
     console.log("✅ 页面加载完成");
+    const filePath = pendingFilePath || getFileFromArgs();
+    if (filePath && mainWindow) {
+      console.log("📤 发送外部文件给渲染进程:", filePath);
+      mainWindow.webContents.send("open-external-file", filePath);
+      pendingFilePath = null;
+    }
   });
 }
 electron.app.whenReady().then(async () => {
@@ -18930,6 +18971,15 @@ electron.app.whenReady().then(async () => {
       createWindow();
     }
   });
+});
+electron.app.on("open-file", (event, filePath) => {
+  event.preventDefault();
+  console.log("📂 macOS open-file 事件:", filePath);
+  if (mainWindow && mainWindow.webContents) {
+    mainWindow.webContents.send("open-external-file", filePath);
+  } else {
+    pendingFilePath = filePath;
+  }
 });
 electron.app.on("window-all-closed", () => {
   if (watcher) {

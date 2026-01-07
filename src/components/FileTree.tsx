@@ -265,7 +265,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                         onMove(data.path, '')
                     }
                 } catch {
-                    console.error('拖拽数据解析失败')
+                    console.error(t('file.dragParseFailed'))
                 }
             }}
         >
@@ -299,7 +299,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                                 onMove(data.path, '')
                             }
                         } catch {
-                            console.error('拖拽数据解析失败')
+                            console.error(t('file.dragParseFailed'))
                         }
                     }}
                     style={{ paddingLeft: '12px' }}
@@ -457,7 +457,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
                             onMove(data.path, '')
                         }
                     } catch {
-                        console.error('拖拽数据解析失败')
+                        console.error(t('file.dragParseFailed'))
                     }
                 }}
             />
@@ -528,8 +528,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     isExpanded: isExpandedProp,
     onToggleExpanded,
     onFileDragStart,
+
     onFileDragEnd
 }) => {
+    const { t } = useTranslation()
     // 如果有外部展开状态控制则使用，否则回退到本地状态
     const [localExpanded, setLocalExpanded] = useState(false)
     const expanded = isExpandedProp ? isExpandedProp(node.path) : localExpanded
@@ -552,7 +554,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
     const handleEditBlur = () => {
         if (onEditComplete) {
-            const newName = editValue.trim() || '未命名文件夹'
+            const newName = editValue.trim() || t('file.untitledFolder')
             onEditComplete(node.path, newName)
         }
     }

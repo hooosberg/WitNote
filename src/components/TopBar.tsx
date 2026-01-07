@@ -44,7 +44,7 @@ const FormatToggle: React.FC<{
     hasSiblingMd?: boolean  // PDF是否有同名MD
     hasSiblingPdf?: boolean // TXT是否有同名PDF
     onFormatToggle: (format: 'md' | 'txt' | 'pdf') => void
-}> = ({ currentExt, isReadOnly, hasSiblingMd, hasSiblingPdf, onFormatToggle }) => {
+}> = ({ currentExt, isReadOnly: _isReadOnly, hasSiblingMd, hasSiblingPdf: _hasSiblingPdf, onFormatToggle }) => {
     const [expanded, setExpanded] = useState(false)
     const [enableTransition, setEnableTransition] = useState(false)
 
@@ -326,7 +326,7 @@ const FocusModeToggle: React.FC<{
 
 export const TopBar: React.FC<TopBarProps> = ({
     leftCollapsed,
-    rightCollapsed,
+    rightCollapsed: _,
     previewMode = 'edit',
     onPreviewModeChange,
     focusMode = false,

@@ -2,7 +2,8 @@
     "app": {
         "name": "WitNote",
         "tagline": "Smart Core, Simple Form",
-        "description": "WitNoteは、プライバシー重視のローカルAIノートアプリです。Ollamaエンジンとシンプルなカード型UIを内蔵し、すぐに使い始められます。クラウド依存なし、プライバシーの懸念なし。"
+        "description": "WitNoteは、プライバシー重視のローカルAIノートアプリです。Ollamaエンジンとシンプルなカード型UIを内蔵し、すぐに使い始められます。クラウド依存なし、プライバシーの懸念なし。",
+        "noSiblingFile": "同名の{{ext}}ファイルが見つかりません"
     },
     "sidebar": {
         "files": "ファイル",
@@ -20,7 +21,8 @@
         "disconnectMessage": "ローカルフォルダとの接続を解除しますが、ファイルは削除されません。",
         "disconnectDetail": "すべてのノートとファイルは安全に保持されます。",
         "emptyFolderHint": "下にフォルダを作成",
-        "emptyGuide": "下のボタンをクリックして、ローカルフォルダを作成またはリンクしてください"
+        "emptyGuide": "下のボタンをクリックして、ローカルフォルダを作成またはリンクしてください",
+        "importFileHint": "インポート先"
     },
     "emptyState": {
         "poem": {
@@ -281,7 +283,10 @@
         "delete": "削除"
     },
     "gallery": {
-        "newArticle": "新規記事"
+        "newArticle": "新規記事",
+        "moveFileHint": "移動先",
+        "importFileHint": "インポート先",
+        "rootFolder": "ルートフォルダ"
     },
     "toast": {
         "fileSaved": "保存しました",
@@ -466,5 +471,34 @@
         "noInsightData": "データがありません。補完を実行して確認してください。",
         "time": "時間",
         "chars": "文字"
+    },
+    "viewer": {
+        "loadingPdf": "PDFを読み込み中...",
+        "loadingDoc": "ドキュメントを読み込み中...",
+        "loadingImage": "画像を読み込み中...",
+        "unsupportedFormat": "サポートされていないファイル形式:"
+    },
+    "dropZone": {
+        "left": "左に配置",
+        "right": "右に配置",
+        "top": "上に配置",
+        "bottom": "下に配置",
+        "center": "中央に配置"
+    },
+    "file": {
+        "untitledFolder": "無題のフォルダ",
+        "readOnlyPreview": "読み取り専用プレビュー",
+        "previewImage": "画像プレビュー",
+        "moveErrorSubdirectory": "フォルダを自身のサブディレクトリに移動することはできません",
+        "moveErrorDuplicate": "同じ名前のファイルまたはフォルダが既に存在します",
+        "dragParseFailed": "ドラッグデータの解析に失敗しました"
+    },
+    "export": {
+        "noActiveFile": "アクティブなファイルがありません",
+        "onlyMarkdownSupported": "エクスポートはMarkdownファイルのみサポートされています",
+        "pdfExportFailed": "PDFへのエクスポートに失敗しました:",
+        "exportFailed": "エクスポートに失敗しました",
+        "pdfExportSuccess": "PDFのエクスポートに成功しました",
+        "exportFailedWithReason": "エクスポートに失敗しました: {{error}}"
     }
 }

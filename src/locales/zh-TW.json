@@ -2,7 +2,8 @@
     "app": {
         "name": "智簡筆記本",
         "tagline": "大智若簡，落筆生花",
-        "description": "智簡筆記本 (WitNote) 是一款注重隱私的本地筆記應用，內建 AI 助手幫助您整理思緒、潤色文章、回答問題。所有數據存儲在本地，AI 模型也可完全離線運行。"
+        "description": "智簡筆記本 (WitNote) 是一款注重隱私的本地筆記應用，內建 AI 助手幫助您整理思緒、潤色文章、回答問題。所有數據存儲在本地，AI 模型也可完全離線運行。",
+        "noSiblingFile": "未找到同名 {{ext}} 檔案"
     },
     "sidebar": {
         "files": "檔案",
@@ -17,7 +18,8 @@
         "linkLocalFolder": "連結本地資料夾",
         "disconnectConfirm": "確定要斷開此資料夾的連結嗎？\n\n⚠️ 這將斷開應用與本地資料夾的連結，但不會刪除資料夾中的任何檔案。\n\n您的所有筆記和檔案都會保留完好。",
         "emptyFolderHint": "在下方新建資料夾",
-        "emptyGuide": "請點擊下方新建或者連結一個本地資料夾作為本地數據存儲位置"
+        "emptyGuide": "請點擊下方新建或者連結一個本地資料夾作為本地數據存儲位置",
+        "importFileHint": "匯入到"
     },
     "emptyState": {
         "poem": {
@@ -394,7 +396,10 @@
         "delete": "刪除"
     },
     "gallery": {
-        "newArticle": "新建文章"
+        "newArticle": "新建文章",
+        "moveFileHint": "移動到",
+        "importFileHint": "匯入到",
+        "rootFolder": "根目錄"
     },
     "toast": {
         "fileSaved": "檔案已保存",
@@ -462,5 +467,34 @@
         "noInsightData": "暫無數據，請觸發一次續寫後查看",
         "time": "生成時間",
         "chars": "字符"
+    },
+    "viewer": {
+        "loadingPdf": "載入 PDF 中...",
+        "loadingDoc": "載入文件中...",
+        "loadingImage": "載入圖片中...",
+        "unsupportedFormat": "不支援的檔案格式："
+    },
+    "dropZone": {
+        "left": "放到左側",
+        "right": "放到右側",
+        "top": "放到上方",
+        "bottom": "放到下方",
+        "center": "放到中間"
+    },
+    "file": {
+        "untitledFolder": "未命名資料夾",
+        "readOnlyPreview": "唯讀預覽 / 不可編輯",
+        "previewImage": "預覽圖片",
+        "moveErrorSubdirectory": "不能將資料夾移動到其子目錄中",
+        "moveErrorDuplicate": "目標位置已存在同名檔案或資料夾",
+        "dragParseFailed": "拖曳資料解析失敗"
+    },
+    "export": {
+        "noActiveFile": "沒有活動檔案",
+        "onlyMarkdownSupported": "只支援 Markdown 檔案匯出",
+        "pdfExportFailed": "匯出 PDF 失敗：",
+        "exportFailed": "匯出失敗",
+        "pdfExportSuccess": "PDF 匯出成功",
+        "exportFailedWithReason": "匯出失敗：{{error}}"
     }
 }

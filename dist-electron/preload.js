@@ -120,4 +120,14 @@ electron.contextBridge.exposeInMainWorld("shortcuts", {
   // 同步智能续写状态到主进程菜单
   syncSmartAutocomplete: (enabled) => electron.ipcRenderer.invoke("menu:syncSmartAutocomplete", enabled)
 });
+electron.contextBridge.exposeInMainWorld("externalFile", {
+  // 监听从系统打开的外部文件
+  onOpenExternalFile: (callback) => {
+    const handler = (_event, filePath) => callback(filePath);
+    electron.ipcRenderer.on("open-external-file", handler);
+    return () => electron.ipcRenderer.removeListener("open-external-file", handler);
+  },
+  // 获取启动时的外部文件路径（用于应用启动后查询）
+  getExternalFilePath: () => electron.ipcRenderer.invoke("fs:getExternalFilePath")
+});
 console.log("🔗 Preload 脚本已加载");

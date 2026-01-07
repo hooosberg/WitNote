@@ -14,6 +14,7 @@ import {
     RECOMMENDED_MODELS
 } from '../services/types';
 import { OllamaService } from '../services/OllamaService';
+import { OpenAIEngine } from '../engines/OpenAIEngine';
 import { UseEngineStoreReturn } from '../store/engineStore';
 import { useSettings } from './useSettings';
 import { getCurrentLanguage } from '../i18n';
@@ -724,12 +725,8 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
                             response = chunks.choices?.[0]?.message?.content || '';
                         } catch (chatError) {
                             // 如果 chat API 失败，尝试直接 generate
-                            console.warn('chat.completions 失败，尝试 generate:', chatError);
-                            if (engine.generate) {
-                                response = await engine.generate(String(prompt));
-                            } else {
-                                throw chatError;
-                            }
+                            console.warn('chat.completions 失败:', chatError);
+                            throw chatError;
                         }
 
                         onToken(response);
@@ -788,10 +785,10 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
                 case 'openai': {
                     // Cloud API 引擎 - 使用 callbacks 对象
                     const engine = engineStore.getEngine();
-                    if (!engine || typeof engine.streamChat !== 'function') {
+                    if (!engine || !('updateConfig' in engine)) {
                         throw new Error('Cloud API 引擎未初始化');
                     }
-                    await engine.streamChat(llmMessages, { onToken, onComplete, onError });
+                    await (engine as OpenAIEngine).streamChat(llmMessages, { onToken, onComplete, onError });
                     break;
                 }
 
@@ -845,8 +842,8 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         switch (engineStore.currentEngine) {
             case 'webllm': {
                 const engine = engineStore.getEngine();
-                if (engine && engine.interruptGenerate) {
-                    engine.interruptGenerate();
+                if (engine && engine.abort) {
+                    engine.abort();
                 }
                 break;
             }

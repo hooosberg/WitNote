@@ -2,7 +2,8 @@
     "app": {
         "name": "智简笔记本",
         "tagline": "大智若简，落笔生花",
-        "description": "智简笔记本 (WitNote) 是一款注重隐私的本地笔记应用，内置 AI 助手帮助您整理思绪、润色文章、回答问题。所有数据存储在本地，AI 模型也可完全离线运行。"
+        "description": "智简笔记本 (WitNote) 是一款注重隐私的本地笔记应用，内置 AI 助手帮助您整理思绪、润色文章、回答问题。所有数据存储在本地，AI 模型也可完全离线运行。",
+        "noSiblingFile": "未找到同名 {{ext}} 文件"
     },
     "sidebar": {
         "files": "文件",
@@ -20,7 +21,8 @@
         "disconnectMessage": "这将断开应用与本地文件夹的连接,但不会删除文件夹中的任何文件。",
         "disconnectDetail": "您的所有笔记和文件都会保留完好",
         "emptyFolderHint": "在下方新建文件夹",
-        "emptyGuide": "请点击下方新建或者链接一个本地文件夹作为本地数据存储位置"
+        "emptyGuide": "请点击下方新建或者链接一个本地文件夹作为本地数据存储位置",
+        "importFileHint": "导入到"
     },
     "emptyState": {
         "poem": {
@@ -320,7 +322,10 @@
     },
     "gallery": {
         "newArticle": "新建文章",
-        "searchPlaceholder": "搜索文件..."
+        "searchPlaceholder": "搜索文件...",
+        "moveFileHint": "移动到",
+        "importFileHint": "导入到",
+        "rootFolder": "根目录"
     },
     "toast": {
         "fileSaved": "文件已保存",
@@ -483,9 +488,35 @@
         "loading": "加载中...",
         "pdfLoading": "加载 PDF 中...",
         "docxLoading": "加载文档中...",
+        "loadingPdf": "加载 PDF 中...",
+        "loadingDoc": "加载文档中...",
+        "loadingImage": "加载图片中...",
         "loadError": "加载失败",
-        "unsupportedFormat": "不支持的文件格式",
+        "unsupportedFormat": "不支持的文件格式:",
         "readOnly": "只读文件",
         "preview": "预览"
+    },
+    "dropZone": {
+        "left": "放到左侧",
+        "right": "放到右侧"
+    },
+    "file": {
+        "readOnlyPreview": "只读预览 / 不可编辑",
+        "previewImage": "预览图片",
+        "moveErrorSubdirectory": "不能将文件夹移动到其子目录中",
+        "moveErrorDuplicate": "目标位置已存在同名文件或文件夹",
+        "dragParseFailed": "拖拽数据解析失败",
+        "untitledFolder": "未命名文件夹"
+    },
+    "export": {
+        "noActiveFile": "没有活动文件",
+        "onlyMarkdownSupported": "只支持 Markdown 文件导出",
+        "pdfExportFailed": "导出 PDF 失败:",
+        "exportFailed": "导出失败",
+        "pdfExportSuccess": "PDF 导出成功",
+        "exportFailedWithReason": "导出失败: {{error}}"
+    },
+    "error": {
+        "unknown": "未知错误"
     }
 }

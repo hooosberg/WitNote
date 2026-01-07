@@ -87,6 +87,23 @@ const AppContent: React.FC = () => {
         } else if (window.platform?.isMac) {
             document.body.classList.add('platform-mac')
         }
+
+        // Hide splash screen after app mounts
+        const splash = document.getElementById('splash-screen')
+        if (splash && splash.style.display !== 'none') {
+            // Give a small buffer to ensure React defines the UI
+            setTimeout(() => {
+                splash.classList.add('splash-hidden')
+                // Remove from DOM after transition
+                setTimeout(() => {
+                    splash.remove()
+                }, 600)
+            }, 500) // Keep visible for at least 500ms for branding effect (optional, or make it 0 for instant)
+        } else if (splash) {
+            // If it was hidden by logic (refresh), just remove it
+            splash.remove()
+        }
+
         return () => {
             document.body.classList.remove('platform-windows', 'platform-mac')
         }
@@ -518,6 +535,7 @@ const AppContent: React.FC = () => {
 
     // 自动根据文件类型切换编辑模式
     // 当切换到不同类型的文件时，自动调整 previewMode 到合适的模式
+    // 注意：只在文件路径变化时触发，不监听 previewMode，避免阻止用户手动切换模式
     useEffect(() => {
         if (!activeFile) return
 
@@ -526,22 +544,16 @@ const AppContent: React.FC = () => {
         const readOnlyFormats = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'webp']
         const isReadOnly = readOnlyFormats.includes(ext)
 
-        // 根据文件类型主动切换到最佳模式
+        // 根据文件类型设置初始模式（仅在切换文件时）
         if (isReadOnly) {
             // 只读文件（PDF/图片/DOCX）→ 必须使用 preview 模式
-            if (previewMode !== 'preview') {
-                setPreviewMode('preview')
-            }
+            setPreviewMode('preview')
         } else {
-            // 可编辑文件（MD/TXT）→ 优先使用 edit 模式
-            // 但如果当前在 split 模式，保持 split（用户可能在双栏编辑）
-            if (previewMode === 'preview') {
-                // 从 preview 切换到 edit（因为可编辑文件默认应该是编辑模式）
-                setPreviewMode('edit')
-            }
-            // 如果是 edit 或 split，保持不变
+            // 可编辑文件（MD/TXT）→ 自动切换到 edit 模式
+            // 这样从只读文件切换到可编辑文件时，会自动进入编辑模式
+            setPreviewMode('edit')
         }
-    }, [activeFile?.path, previewMode]) // 监听文件路径和当前模式
+    }, [activeFile?.path]) // 只监听文件路径变化，不监听 previewMode
 
     // 加载文件摘要函数
     const loadFilePreviews = async (files: FileNode[]): Promise<Map<string, string>> => {
@@ -722,6 +734,107 @@ const AppContent: React.FC = () => {
             window.shortcuts.syncSmartAutocomplete(settings.autocompleteEnabled)
         }
     }, [settings.autocompleteEnabled])
+
+    // 监听外部文件打开事件（通过文件关联或右键打开）
+    useEffect(() => {
+        if (!window.externalFile) return
+
+        // 处理外部文件打开
+        const handleExternalFileOpen = async (absolutePath: string) => {
+            console.log('📂 收到外部文件打开请求:', absolutePath)
+
+            // 如果还没有连接笔记本，提示用户
+            if (!vaultPath) {
+                showToast('warning', t('file.externalFileNoVault', '请先选择一个笔记本目录'))
+                return
+            }
+
+            // 检查文件是否在当前 vault 内
+            const normalizedPath = absolutePath.replace(/\\/g, '/')
+            const normalizedVaultPath = vaultPath.replace(/\\/g, '/')
+
+            // 获取文件名和扩展名
+            const fileName = normalizedPath.split('/').pop() || ''
+            const ext = fileName.includes('.') ? '.' + fileName.split('.').pop()?.toLowerCase() : ''
+
+            // 判断是否为可编辑文件
+            const editableExtensions = ['.md', '.markdown', '.txt']
+            const isEditableFile = editableExtensions.includes(ext)
+
+            if (normalizedPath.startsWith(normalizedVaultPath + '/')) {
+                // 文件已在 vault 内，直接打开
+                const relativePath = normalizedPath.slice(normalizedVaultPath.length + 1)
+
+                const fileNode: FileNode = {
+                    name: fileName,
+                    path: relativePath,
+                    isDirectory: false,
+                    extension: ext
+                }
+
+                openFile(fileNode)
+                // 根据文件类型设置模式
+                if (isEditableFile) {
+                    setPreviewMode('edit')
+                } else {
+                    setPreviewMode('preview')
+                }
+                showToast('success', t('file.openedFile', '已打开文件: {{name}}', { name: fileName }))
+            } else {
+                // 文件不在 vault 内，复制到笔记本目录后打开
+                // 这样可以规避 macOS 沙盒权限问题
+                try {
+                    showToast('info', t('file.importingFile', '正在导入文件...'))
+
+                    // 使用现有的复制外部文件 API，复制到根目录
+                    const relativePath = await window.fs.copyExternalFile(absolutePath, '')
+
+                    if (relativePath) {
+                        // 先刷新文件树，确保侧边栏显示新导入的文件
+                        await fileSystem.refreshTree()
+
+                        const copiedFileName = relativePath.split('/').pop() || fileName
+
+                        const fileNode: FileNode = {
+                            name: copiedFileName,
+                            path: relativePath,
+                            isDirectory: false,
+                            extension: ext
+                        }
+
+                        // 打开导入的文件
+                        await openFile(fileNode)
+                        // 根据文件类型设置模式
+                        if (isEditableFile) {
+                            setPreviewMode('edit')
+                        } else {
+                            setPreviewMode('preview')
+                        }
+                        showToast('success', t('file.importedAndOpened', '已导入并打开: {{name}}', { name: copiedFileName }))
+                    } else {
+                        showToast('error', t('file.importFailed', '文件导入失败'))
+                    }
+                } catch (error) {
+                    console.error('导入外部文件失败:', error)
+                    showToast('error', t('file.importError', '导入文件时出错: {{error}}', { error: String(error) }))
+                }
+            }
+        }
+
+        // 监听外部文件打开事件（应用运行时触发）
+        const unsubscribe = window.externalFile.onOpenExternalFile(handleExternalFileOpen)
+
+        // 应用启动时检查是否有待打开的文件
+        window.externalFile.getExternalFilePath().then((filePath) => {
+            if (filePath) {
+                handleExternalFileOpen(filePath)
+            }
+        })
+
+        return () => {
+            unsubscribe()
+        }
+    }, [vaultPath, openFile, showToast, t, setPreviewMode, fileSystem])
 
     // 关闭菜单（点击外部区域时）
     useEffect(() => {
@@ -916,7 +1029,7 @@ const AppContent: React.FC = () => {
         return (
             <div className="app-loading">
                 <div className="loading-spinner">🧘</div>
-                <p>正在初始化...</p>
+                <p>{t('chat.initializing')}</p>
             </div>
         )
     }
@@ -1284,7 +1397,7 @@ const AppContent: React.FC = () => {
                             await openFile(targetFile)
                             return true
                         } else {
-                            showToast('warning', `⚠️ 未找到同名 ${targetExt.toUpperCase()} 文件`)
+                            showToast('warning', t('app.noSiblingFile', { ext: targetExt.toUpperCase() }))
                             return false
                         }
                     }
@@ -1295,7 +1408,7 @@ const AppContent: React.FC = () => {
                             // MD → PDF: 执行导出并切换
                             const result = await exportToPdf()
                             if (result.success) {
-                                showToast('success', '✅ PDF 导出成功')
+                                showToast('success', t('export.pdfExportSuccess'))
                                 const { baseName, dir } = getPathParts()
                                 const pdfPath = dir ? `${dir}/${baseName}.pdf` : `${baseName}.pdf`
 
@@ -1312,7 +1425,7 @@ const AppContent: React.FC = () => {
                                 }
                                 await openFile(pdfNode)
                             } else {
-                                showToast('error', `❌ 导出失败: ${result.error || '未知错误'}`)
+                                showToast('error', t('export.exportFailedWithReason', { error: result.error || t('error.unknown') }))
                             }
                         } else if (format === 'txt') {
                             // MD → TXT: 格式转换
@@ -1442,7 +1555,7 @@ const AppContent: React.FC = () => {
                                 <div className="external-drop-overlay">
                                     <div className="external-drop-content">
                                         <Plus size={32} strokeWidth={1.5} />
-                                        <span>{t('sidebar.importFileHint', '导入到')} <strong>{externalFileDragInfo.targetFolder}</strong></span>
+                                        <span>{t('sidebar.importFileHint')} <strong>{externalFileDragInfo.targetFolder}</strong></span>
                                     </div>
                                 </div>
                             )}
@@ -1502,7 +1615,7 @@ const AppContent: React.FC = () => {
                                                 }
                                             }
                                         } catch {
-                                            console.error('拖拽数据解析失败')
+                                            console.error(t('file.dragParseFailed'))
                                         }
                                     }
                                 }}
@@ -1550,7 +1663,7 @@ const AppContent: React.FC = () => {
                                                         }
                                                     }
                                                 } catch {
-                                                    console.error('拖拽数据解析失败')
+                                                    console.error(t('file.dragParseFailed'))
                                                 }
                                             }}
                                             style={{ paddingLeft: '12px' }}
@@ -1582,7 +1695,7 @@ const AppContent: React.FC = () => {
                                                 onDelete={handleDelete}
                                                 onCreateFolder={async (inDir) => {
                                                     // 直接创建"未命名文件夹"并进入编辑状态
-                                                    const actualPath = await createNewFolder('未命名文件夹', inDir)
+                                                    const actualPath = await createNewFolder(t('file.untitledFolder'), inDir)
                                                     if (actualPath) {
                                                         setEditingFolderPath(actualPath)
                                                     }
@@ -1695,7 +1808,7 @@ const AppContent: React.FC = () => {
                                 >
                                     <button onClick={async () => {
                                         // 直接在根目录创建"未命名文件夹"并进入编辑状态
-                                        const actualPath = await createNewFolder('未命名文件夹')
+                                        const actualPath = await createNewFolder(t('file.untitledFolder'))
                                         if (actualPath) {
                                             setEditingFolderPath(actualPath)
                                         }
@@ -2005,7 +2118,7 @@ const AppContent: React.FC = () => {
                                             <div className="gallery-drop-overlay">
                                                 <div className="gallery-drop-content">
                                                     <FolderInput size={32} strokeWidth={1.5} />
-                                                    <span>{t('gallery.moveFileHint', '移动到')} <strong>{galleryDragInfo.targetFolder}</strong></span>
+                                                    <span>{t('gallery.moveFileHint')} <strong>{galleryDragInfo.targetFolder}</strong></span>
                                                 </div>
                                             </div>
                                         )}
@@ -2015,7 +2128,7 @@ const AppContent: React.FC = () => {
                                             <div className="external-drop-overlay">
                                                 <div className="external-drop-content">
                                                     <Plus size={32} strokeWidth={1.5} />
-                                                    <span>{t('gallery.importFileHint', '导入到')} <strong>{externalFileDragInfo.targetFolder}</strong></span>
+                                                    <span>{t('gallery.importFileHint')} <strong>{externalFileDragInfo.targetFolder}</strong></span>
                                                 </div>
                                             </div>
                                         )}
@@ -2156,8 +2269,8 @@ const AppContent: React.FC = () => {
                                                             <div className="card-summary">
                                                                 {(() => {
                                                                     const ext = file.extension?.toLowerCase()
-                                                                    if (ext === '.pdf' || ext === '.docx') return '只读预览 / 不可编辑'
-                                                                    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext || '')) return '预览图片'
+                                                                    if (ext === '.pdf' || ext === '.docx') return t('file.readOnlyPreview')
+                                                                    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext || '')) return t('file.previewImage')
                                                                     return preview || '...'
                                                                 })()}
                                                             </div>

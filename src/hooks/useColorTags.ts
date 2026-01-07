@@ -30,30 +30,48 @@ export function useColorTags() {
     const [colorTags, setColorTags] = useState<ColorTagsState>({})
     const [isLoaded, setIsLoaded] = useState(false)
 
-    // 加载颜色标签
-    useEffect(() => {
-        const loadTags = async () => {
-            try {
-                if (window.fs) {
-                    const vaultPath = await window.fs.getVaultPath()
-                    if (vaultPath) {
-                        try {
-                            const content = await window.fs.readFile(TAGS_FILE)
-                            setColorTags(JSON.parse(content))
-                        } catch {
-                            // 文件不存在，使用空对象
-                            setColorTags({})
-                        }
+    // 加载颜色标签的核心逻辑
+    const loadTags = useCallback(async () => {
+        try {
+            if (window.fs) {
+                const vaultPath = await window.fs.getVaultPath()
+                if (vaultPath) {
+                    try {
+                        const content = await window.fs.readFile(TAGS_FILE)
+                        setColorTags(JSON.parse(content))
+                        console.log('🎨 颜色标签已加载')
+                    } catch {
+                        // 文件不存在，使用空对象
+                        setColorTags({})
                     }
+                } else {
+                    // 没有连接 vault，清空状态
+                    setColorTags({})
                 }
-            } catch (error) {
-                console.error('加载颜色标签失败:', error)
-                setColorTags({})
             }
-            setIsLoaded(true)
+        } catch (error) {
+            console.error('加载颜色标签失败:', error)
+            setColorTags({})
         }
-        loadTags()
+        setIsLoaded(true)
     }, [])
+
+    // 初始加载
+    useEffect(() => {
+        loadTags()
+    }, [loadTags])
+
+    // 监听 vault 变化事件
+    useEffect(() => {
+        const handleVaultChange = () => {
+            console.log('🔄 检测到 Vault 变化，重新加载颜色标签')
+            loadTags()
+        }
+        window.addEventListener('vault-changed', handleVaultChange)
+        return () => {
+            window.removeEventListener('vault-changed', handleVaultChange)
+        }
+    }, [loadTags])
 
     // 保存颜色标签
     const saveTags = useCallback(async (tags: ColorTagsState) => {
@@ -107,6 +125,11 @@ export function useColorTags() {
         })
     }, [saveTags])
 
+    // 手动重新加载（供外部调用）
+    const reload = useCallback(() => {
+        loadTags()
+    }, [loadTags])
+
     return {
         colorTags,
         isLoaded,
@@ -114,7 +137,9 @@ export function useColorTags() {
         getColorTag,
         getColorHex,
         updatePath,
+        reload,
     }
 }
 
 export default useColorTags
+

@@ -1,8 +1,14 @@
 const { notarize } = require('@electron/notarize');
 const path = require('path');
+require('dotenv').config();
 
 exports.default = async function notarizing(context) {
     const { electronPlatformName, appOutDir } = context;
+
+    if (process.env.SKIP_NOTARIZE === 'true') {
+        console.log('Skipping notarization - SKIP_NOTARIZE is set');
+        return;
+    }
 
     // 只在 macOS 上公证
     if (electronPlatformName !== 'darwin') {

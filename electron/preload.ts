@@ -242,5 +242,19 @@ contextBridge.exposeInMainWorld('shortcuts', {
         ipcRenderer.invoke('menu:syncSmartAutocomplete', enabled)
 })
 
+// 暴露外部文件打开 API（用于文件关联功能）
+contextBridge.exposeInMainWorld('externalFile', {
+    // 监听从系统打开的外部文件
+    onOpenExternalFile: (callback: (filePath: string) => void): (() => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, filePath: string) => callback(filePath)
+        ipcRenderer.on('open-external-file', handler)
+        return () => ipcRenderer.removeListener('open-external-file', handler)
+    },
+
+    // 获取启动时的外部文件路径（用于应用启动后查询）
+    getExternalFilePath: (): Promise<string | null> =>
+        ipcRenderer.invoke('fs:getExternalFilePath')
+})
+
 console.log('🔗 Preload 脚本已加载')
 

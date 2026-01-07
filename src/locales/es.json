@@ -2,7 +2,8 @@
     "app": {
         "name": "WitNote",
         "tagline": "Smart Core, Simple Form",
-        "description": "WitNote es una aplicación de notas con IA local centrada en la privacidad. Con el motor Ollama integrado y una interfaz minimalista, funciona desde el primer momento."
+        "description": "WitNote es una aplicación de notas con IA local centrada en la privacidad. Con el motor Ollama integrado y una interfaz minimalista, funciona desde el primer momento.",
+        "noSiblingFile": "No se encontró archivo {{ext}} con el mismo nombre"
     },
     "sidebar": {
         "files": "Archivos",
@@ -20,7 +21,8 @@
         "disconnectMessage": "Esto desconectará la aplicación de la carpeta local, pero NO eliminará ningún archivo.",
         "disconnectDetail": "Todas sus notas y archivos permanecerán seguros localmente.",
         "emptyFolderHint": "Crear carpeta abajo",
-        "emptyGuide": "Haga clic abajo para crear o vincular una carpeta local"
+        "emptyGuide": "Haga clic abajo para crear o vincular una carpeta local",
+        "importFileHint": "Importar a"
     },
     "emptyState": {
         "poem": {
@@ -307,7 +309,10 @@
         "delete": "Eliminar"
     },
     "gallery": {
-        "newArticle": "Nuevo artículo"
+        "newArticle": "Nuevo artículo",
+        "moveFileHint": "Mover a",
+        "importFileHint": "Importar a",
+        "rootFolder": "Carpeta raíz"
     },
     "toast": {
         "fileSaved": "Archivo guardado",
@@ -465,5 +470,34 @@
         "noInsightData": "Sin datos. Dispare el autocompletado para ver.",
         "time": "Hora",
         "chars": "caracteres"
+    },
+    "viewer": {
+        "loadingPdf": "Cargando PDF...",
+        "loadingDoc": "Cargando documento...",
+        "loadingImage": "Cargando imagen...",
+        "unsupportedFormat": "Formato de archivo no soportado:"
+    },
+    "dropZone": {
+        "left": "Mover a la izquierda",
+        "right": "Mover a la derecha",
+        "top": "Mover arriba",
+        "bottom": "Mover abajo",
+        "center": "Mover al centro"
+    },
+    "file": {
+        "untitledFolder": "Carpeta sin título",
+        "readOnlyPreview": "Vista previa de solo lectura",
+        "previewImage": "Vista previa de imagen",
+        "moveErrorSubdirectory": "No se puede mover una carpeta a su propio subdirectorio",
+        "moveErrorDuplicate": "Ya existe un archivo o carpeta con el mismo nombre en el destino",
+        "dragParseFailed": "Error al analizar datos de arrastre"
+    },
+    "export": {
+        "noActiveFile": "No hay archivo activo",
+        "onlyMarkdownSupported": "Solo se admiten archivos Markdown para exportar",
+        "pdfExportFailed": "Error al exportar a PDF:",
+        "exportFailed": "Error de exportación",
+        "pdfExportSuccess": "Exportación a PDF exitosa",
+        "exportFailedWithReason": "Error de exportación: {{error}}"
     }
 }
