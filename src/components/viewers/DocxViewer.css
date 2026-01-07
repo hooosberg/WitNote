@@ -1,15 +1,23 @@
 .docx-viewer {
     width: 100%;
     height: 100%;
-    overflow: auto;
     background: var(--bg-primary);
-    padding: 2rem 1rem;
+    overflow: hidden;
+}
+
+/* Scrollable container - matches Editor pattern for frosted glass effect */
+.docx-viewer-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 48px 48px;
 }
 
 .docx-content {
     max-width: 800px;
     margin: 0 auto;
-    padding: 2rem 3rem;
+    padding: 2rem 0;
     line-height: 1.8;
     color: var(--text-primary);
     font-size: var(--font-size, 17px);

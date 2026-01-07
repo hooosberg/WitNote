@@ -3,7 +3,7 @@
  * Phase 8: 可调整三栏布局 + 增强画廊
  */
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import ReactDOM from 'react-dom'
 import { useTranslation } from 'react-i18next'
 // 使用 CSS Flexbox 布局替代 react-resizable-panels
@@ -28,6 +28,7 @@ import { ToastProvider, useToast } from './components/Toast'
 import SettingsPanel from './components/Settings'
 import ConfirmDialog from './components/ConfirmDialog'
 import DropZoneOverlay from './components/DropZoneOverlay'
+import ResizableDivider from './components/ResizableDivider'
 import { useFileSystem, FileNode } from './hooks/useFileSystem'
 import { useLLM } from './hooks/useLLM'
 import { useFolderOrder } from './hooks/useFolderOrder'
@@ -45,6 +46,18 @@ const APP_STORAGE_KEYS = {
     SETTINGS_TAB: 'witnote-app-settings-tab',
     PREVIEW_MODE: 'witnote-app-preview-mode',
     SPLIT_SECONDARY_FILE: 'witnote-app-split-secondary-file',  // 双栏右侧文件路径
+    SIDEBAR_WIDTH: 'witnote-sidebar-width',     // 左侧边栏宽度
+    CHAT_WIDTH: 'witnote-chat-width',           // 右侧 AI 面板宽度
+}
+
+// 面板宽度阈值常量
+const PANEL_LIMITS = {
+    SIDEBAR_MIN: 200,
+    SIDEBAR_MAX: 450,
+    SIDEBAR_DEFAULT: 320,
+    CHAT_MIN: 240,
+    CHAT_MAX: 450,
+    CHAT_DEFAULT: 320,
 }
 
 // 排序选项
@@ -84,6 +97,10 @@ const AppContent: React.FC = () => {
     const [autoHideRight, setAutoHideRight] = useState(false)     // 响应式隐藏右侧
     const [autoHideLeft, setAutoHideLeft] = useState(false)       // 响应式隐藏左侧
 
+    // 左右面板独立控制状态
+    const [showSidebar, setShowSidebar] = useState(true)
+    const [showChat, setShowChat] = useState(true)
+
     // 响应式布局：渐进式隐藏面板
     // > 1000px: 三栏（完整布局）
     // 800-1000px: 两栏（先隐藏右侧AI面板）
@@ -122,20 +139,32 @@ const AppContent: React.FC = () => {
         return () => window.removeEventListener('resize', handleResize)
     }, [manualFocusMode])
 
-    // 派生的专注模式状态（用户手动隐藏两侧 或 响应式自动隐藏两侧）
-    const focusMode = manualFocusMode || (autoHideLeft && autoHideRight)
+    // 派生的专注模式状态（用户手动隐藏两侧 或 响应式自动隐藏两侧 或 用户手动分别关闭了两侧）
+    const focusMode = manualFocusMode || (autoHideLeft && autoHideRight) || (!showSidebar && !showChat)
 
     // 切换专注模式（手动控制）
     const toggleFocusMode = () => {
-        if (autoHideLeft && autoHideRight && !manualFocusMode) {
+        if (autoHideLeft && autoHideRight && !manualFocusMode && !(!showSidebar && !showChat)) {
             // 在自动专注模式下（窗口<800px），调整窗口宽度到1000px
             const appWindow = (window as unknown as { appWindow?: { setWidth: (w: number) => Promise<boolean> } }).appWindow
             if (appWindow) {
                 appWindow.setWidth(1000)
             }
         } else {
-            // 正常切换手动专注模式
-            setManualFocusMode(prev => !prev)
+            // 智能切换逻辑：
+            // 如果当前已经是专注模式（无论是如何进入的），点击按钮意味着"退出专注模式"
+            if (focusMode) {
+                // 退出专注模式：确保 Sidebars 可见，且关闭 manualFocusMode
+                setManualFocusMode(false)
+                setShowSidebar(true)
+                setShowChat(true)
+            } else {
+                // 进入专注模式
+                setManualFocusMode(true)
+            }
+
+
+
         }
     }
 
@@ -150,9 +179,11 @@ const AppContent: React.FC = () => {
         }
     }, [focusMode])
 
-    // 派生状态：左右面板独立控制
-    const leftCollapsed = manualFocusMode || autoHideLeft   // 手动专注模式或响应式隐藏左侧
-    const rightCollapsed = manualFocusMode || autoHideRight // 手动专注模式或响应式隐藏右侧
+
+    // 如果进入手动专注模式，或者是响应式隐藏，或者是用户手动隐藏了侧边栏
+    const leftCollapsed = manualFocusMode || autoHideLeft || !showSidebar
+    // 如果进入手动专注模式，或者是响应式隐藏，或者是用户手动隐藏了聊天栏
+    const rightCollapsed = manualFocusMode || autoHideRight || !showChat
 
     // 对话框状态
     const [showNewFolderDialog, setShowNewFolderDialog] = useState(false)
@@ -173,10 +204,10 @@ const AppContent: React.FC = () => {
     const [showSettings, setShowSettings] = useState(() => {
         return localStorage.getItem(APP_STORAGE_KEYS.SHOW_SETTINGS) === 'true'
     })
-    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'>(() => {
+    const [settingsDefaultTab, setSettingsDefaultTab] = useState<'appearance' | 'ai' | 'persona' | 'autocomplete' | 'shortcuts' | 'about'>(() => {
         const saved = localStorage.getItem(APP_STORAGE_KEYS.SETTINGS_TAB)
-        if (saved && ['appearance', 'ai', 'persona', 'shortcuts', 'about'].includes(saved)) {
-            return saved as 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about'
+        if (saved && ['appearance', 'ai', 'persona', 'autocomplete', 'shortcuts', 'about'].includes(saved)) {
+            return saved as 'appearance' | 'ai' | 'persona' | 'autocomplete' | 'shortcuts' | 'about'
         }
         return 'appearance'
     })
@@ -229,7 +260,7 @@ const AppContent: React.FC = () => {
 
 
     // 打开设置面板的函数
-    const openSettingsPanel = (tab: 'appearance' | 'ai' | 'persona' | 'shortcuts' | 'about' = 'appearance') => {
+    const openSettingsPanel = (tab: 'appearance' | 'ai' | 'persona' | 'autocomplete' | 'shortcuts' | 'about' = 'appearance') => {
         setSettingsDefaultTab(tab)
         setShowSettings(true)
     }
@@ -268,6 +299,7 @@ const AppContent: React.FC = () => {
         message: string;
         details?: string[];
         onConfirm: () => void;
+        variant?: 'info' | 'warning';
     } | null>(null)
 
     // 拖拽放置区状态
@@ -283,6 +315,91 @@ const AppContent: React.FC = () => {
         fileName: string
         targetFolder: string
     }>({ visible: false, fileName: '', targetFolder: '' })
+
+    // 双栏布局宽度比例 (左侧宽度百分比 0.2 - 0.8)
+    const [mainPaneRatio, setMainPaneRatio] = useState(0.5)
+    const [isDraggingDivider, setIsDraggingDivider] = useState(false)
+
+    // 左右侧边栏宽度状态（从 localStorage 恢复）
+    const [sidebarWidth, setSidebarWidth] = useState(() => {
+        const saved = localStorage.getItem(APP_STORAGE_KEYS.SIDEBAR_WIDTH)
+        return saved ? parseInt(saved, 10) : PANEL_LIMITS.SIDEBAR_DEFAULT
+    })
+    const [chatWidth, setChatWidth] = useState(() => {
+        const saved = localStorage.getItem(APP_STORAGE_KEYS.CHAT_WIDTH)
+        return saved ? parseInt(saved, 10) : PANEL_LIMITS.CHAT_DEFAULT
+    })
+    // 是否正在调整面板大小
+    const [isResizingPanels, setIsResizingPanels] = useState(false)
+
+    // 记录拖动开始时的初始宽度
+    const initialSidebarWidthRef = React.useRef(sidebarWidth)
+    const initialChatWidthRef = React.useRef(chatWidth)
+
+    // 保存侧边栏宽度到 localStorage
+    useEffect(() => {
+        localStorage.setItem(APP_STORAGE_KEYS.SIDEBAR_WIDTH, String(sidebarWidth))
+    }, [sidebarWidth])
+
+    useEffect(() => {
+        localStorage.setItem(APP_STORAGE_KEYS.CHAT_WIDTH, String(chatWidth))
+    }, [chatWidth])
+
+    // 左侧分隔线拖动处理 - offset 是相对于起始点的总位移
+    const handleLeftDividerResize = useCallback((offset: number) => {
+        const newWidth = initialSidebarWidthRef.current + offset
+        setSidebarWidth(Math.max(PANEL_LIMITS.SIDEBAR_MIN, Math.min(PANEL_LIMITS.SIDEBAR_MAX, newWidth)))
+    }, [])
+
+    // 右侧分隔线拖动处理 - offset 是相对于起始点的总位移 (direction="right" 已处理方向)
+    const handleRightDividerResize = useCallback((offset: number) => {
+        const newWidth = initialChatWidthRef.current + offset
+        setChatWidth(Math.max(PANEL_LIMITS.CHAT_MIN, Math.min(PANEL_LIMITS.CHAT_MAX, newWidth)))
+    }, [])
+
+    const handleResizeStart = (panel: 'left' | 'right') => {
+        setIsResizingPanels(true)
+        if (panel === 'left') initialSidebarWidthRef.current = sidebarWidth
+        if (panel === 'right') initialChatWidthRef.current = chatWidth
+    }
+
+    const handleResizeEnd = () => {
+        setIsResizingPanels(false)
+    }
+
+    // 分割线拖拽处理 (保留原有中间分隔线逻辑)
+
+    // 分割线拖拽处理
+    const handleDividerMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation() // 防止冒泡
+        setIsDraggingDivider(true)
+
+        const startX = e.clientX
+        const startRatio = mainPaneRatio
+        // 使用 currentTarget 确保始终获取绑定事件的元素（即分隔线本身），而不是可能被点击的子元素（handle）
+        // 这样 parentElement 就始终是布局容器，而不是分隔线自己
+        const container = (e.currentTarget as HTMLElement).parentElement
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            if (!container) return
+            const rect = container.getBoundingClientRect()
+            const deltaX = moveEvent.clientX - startX
+            // 计算比例变化
+            const deltaRatio = deltaX / rect.width
+            const newRatio = Math.max(0.2, Math.min(0.8, startRatio + deltaRatio))
+            setMainPaneRatio(newRatio)
+        }
+
+        const handleMouseUp = () => {
+            setIsDraggingDivider(false)
+            document.removeEventListener('mousemove', handleMouseMove)
+            document.removeEventListener('mouseup', handleMouseUp)
+        }
+
+        document.addEventListener('mousemove', handleMouseMove)
+        document.addEventListener('mouseup', handleMouseUp)
+    }
 
 
     // 监听全局拖拽事件，用于禁用 iframe 的指针事件
@@ -559,9 +676,34 @@ const AppContent: React.FC = () => {
         return activeFolder.children?.filter(n => !n.isDirectory) || []
     }, [activeFolder, fileTree])
 
+    // 获取搜索范围内的文件（递归搜索，用于搜索功能）
+    const searchableFiles = useMemo(() => {
+        // 辅助函数：递归收集文件夹内所有文件
+        const collectAllFiles = (node: FileNode): FileNode[] => {
+            const files: FileNode[] = []
+            if (!node.isDirectory) {
+                files.push(node)
+            } else if (node.children) {
+                for (const child of node.children) {
+                    files.push(...collectAllFiles(child))
+                }
+            }
+            return files
+        }
+
+        if (!activeFolder) {
+            // 根目录：搜索所有文件
+            return getAllFiles()
+        }
+
+        // 特定文件夹：递归搜索该文件夹下所有文件
+        return collectAllFiles(activeFolder)
+    }, [activeFolder, getAllFiles])
+
     // 排序和筛选后的文件
     const sortedFilteredFiles = useMemo(() => {
-        let files = currentFiles
+        // 如果有搜索词，使用递归搜索范围；否则只显示当前文件夹的直接子文件
+        let files = searchQuery.trim() ? searchableFiles : currentFiles
 
         // 颜色筛选
         if (filterColor !== 'all') {
@@ -634,7 +776,7 @@ const AppContent: React.FC = () => {
         const pinnedFiles = sortedFiles.filter(f => folderOrder.isPinned(f.path))
         const unpinnedFiles = sortedFiles.filter(f => !folderOrder.isPinned(f.path))
         return [...pinnedFiles, ...unpinnedFiles]
-    }, [currentFiles, filterColor, getColor, activeFolder?.path, folderOrder, searchQuery, previews])
+    }, [currentFiles, searchableFiles, filterColor, getColor, activeFolder?.path, folderOrder, searchQuery, previews])
 
     // 拖拽时的虚拟排序预览
     const virtualOrderFiles = useMemo(() => {
@@ -794,9 +936,21 @@ const AppContent: React.FC = () => {
     }
 
     const handleDelete = async (node: FileNode) => {
-        if (confirm(`删除 "${node.name}"?`)) {
-            await deleteFile(node.path)
-        }
+        // 使用自定义警告对话框替代浏览器 confirm()
+        setConfirmDialog({
+            isOpen: true,
+            title: t('dialog.deleteWarningTitle'),
+            message: `${t('dialog.deleteWarningMessage')}\n\n"${node.name}"`,
+            details: [
+                t('dialog.deleteWarningDetail1'),
+                t('dialog.deleteWarningDetail2')
+            ],
+            variant: 'warning',
+            onConfirm: async () => {
+                setConfirmDialog(null)
+                await deleteFile(node.path)
+            }
+        })
     }
 
     const handleTitleChange = async (newFileName: string) => {
@@ -1013,15 +1167,16 @@ const AppContent: React.FC = () => {
                 onClose={() => setShowSettings(false)}
                 llm={llm}
                 defaultTab={settingsDefaultTab}
+                onTabChange={setSettingsDefaultTab}
                 engineStore={engineStore}
             />
 
             {/* 可调整三栏布局 */}
-            {/* 可调整三栏布局 -> 固定宽度 Flex 布局 */}
-            <div className="app-layout">
+            {/* 可调整三栏布局 -> 动态宽度 Flex 布局 */}
+            <div className={`app-layout ${isResizingPanels ? 'resizing-panels' : ''}`}>
                 {/* 左侧边栏 */}
                 {!leftCollapsed && (
-                    <div className="panel-sidebar">
+                    <div className="panel-sidebar" style={{ width: sidebarWidth, flexBasis: sidebarWidth }}>
                         <div className="sidebar-inner">
                             {/* 侧边栏头部已移除，使用 TopBar */}
 
@@ -1321,6 +1476,17 @@ const AppContent: React.FC = () => {
                 )
                 }
 
+                {/* 左侧分隔线 - iPad 风格 */}
+                {!leftCollapsed && (
+                    <ResizableDivider
+                        direction="left"
+                        onResize={handleLeftDividerResize}
+                        onResizeStart={() => handleResizeStart('left')}
+                        onResizeEnd={handleResizeEnd}
+                        onDoubleClick={() => setShowSidebar(false)}
+                    />
+                )}
+
                 {/* 中间内容区 */}
                 <div
                     className={`panel-main ${isDragging || dropZoneVisible ? 'dragging-over' : ''}`}
@@ -1355,8 +1521,8 @@ const AppContent: React.FC = () => {
                             layoutMode === 'dual' && previewFile ? (
                                 // 双栏布局：两个不同文件并排显示
                                 // 主文件使用 'edit' 模式（不使用 split，避免再次分屏预览）
-                                <div className="dual-pane-layout">
-                                    <div className="main-pane">
+                                <div className={`dual-pane-layout ${isDraggingDivider ? 'resizing' : ''}`}>
+                                    <div className="main-pane" style={{ flex: `0 0 ${mainPaneRatio * 100}%` }}>
                                         <SmartFileViewer
                                             file={activeFile}
                                             vaultPath={vaultPath || ''}
@@ -1373,8 +1539,19 @@ const AppContent: React.FC = () => {
                                         />
                                     </div>
 
-                                    <div className="pane-divider" />
-                                    <div className="preview-pane">
+                                    <div
+                                        className={`resizable-divider ${isDraggingDivider ? 'dragging' : ''}`}
+                                        onMouseDown={handleDividerMouseDown}
+                                        onDoubleClick={() => {
+                                            setPreviewFile(null)
+                                            // 同时重置为主文件的编辑模式（左侧变为单屏）
+                                            // 这样就符合"左侧栏恢复成单屏模式"的预期
+                                            setPreviewMode('edit')
+                                        }}
+                                    >
+                                        <div className="divider-handle" />
+                                    </div>
+                                    <div className="preview-pane" style={{ flex: 1 }}>
                                         <SmartFileViewer
                                             file={previewFile}
                                             vaultPath={vaultPath || ''}
@@ -1692,11 +1869,22 @@ const AppContent: React.FC = () => {
                     </div>
                 </div>
 
+                {/* 右侧分隔线 - iPad 风格 */}
+                {!rightCollapsed && (
+                    <ResizableDivider
+                        direction="right"
+                        onResize={handleRightDividerResize}
+                        onResizeStart={() => handleResizeStart('right')}
+                        onResizeEnd={handleResizeEnd}
+                        onDoubleClick={() => setShowChat(false)}
+                    />
+                )}
+
                 {/* 右侧 AI 面板 */}
                 {
                     !rightCollapsed && (
 
-                        <div className="panel-chat">
+                        <div className="panel-chat" style={{ width: chatWidth, flexBasis: chatWidth }}>
                             <ChatPanel llm={llm} engineStore={engineStore} openSettings={() => openSettingsPanel('ai')} />
                         </div>
 
@@ -1764,6 +1952,7 @@ const AppContent: React.FC = () => {
                         details={confirmDialog.details}
                         onConfirm={confirmDialog.onConfirm}
                         onCancel={() => setConfirmDialog(null)}
+                        variant={confirmDialog.variant}
                     />
                 )
             }

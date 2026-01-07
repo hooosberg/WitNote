@@ -100,7 +100,13 @@ const STORAGE_KEYS = {
     WEBLLM_FIRST_TIME: 'zen-webllm-first-time-setup',
 };
 
-export function useEngineStore(): UseEngineStoreReturn {
+interface UseEngineStoreOptions {
+    enableAutoInit?: boolean;
+}
+
+export function useEngineStore(options: UseEngineStoreOptions = {}): UseEngineStoreReturn {
+    const { enableAutoInit = true } = options;
+
     // 引擎类型
     const [currentEngine, setCurrentEngine] = useState<EngineType>(() => {
         const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_ENGINE);
@@ -152,37 +158,75 @@ export function useEngineStore(): UseEngineStoreReturn {
 
     // 调试状态
     const [lastGenerationInfo, setLastGenerationInfo] = useState<LastGenerationInfo | null>(null);
-
-    // 检测 WebLLM 缓存
+    // 检测 WebLLM 缓存并自动初始化
     useEffect(() => {
-        const checkCache = async () => {
-            try {
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    const webllmCaches = cacheNames.filter(name =>
-                        name.includes('webllm') || name.includes('mlc')
-                    );
+        if (!enableAutoInit) return;
 
-                    // 检查每个模型是否已缓存
-                    const cached: string[] = [];
-                    for (const modelInfo of ALL_WEBLLM_MODELS_INFO) {
-                        // 简单检查：如果有任何缓存，就认为模型可能已缓存
-                        // 更精确的检查需要分析缓存内容
-                        if (webllmCaches.length > 0) {
-                            const modelCache = await caches.open(modelInfo.model_id);
-                            const keys = await modelCache.keys();
-                            if (keys.length > 0) {
-                                cached.push(modelInfo.model_id);
-                            }
+        const checkCacheAndAutoInit = async () => {
+            try {
+                // 使用 WebLLM 官方的 hasModelInCache 函数来检测
+                const { hasModelInCache } = await import('@mlc-ai/web-llm');
+
+                const cached: string[] = [];
+                for (const modelInfo of ALL_WEBLLM_MODELS_INFO) {
+                    try {
+                        const isInCache = await hasModelInCache(modelInfo.model_id);
+                        if (isInCache) {
+                            cached.push(modelInfo.model_id);
+                            console.log('✅ 模型已缓存:', modelInfo.model_id);
                         }
+                    } catch (e) {
+                        // 单个模型检测失败不影响其他模型
+                        console.log('检测模型缓存失败:', modelInfo.model_id, e);
                     }
-                    setWebllmCachedModels(cached);
+                }
+
+                console.log('📦 已缓存的模型列表:', cached);
+                setWebllmCachedModels(cached);
+
+                // 自动初始化：如果当前引擎是 WebLLM 且选中的模型已缓存
+                const savedEngine = localStorage.getItem(STORAGE_KEYS.CURRENT_ENGINE);
+                const savedModel = localStorage.getItem(STORAGE_KEYS.WEBLLM_MODEL);
+
+                if (savedEngine === 'webllm' && savedModel && cached.includes(savedModel)) {
+                    console.log('🚀 自动初始化 WebLLM 引擎:', savedModel);
+
+                    // 创建并初始化引擎
+                    const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+
+                    setWebllmLoading(true);
+                    setWebllmProgress({ progress: 0, text: '正在加载模型...' });
+
+                    try {
+                        const engine = await CreateMLCEngine(savedModel, {
+                            initProgressCallback: (report) => {
+                                setWebllmProgress({
+                                    progress: report.progress,
+                                    text: report.text
+                                });
+                            }
+                        });
+
+                        // 创建 WebLLMEngine 包装器并设置内部引擎
+                        const webllmEngine = new WebLLMEngine(savedModel);
+                        (webllmEngine as any).engine = engine;
+                        (webllmEngine as any)._isReady = true;
+
+                        webllmEngineRef.current = webllmEngine;
+                        setWebllmReady(true);
+                        console.log('✅ WebLLM 自动初始化成功');
+                    } catch (e) {
+                        console.error('❌ WebLLM 自动初始化失败:', e);
+                    } finally {
+                        setWebllmLoading(false);
+                        setWebllmProgress(null);
+                    }
                 }
             } catch (e) {
                 console.log('检查 WebLLM 缓存失败:', e);
             }
         };
-        checkCache();
+        checkCacheAndAutoInit();
     }, []);
 
     // 设置引擎
@@ -208,6 +252,10 @@ export function useEngineStore(): UseEngineStoreReturn {
         const targetModel = modelId || selectedModel || DEFAULT_WEBLLM_MODEL;
 
         console.log('🚀 初始化 WebLLM:', targetModel);
+
+        // 立即更新 selectedModel，确保加载动画显示在正确的模型卡片上
+        setSelectedModel(targetModel);
+
         setWebllmLoading(true);
         setWebllmReady(false);
         setError(null);
@@ -261,15 +309,9 @@ export function useEngineStore(): UseEngineStoreReturn {
     // 删除 WebLLM 模型缓存
     const deleteWebLLMModel = useCallback(async (modelId: string) => {
         try {
-            // 清除缓存
-            if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                for (const cacheName of cacheNames) {
-                    if (cacheName.includes(modelId) || cacheName.includes('webllm') || cacheName.includes('mlc')) {
-                        await caches.delete(cacheName);
-                    }
-                }
-            }
+            // 使用 WebLLM 官方的删除函数
+            const { deleteModelAllInfoInCache } = await import('@mlc-ai/web-llm');
+            await deleteModelAllInfoInCache(modelId);
 
             // 更新状态
             setWebllmCachedModels(prev => prev.filter(m => m !== modelId));

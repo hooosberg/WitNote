@@ -287,8 +287,8 @@ select:focus {
 
 
 .panel-sidebar {
-  flex: 0 0 var(--sidebar-width);
-  width: var(--sidebar-width);
+  flex-shrink: 0;
+  /* 宽度由 JavaScript 动态设置 */
   background: var(--bg-sidebar);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -314,8 +314,8 @@ select:focus {
 }
 
 .panel-chat {
-  flex: 0 0 var(--chat-width);
-  width: var(--chat-width);
+  flex-shrink: 0;
+  /* 宽度由 JavaScript 动态设置 */
   background: var(--bg-chat);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -371,8 +371,8 @@ select:focus {
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
-  padding-top: var(--titlebar-height);
 }
+
 
 
 .pane-divider {
@@ -386,6 +386,83 @@ select:focus {
 .pane-divider:hover {
   background: var(--accent-color);
 }
+
+/* ============ iPad 风格可拖动分隔线 ============ */
+.resizable-divider {
+  width: 8px;
+  flex-shrink: 0;
+  position: relative;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: background 0.15s ease;
+  z-index: 10;
+}
+
+/* 中间灰色竖线 */
+.resizable-divider::before {
+  content: '';
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  background: var(--border-color);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 中间短手柄提示 - iPad 风格 */
+.divider-handle {
+  width: 4px;
+  height: 36px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  transition: all 0.15s ease;
+  z-index: 1;
+}
+
+/* 悬停状态 */
+.resizable-divider:hover .divider-handle {
+  background: var(--text-tertiary);
+  height: 48px;
+}
+
+.resizable-divider:hover::before {
+  background: var(--text-tertiary);
+}
+
+/* 拖动状态 */
+.resizable-divider.dragging .divider-handle {
+  background: var(--accent-color);
+  height: 56px;
+}
+
+.resizable-divider.dragging::before {
+  background: var(--accent-color);
+}
+
+/* 拖动时禁用面板内的交互，避免干扰 */
+.app-layout.resizing-panels {
+  user-select: none;
+}
+
+.app-layout.resizing-panels .panel-sidebar,
+.app-layout.resizing-panels .panel-main,
+.app-layout.resizing-panels .panel-chat {
+  pointer-events: none;
+}
+
+/* Resizing state - disable iframe pointer events during drag */
+.dual-pane-layout.resizing {
+  user-select: none;
+}
+
+.dual-pane-layout.resizing .main-pane,
+.dual-pane-layout.resizing .preview-pane {
+  pointer-events: none;
+}
+
 
 /* ============ 拖拽放置区覆盖层 ============ */
 .drop-zone-overlay {
@@ -2348,7 +2425,6 @@ select:focus {
 
 /* 左侧编辑区 - 右边有分割线 */
 .editor-split-left {
-  border-right: 1px solid var(--border-color);
   padding-left: 48px;
   /* 统一左侧边距 */
   padding-right: 48px;

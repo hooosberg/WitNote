@@ -303,6 +303,10 @@
         "confirm": "Confirm",
         "delete": "Delete",
         "deleteConfirm": "Are you sure you want to delete",
+        "deleteWarningTitle": "Confirm Deletion?",
+        "deleteWarningMessage": "Please carefully confirm what you want to delete.",
+        "deleteWarningDetail1": "Items will be moved to system Trash",
+        "deleteWarningDetail2": "You can recover deleted files from the Trash",
         "rename": "Rename",
         "newFileName": "New file name",
         "newFolderName": "New folder name"

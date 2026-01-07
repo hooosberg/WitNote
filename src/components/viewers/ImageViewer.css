@@ -1,20 +1,133 @@
 .image-viewer {
     width: 100%;
     height: 100%;
+    background: var(--bg-primary);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Scrollable container - matches Editor pattern for frosted glass effect */
+.image-viewer-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.image-viewer-content {
+    min-height: calc(100vh - var(--titlebar-height) - 80px);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-primary);
-    overflow: auto;
     padding: 2rem;
 }
 
-.image-viewer img {
+.image-viewer-content.zoomed {
+    cursor: grab;
+}
+
+.image-viewer-content.dragging {
+    cursor: grabbing;
+}
+
+.image-viewer-content img {
     max-width: 100%;
-    max-height: 100%;
+    max-height: calc(100vh - var(--titlebar-height) - 120px);
     object-fit: contain;
     border-radius: var(--radius-md);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    user-select: none;
+    -webkit-user-drag: none;
+    transform-origin: center center;
+}
+
+/* Floating island zoom control */
+.zoom-island {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+
+    /* Frosted glass effect */
+    background: rgba(var(--bg-sidebar-rgb), 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    /* Pill shape */
+    border-radius: 50px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.zoom-island-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.zoom-island-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.zoom-island-btn:active {
+    transform: scale(0.95);
+}
+
+.zoom-island-slider {
+    width: 100px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border-color);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.zoom-island-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-island-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+/* Zoom percentage display */
+.zoom-island-percent {
+    min-width: 42px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .zoom-island {
+    background: rgba(var(--bg-sidebar-rgb), 0.65);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .image-viewer-loading,

@@ -56,6 +56,12 @@
     color: #FF9500;
 }
 
+/* 警告变体图标 - 使用更醒目的红/橙色 */
+.confirm-icon.warning {
+    background: rgba(255, 59, 48, 0.12);
+    color: #FF3B30;
+}
+
 /* 标题 - 浅色主题 */
 .confirm-title {
     font-size: 17px;

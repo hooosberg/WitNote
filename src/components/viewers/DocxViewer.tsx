@@ -60,10 +60,14 @@ const DocxViewer: React.FC<DocxViewerProps> = ({ filePath }) => {
 
     return (
         <div className="docx-viewer">
-            <div
-                className="docx-content"
-                dangerouslySetInnerHTML={{ __html: htmlContent }}
-            />
+            {/* Scrollable container - matches Editor pattern for frosted glass effect */}
+            <div className="docx-viewer-scroll">
+                <div className="topbar-spacer" />
+                <div
+                    className="docx-content"
+                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+                />
+            </div>
         </div>
     )
 }

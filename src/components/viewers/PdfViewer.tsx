@@ -62,17 +62,24 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filePath }) => {
 
     return (
         <div className="pdf-viewer">
-            <iframe
-                src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=page-width`}
-                title="PDF Preview"
-                width="100%"
-                height="100%"
-                style={{
-                    border: 'none',
-                    display: 'block',
-                    background: 'var(--bg-primary)'
-                }}
-            />
+            {/* Scrollable container - matches Editor pattern for frosted glass effect */}
+            <div className="pdf-viewer-scroll">
+                <div className="topbar-spacer" />
+                <div className="pdf-viewer-content">
+                    <iframe
+                        src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=page-width`}
+                        title="PDF Preview"
+                        style={{
+                            width: '100%',
+                            height: 'calc(100vh - var(--titlebar-height) - 40px)',
+                            border: 'none',
+                            display: 'block',
+                            background: 'var(--bg-primary)',
+                            borderRadius: 'var(--radius-md)'
+                        }}
+                    />
+                </div>
+            </div>
         </div>
     )
 }

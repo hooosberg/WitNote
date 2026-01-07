@@ -267,6 +267,10 @@
         "confirm": "確認",
         "delete": "削除",
         "deleteConfirm": "削除してもよろしいですか",
+        "deleteWarningTitle": "このアイテムを削除しますか?",
+        "deleteWarningMessage": "削除する内容をよくご確認ください。",
+        "deleteWarningDetail1": "ファイルはシステムのゴミ箱に移動されます",
+        "deleteWarningDetail2": "ゴミ箱から削除したファイルを復元できます",
         "rename": "名前変更",
         "newFileName": "新しいファイル名",
         "newFolderName": "新しいフォルダ名"

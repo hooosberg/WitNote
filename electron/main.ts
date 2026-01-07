@@ -754,23 +754,29 @@ function setupIpcHandlers() {
         return true
     })
 
-    // 删除文件或文件夹
+    // 删除文件或文件夹（移动到系统回收站）
     ipcMain.handle('fs:deleteFile', async (_event, relativePath: string) => {
         const vaultPath = store.get('vaultPath')
         if (!vaultPath) throw new Error('未设置 Vault 路径')
 
         const fullPath = join(vaultPath, relativePath)
 
-        // 检查是文件还是文件夹
-        const stat = await fs.stat(fullPath)
-        if (stat.isDirectory()) {
-            // 递归删除文件夹
-            await fs.rm(fullPath, { recursive: true, force: true })
-        } else {
-            // 删除文件
-            await fs.unlink(fullPath)
+        // 使用 shell.trashItem 移动到系统回收站（macOS 废纸篓）
+        // 这比永久删除更安全，用户可以从回收站中找回文件
+        try {
+            await shell.trashItem(fullPath)
+            return true
+        } catch (error) {
+            console.error('移动到回收站失败，尝试永久删除:', error)
+            // 如果移动到回收站失败（如某些 Linux 桌面环境不支持），回退到永久删除
+            const stat = await fs.stat(fullPath)
+            if (stat.isDirectory()) {
+                await fs.rm(fullPath, { recursive: true, force: true })
+            } else {
+                await fs.unlink(fullPath)
+            }
+            return true
         }
-        return true
     })
 
     // 重命名文件

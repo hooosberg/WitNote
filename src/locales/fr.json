@@ -293,6 +293,10 @@
         "confirm": "Confirmer",
         "delete": "Supprimer",
         "deleteConfirm": "Voulez-vous supprimer",
+        "deleteWarningTitle": "Confirmer la suppression?",
+        "deleteWarningMessage": "Veuillez confirmer attentivement ce que vous souhaitez supprimer.",
+        "deleteWarningDetail1": "Les fichiers seront déplacés vers la corbeille",
+        "deleteWarningDetail2": "Vous pouvez récupérer les fichiers depuis la corbeille",
         "rename": "Renommer",
         "newFileName": "Nouveau nom",
         "newFolderName": "Nouveau dossier"

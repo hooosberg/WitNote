@@ -1,10 +1,20 @@
 .pdf-viewer {
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
     background: var(--bg-primary);
     overflow: hidden;
+}
+
+/* Scrollable container - matches Editor pattern for frosted glass effect */
+.pdf-viewer-scroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.pdf-viewer-content {
+    padding: 0 20px 20px;
 }
 
 .pdf-viewer-loading,
@@ -17,7 +27,7 @@
     color: var(--text-secondary);
 }
 
-.loading-spinner {
+.pdf-viewer-loading .loading-spinner {
     width: 40px;
     height: 40px;
     border: 4px solid var(--border-color);
@@ -37,7 +47,7 @@
     color: var(--error-color);
 }
 
-.error-message {
+.pdf-viewer-error .error-message {
     font-size: 0.9em;
     opacity: 0.8;
     margin-top: 0.5rem;

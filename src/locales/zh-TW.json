@@ -380,6 +380,10 @@
         "confirm": "確認",
         "delete": "刪除",
         "deleteConfirm": "確定要刪除",
+        "deleteWarningTitle": "確定刪除此項目?",
+        "deleteWarningMessage": "請仔細確認您要刪除的內容。",
+        "deleteWarningDetail1": "刪除後檔案將移至系統回收站",
+        "deleteWarningDetail2": "您可以在回收站中找回已刪除的檔案",
         "rename": "重命名",
         "newFileName": "新檔名",
         "newFolderName": "新資料夾名"

@@ -21,6 +21,27 @@ import { getCurrentLanguage } from '../i18n';
 // 上下文最大长度
 const MAX_CONTEXT_LENGTH = 4000;
 
+// 聊天记录存储限制
+const MAX_CHAT_MESSAGES = 20;  // 最多保存 20 条消息
+const MAX_CHAT_SIZE_BYTES = 10000;  // 最大 10KB
+
+/**
+ * 限制聊天消息数量和大小
+ */
+function limitMessages(messages: ChatMessage[], maxCount: number, maxBytes: number): ChatMessage[] {
+    // 保留最近的消息
+    let limited = messages.slice(-maxCount);
+
+    // 检查字节数限制
+    let jsonStr = JSON.stringify(limited);
+    while (jsonStr.length > maxBytes && limited.length > 2) {
+        limited = limited.slice(1);  // 移除最早的消息，保留至少最后一对问答
+        jsonStr = JSON.stringify(limited);
+    }
+
+    return limited;
+}
+
 export interface UseLLMReturn {
     // 状态
     status: LLMStatus;
@@ -105,7 +126,6 @@ export function useLLM(engineStore: UseEngineStoreReturn): UseLLMReturn {
     const [activeFolderFiles, setActiveFolderFiles] = useState<string[]>([]);
     const [filePreviews, setFilePreviews] = useState<Map<string, string>>(new Map());
     const [activeChatPath, setActiveChatPath] = useState<string | null>(null);
-    const sessionChatCache = useRef<Map<string, ChatMessage[]>>(new Map());
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
@@ -639,19 +659,19 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
             });
             setIsGenerating(false);
 
-            // 保存聊天记录
-            if (activeChatPath) {
+            // 保存聊天记录（统一持久化到磁盘，包括文件夹聊天）
+            if (activeChatPath && window.chat) {
                 const finalMessages = [...newMessages];
                 finalMessages[finalMessages.length - 1].isStreaming = false;
 
-                if (activeChatPath.startsWith('__')) {
-                    sessionChatCache.current.set(activeChatPath, finalMessages);
-                } else if (window.chat) {
-                    try {
-                        await window.chat.save(activeChatPath, finalMessages);
-                    } catch (error) {
-                        console.error('保存聊天记录失败:', error);
-                    }
+                // 应用存储限制
+                const limitedMessages = limitMessages(finalMessages, MAX_CHAT_MESSAGES, MAX_CHAT_SIZE_BYTES);
+
+                try {
+                    await window.chat.save(activeChatPath, limitedMessages);
+                    console.log('💾 聊天记录已保存:', activeChatPath, `(${limitedMessages.length} 条消息)`);
+                } catch (error) {
+                    console.error('保存聊天记录失败:', error);
                 }
             }
         };
@@ -789,17 +809,14 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
     const loadChatHistory = useCallback(async (chatPath: string): Promise<ChatMessage[]> => {
         setActiveChatPath(chatPath);
 
-        if (chatPath.startsWith('__')) {
-            const cached = sessionChatCache.current.get(chatPath) || [];
-            setMessages(cached);
-            return cached;
-        }
-
+        // 统一从磁盘加载（不再区分文件和文件夹）
         if (!window.chat) return [];
         try {
             const history = await window.chat.load(chatPath) as ChatMessage[];
-            setMessages(history || []);
-            return history || [];
+            const loadedMessages = history || [];
+            setMessages(loadedMessages);
+            console.log('📂 加载聊天记录:', chatPath, `(${loadedMessages.length} 条消息)`);
+            return loadedMessages;
         } catch (error) {
             console.error('加载聊天记录失败:', error);
             setMessages([]);

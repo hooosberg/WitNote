@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import './ConfirmDialog.css';
 
@@ -8,17 +8,23 @@ export interface ConfirmDialogProps {
     details?: string[];
     onConfirm: () => void;
     onCancel: () => void;
+    /** 变体样式：warning 使用三角警告图标，info 使用圆形图标（默认） */
+    variant?: 'info' | 'warning';
 }
 
-export default function ConfirmDialog({ title, message, details, onConfirm, onCancel }: ConfirmDialogProps) {
+export default function ConfirmDialog({ title, message, details, onConfirm, onCancel, variant = 'info' }: ConfirmDialogProps) {
     const { t } = useTranslation();
 
     return (
         <div className="confirm-overlay" onClick={onCancel}>
             <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
                 {/* Logo/Icon */}
-                <div className="confirm-icon">
-                    <AlertCircle size={40} strokeWidth={2} />
+                <div className={`confirm-icon ${variant === 'warning' ? 'warning' : ''}`}>
+                    {variant === 'warning' ? (
+                        <AlertTriangle size={40} strokeWidth={2} />
+                    ) : (
+                        <AlertCircle size={40} strokeWidth={2} />
+                    )}
                 </div>
 
                 {/* Title */}

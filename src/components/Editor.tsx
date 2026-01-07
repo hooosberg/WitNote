@@ -171,7 +171,8 @@ export const Editor: React.FC<EditorProps> = ({
 
     // 智能联想功能
     // 优先使用外部传入的 engineStore（确保与 ChatPanel 同步），否则回退到内部创建
-    const internalEngineStore = useEngineStore()
+    // 当外部传入 store 时，内部 hook 仅用于作为 fallback，且不应触发副作用
+    const internalEngineStore = useEngineStore({ enableAutoInit: !externalEngineStore })
     const engineStore = externalEngineStore || internalEngineStore
     const { settings } = useSettings()
 
@@ -197,6 +198,42 @@ export const Editor: React.FC<EditorProps> = ({
 
     const [title, setTitle] = useState('')
     const showPreview = previewMode !== 'edit' // 兼容现有代码
+
+    // 分屏比例状态 (默认 50%)
+    const [splitRatio, setSplitRatio] = useState(0.5)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [isDraggingSplit, setIsDraggingSplit] = useState(false)
+
+    // 分屏拖动处理 (参考 App.tsx 实现)
+    const handleSplitResize = useCallback((e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDraggingSplit(true)
+
+        const startX = e.clientX
+        const startRatio = splitRatio
+        const container = (e.currentTarget as HTMLElement).parentElement
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            if (!container) return
+            const rect = container.getBoundingClientRect()
+            const deltaX = moveEvent.clientX - startX
+            // 计算比例变化
+            const deltaRatio = deltaX / rect.width
+            // 限制比例在 20% - 80% 之间
+            const newRatio = Math.max(0.2, Math.min(0.8, startRatio + deltaRatio))
+            setSplitRatio(newRatio)
+        }
+
+        const handleMouseUp = () => {
+            setIsDraggingSplit(false)
+            document.removeEventListener('mousemove', handleMouseMove)
+            document.removeEventListener('mouseup', handleMouseUp)
+        }
+
+        document.addEventListener('mousemove', handleMouseMove)
+        document.addEventListener('mouseup', handleMouseUp)
+    }, [splitRatio])
 
     // 分屏滚动联动处理 - 按比例同步滚动位置
     const handleSplitScroll = useCallback((source: 'left' | 'right') => {
@@ -229,6 +266,8 @@ export const Editor: React.FC<EditorProps> = ({
             isScrollingSyncRef.current = false
         }, 16) // 约一帧的时间
     }, [])
+
+
 
     // 判断是否为新建的未命名文件
     const isUntitled = fileName.startsWith('Untitled_')
@@ -451,6 +490,7 @@ export const Editor: React.FC<EditorProps> = ({
                         <div
                             ref={splitLeftRef}
                             className="editor-split-pane editor-split-left"
+                            style={{ flex: `0 0 ${splitRatio * 100}%` }}
                             onScroll={() => handleSplitScroll('left')}
                         >
                             <div className="topbar-spacer" />
@@ -594,10 +634,29 @@ export const Editor: React.FC<EditorProps> = ({
                             </div>
                         </div>
 
+                        {/* 分隔线 */}
+                        <div
+                            className={`resizable-divider ${isDraggingSplit ? 'dragging' : ''}`}
+                            onMouseDown={handleSplitResize}
+                            onDoubleClick={() => {
+                                // 双击中间调节杆：变为单屏模式
+                                // 如果是 Markdown，变为编辑模式；如果是不可编辑（如图片），变为预览模式（即单屏查看）
+                                if (isMarkdown) {
+                                    onPreviewModeChange?.('edit')
+                                } else {
+                                    onPreviewModeChange?.('preview')
+                                }
+                            }}
+                            style={{ cursor: 'col-resize', width: '8px', flexShrink: 0, position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                            <div className="divider-handle" />
+                        </div>
+
                         {/* 右侧预览区 */}
                         <div
                             ref={splitRightRef}
                             className="editor-split-pane editor-split-right"
+                            style={{ flex: 1 }}
                             onScroll={() => handleSplitScroll('right')}
                         >
                             <div className="topbar-spacer" />

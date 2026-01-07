@@ -293,6 +293,10 @@
         "confirm": "Bestätigen",
         "delete": "Löschen",
         "deleteConfirm": "Möchten Sie löschen",
+        "deleteWarningTitle": "Löschung bestätigen?",
+        "deleteWarningMessage": "Bitte bestätigen Sie sorgfältig, was Sie löschen möchten.",
+        "deleteWarningDetail1": "Dateien werden in den Papierkorb verschoben",
+        "deleteWarningDetail2": "Sie können Dateien aus dem Papierkorb wiederherstellen",
         "rename": "Umbenennen",
         "newFileName": "Neuer Dateiname",
         "newFolderName": "Neuer Ordnername"

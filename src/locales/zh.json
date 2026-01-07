@@ -303,6 +303,10 @@
         "confirm": "确认",
         "delete": "删除",
         "deleteConfirm": "确定要删除",
+        "deleteWarningTitle": "确定删除此项目?",
+        "deleteWarningMessage": "请仔细确认您要删除的内容。",
+        "deleteWarningDetail1": "删除后文件将移至系统回收站",
+        "deleteWarningDetail2": "您可以在回收站中找回已删除的文件",
         "rename": "重命名",
         "newFileName": "新文件名",
         "newFolderName": "新文件夹名"

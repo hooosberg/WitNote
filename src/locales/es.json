@@ -293,6 +293,10 @@
         "confirm": "Confirmar",
         "delete": "Eliminar",
         "deleteConfirm": "¿Desea eliminar?",
+        "deleteWarningTitle": "¿Confirmar eliminación?",
+        "deleteWarningMessage": "Por favor confirme cuidadosamente lo que desea eliminar.",
+        "deleteWarningDetail1": "Los archivos se moverán a la papelera",
+        "deleteWarningDetail2": "Puede recuperar archivos de la papelera",
         "rename": "Renombrar",
         "newFileName": "Nuevo nombre",
         "newFolderName": "Nueva carpeta"

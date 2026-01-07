@@ -38,6 +38,7 @@ const SmartFileViewer: React.FC<SmartFileViewerProps> = ({
                 filePath={file.path}
                 vaultPath={vaultPath}
                 previewMode={previewMode || 'edit'}
+                key={file.path}
                 {...editorProps}
             />
         )

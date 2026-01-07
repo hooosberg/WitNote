@@ -88,6 +88,7 @@ interface SettingsProps {
     onClose: () => void;
     llm?: UseLLMReturn;
     defaultTab?: TabType;
+    onTabChange?: (tab: TabType) => void;  // 选项卡切换回调，用于持久化
     engineStore: UseEngineStoreReturn;
 }
 
@@ -100,9 +101,15 @@ const RoleIcon = ({ name, size = 20, className }: { name: string, size?: number,
     return <Icon size={size} className={className} />;
 };
 
-export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: SettingsProps) {
+export function Settings({ isOpen, onClose, llm, defaultTab, onTabChange, engineStore }: SettingsProps) {
     const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>(defaultTab || 'appearance');
+
+    // 封装选项卡切换函数，同时通知父组件
+    const handleTabChange = (tab: TabType) => {
+        setActiveTab(tab);
+        onTabChange?.(tab);  // 通知父组件更新持久化状态
+    };
 
     // 自定义确认对话框状态
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -1625,42 +1632,42 @@ export function Settings({ isOpen, onClose, llm, defaultTab, engineStore }: Sett
                     <div className="settings-tabs">
                         <button
                             className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('appearance')}
+                            onClick={() => handleTabChange('appearance')}
                         >
                             <Palette size={18} />
                             <span>{t('settings.appearance')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('ai')}
+                            onClick={() => handleTabChange('ai')}
                         >
                             <Bot size={18} />
                             <span>{t('settings.aiEngine')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'persona' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('persona')}
+                            onClick={() => handleTabChange('persona')}
                         >
                             <MessageSquare size={18} />
                             <span>{t('settings.persona')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'autocomplete' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('autocomplete')}
+                            onClick={() => handleTabChange('autocomplete')}
                         >
                             <PenTool size={18} />
                             <span>{t('autocomplete.title')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'shortcuts' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('shortcuts')}
+                            onClick={() => handleTabChange('shortcuts')}
                         >
                             <Keyboard size={18} />
                             <span>{t('settings.shortcuts')}</span>
                         </button>
                         <button
                             className={`settings-tab ${activeTab === 'about' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('about')}
+                            onClick={() => handleTabChange('about')}
                         >
                             <Info size={18} />
                             <span>{t('settings.about')}</span>

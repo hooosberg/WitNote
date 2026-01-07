@@ -62,8 +62,6 @@ const FormatToggle: React.FC<{
     const isPdf = currentExt === 'pdf'
 
     // Determine active index for slider positioning (PDF=0, TXT=1, MD=2)
-    // If not one of these, default to 0 (PDF) or hide effect? 
-    // We'll stick to 0 for PDF/Other, 1 for TXT, 2 for MD.
     const activeIndex = isMd ? 2 : isTxt ? 1 : 0
 
     // Effect to enable transition after a short delay when expanded
@@ -79,124 +77,95 @@ const FormatToggle: React.FC<{
         }
     }, [expanded])
 
-    // For read-only non-PDF files (images/docx), we might want to disable interaction 
-    // but keep the visual consistency of the 3-segment control, 
-    // OR just show a single disabled state if it significantly differs?
-    // User requested "size specification should be exactly the same".
-    // So even for readonly, we should probably keep the 3-segment look but maybe lock it?
-    // However, for images/docx, "PDF/TXT/MD" options don't make sense.
-    // Let's keep the special single-read-only state for exotic files, 
-    // BUT for PDF (which is one of the toggles), we might want it in the toggle group?
-    // Actually, PDF is usually just a target format. The current file IS PDF.
-    // So if file is PDF, Pdf button is active.
-
-    // If the file is strictly read-only (like an image), showing PDF/TXT/MD toggles is confusing.
-    // We will keep the generic read-only single state for purely non-convertible things (images),
-    // but for text-based things (even if currently read-only like PDF in some contexts), 
-    // we might want the toggle if it's about *converting*?
-    // The previous logic had `if (isReadOnly) return ...`.
-    // Let's stick to that for Images/DOCX to avoid confusion.
-    // PDF is technically "read only" in this app's context (can't edit text), but it IS one of the formats in the toggle.
-    // So if current is PDF, we should show the toggle with PDF selected?
-    // Re-reading logic: `isReadOnly` is passed in.
-    // If `isReadOnly` is true, simple view. 
-    // But wait, the user wants "size specification exactly the same".
-    // If I show a single button for PDF, it won't match the 3-button size.
-    // The user's screenshot showed "PDF TXT MD" with MD selected.
-    // So likely they want the full control even if it's just indicating state.
-
-    // Let's try to render the full control even for `isReadOnly`, but disable buttons?
-    // If it is an image, "PDF TXT MD" makes no sense.
-    // I will assume for "PDF", "TXT", "MD" files, we show the full control.
-    // For Image/DOCX, we might still have to use the single tag, or maybe a full width tag?
-    // Let's optimize for the common case (MD/TXT/PDF) to match the requested look.
-
     const isIMAGEorDOCX = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'docx'].includes(currentExt)
 
-    // For non-convertible files, always use simple display
-    if (isIMAGEorDOCX) {
-        return (
-            <div className="segmented-control simple-display">
-                <div className="segmented-control-btn active disabled" style={{ width: '100%', fontWeight: 600 }}>
-                    {getDisplayFormat(currentExt)}
-                </div>
-            </div>
-        )
-    }
-
-    // Collapsed state: Single button that looks EXACTLY like the active segment
-    // We use .segmented-control-single which we styled to match the slider thumb
-    if (!expanded) {
-        return (
-            <div
-                className="segmented-control-single"
-                onMouseEnter={() => setExpanded(true)}
-                style={{ width: '44px' }} // Approximate width of one segment
-            >
-                <div className="segmented-control-btn">
-                    {getDisplayFormat(currentExt)}
-                </div>
-            </div>
-        )
-    }
-
-    // Expanded state
+    // Unified container for all file types to prevent layout shifts
     return (
-        <div className="segmented-control"
+        <div
+            className="format-toggle-container"
+            style={{
+                position: 'relative',
+                width: '44px',
+                height: '30px',
+                zIndex: expanded ? 100 : 1
+            }}
+            onMouseEnter={() => !isIMAGEorDOCX && setExpanded(true)}
             onMouseLeave={() => {
                 setExpanded(false)
                 setHoveredDisabled(null)
             }}
-            style={{
-                minWidth: '140px',
-                // Animation origin could be set in CSS or here
-            }}
         >
-            {/* Background Slider */}
+            {/* Collapsed state: Single button */}
             <div
-                className="segmented-control-slider"
+                className={`segmented-control-single ${isIMAGEorDOCX ? 'readonly' : ''}`}
                 style={{
-                    transform: `translateX(calc(${activeIndex * 100}% + ${activeIndex * 2}px))`,
-                    transition: enableTransition ? undefined : 'none'
+                    width: '100%',
+                    opacity: expanded ? 0 : 1,
+                    pointerEvents: expanded ? 'none' : 'auto'
                 }}
-            />
-
-            {/* PDF Button */}
-            <button
-                className={`segmented-control-btn ${isPdf ? 'active' : ''} disabled`}
-                disabled
-                title={isPdf ? '当前格式' : 'PDF 导出暂不支持'}
-                onMouseEnter={() => setHoveredDisabled('pdf')}
-                onMouseLeave={() => setHoveredDisabled(null)}
-                style={{ cursor: 'not-allowed', opacity: isPdf ? 1 : 0.5 }}
             >
-                PDF
-            </button>
+                <div className={`segmented-control-btn ${isIMAGEorDOCX ? 'active disabled' : ''}`} style={isIMAGEorDOCX ? { width: '100%', fontWeight: 600, cursor: 'default' } : undefined}>
+                    {getDisplayFormat(currentExt)}
+                </div>
+            </div>
 
-            {/* TXT Button */}
-            <button
-                className={`segmented-control-btn ${isTxt ? 'active' : ''}`}
-                onClick={() => {
-                    if (!isTxt) {
-                        onFormatToggle('txt')
-                        // Keep expanded on click to allow rapid changes or see feedback?
-                        // User said "Mouse not up -> not expanded" which implies "mouse up -> expanded"
-                        // If I click, I am still hovering.
-                    }
-                }}
-                title="转换为 TXT"
-            >
-                TXT
-            </button>
+            {/* Expanded state: Overlay (Only for convertible types) */}
+            {expanded && !isIMAGEorDOCX && (
+                <div className="segmented-control"
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0, // Anchor to right to expand left
+                        minWidth: '140px',
+                        fontSize: '11px' // Ensure text size matches collapsed state
+                    }}
+                >
+                    {/* Background Slider */}
+                    <div
+                        className="segmented-control-slider"
+                        style={{
+                            transform: `translateX(calc(${activeIndex * 100}% + ${activeIndex * 2}px))`,
+                            transition: enableTransition ? undefined : 'none'
+                        }}
+                    />
 
-            {/* MD Button */}
-            <button
-                className={`segmented-control-btn ${isMd ? 'active' : ''}`}
-                onClick={() => !isMd && onFormatToggle('md')}
-                title="转换为 Markdown"
-            >
-                MD
-            </button>
+                    {/* PDF Button */}
+                    <button
+                        className={`segmented-control-btn ${isPdf ? 'active' : ''} disabled`}
+                        disabled
+                        title={isPdf ? '当前格式' : 'PDF 导出暂不支持'}
+                        onMouseEnter={() => setHoveredDisabled('pdf')}
+                        onMouseLeave={() => setHoveredDisabled(null)}
+                        style={{ cursor: 'not-allowed', opacity: isPdf ? 1 : 0.5, fontSize: '11px' }}
+                    >
+                        PDF
+                    </button>
+
+                    {/* TXT Button */}
+                    <button
+                        className={`segmented-control-btn ${isTxt ? 'active' : ''}`}
+                        onClick={() => {
+                            if (!isTxt) {
+                                onFormatToggle('txt')
+                            }
+                        }}
+                        title="转换为 TXT"
+                        style={{ fontSize: '11px' }}
+                    >
+                        TXT
+                    </button>
+
+                    {/* MD Button */}
+                    <button
+                        className={`segmented-control-btn ${isMd ? 'active' : ''}`}
+                        onClick={() => !isMd && onFormatToggle('md')}
+                        title="转换为 Markdown"
+                        style={{ fontSize: '11px' }}
+                    >
+                        MD
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
