@@ -239,7 +239,25 @@
         "loading": "Loading...",
         "windowsOllamaTip": "Ollama is recommended for Windows. Please install Ollama first:",
         "downloadOllama": "Download Ollama",
-        "version": "Version"
+        "version": "Version",
+        "clearChatHistory": "Clear Chat History",
+        "clearChatHistoryHint": "Delete all chat history for all notes",
+        "clearChatHistoryConfirmTitle": "Clear all chat history?",
+        "clearChatHistoryConfirmMessage": "This will delete chat history associated with all notes. This action cannot be undone.",
+        "clearChatHistorySuccess": "Chat history cleared",
+        "chatManagement": {
+            "title": "Chat History Management",
+            "hint": "Control how chat history is stored",
+            "retention": "Retention Period",
+            "retentionForever": "Forever",
+            "retention1Day": "1 Day",
+            "retention3Days": "3 Days",
+            "retention7Days": "7 Days",
+            "retention30Days": "30 Days",
+            "maxMessages": "Max Messages",
+            "messages": "messages",
+            "maxSize": "Max File Size"
+        }
     },
     "shortcuts": {
         "title": "Keyboard Shortcuts",
@@ -506,7 +524,13 @@
         "moveErrorSubdirectory": "Cannot move a folder into its own subdirectory",
         "moveErrorDuplicate": "A file or folder with the same name already exists at the target location",
         "dragParseFailed": "Failed to parse drag data",
-        "untitledFolder": "Untitled Folder"
+        "untitledFolder": "Untitled Folder",
+        "importingFile": "Importing file...",
+        "importedAndOpened": "Imported and opened: {{name}}",
+        "openedFile": "Opened file: {{name}}",
+        "externalFileNoVault": "Please select a notebook folder first",
+        "importFailed": "File import failed",
+        "importError": "Error importing file: {{error}}"
     },
     "export": {
         "noActiveFile": "No active file",

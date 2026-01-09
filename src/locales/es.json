@@ -490,7 +490,13 @@
         "previewImage": "Vista previa de imagen",
         "moveErrorSubdirectory": "No se puede mover una carpeta a su propio subdirectorio",
         "moveErrorDuplicate": "Ya existe un archivo o carpeta con el mismo nombre en el destino",
-        "dragParseFailed": "Error al analizar datos de arrastre"
+        "dragParseFailed": "Error al analizar datos de arrastre",
+        "importingFile": "Importando archivo...",
+        "importedAndOpened": "Importado y abierto: {{name}}",
+        "openedFile": "Archivo abierto: {{name}}",
+        "externalFileNoVault": "Por favor, seleccione primero una carpeta de notas",
+        "importFailed": "Error al importar archivo",
+        "importError": "Error al importar el archivo: {{error}}"
     },
     "export": {
         "noActiveFile": "No hay archivo activo",

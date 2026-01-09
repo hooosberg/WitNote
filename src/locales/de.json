@@ -490,7 +490,13 @@
         "previewImage": "Bildvorschau",
         "moveErrorSubdirectory": "Ordner kann nicht in sein eigenes Unterverzeichnis verschoben werden",
         "moveErrorDuplicate": "Am Zielort existiert bereits eine Datei oder ein Ordner mit demselben Namen",
-        "dragParseFailed": "Parsen der Drag-Daten fehlgeschlagen"
+        "dragParseFailed": "Parsen der Drag-Daten fehlgeschlagen",
+        "importingFile": "Datei wird importiert...",
+        "importedAndOpened": "Importiert und geöffnet: {{name}}",
+        "openedFile": "Datei geöffnet: {{name}}",
+        "externalFileNoVault": "Bitte wählen Sie zuerst einen Notizordner",
+        "importFailed": "Dateiimport fehlgeschlagen",
+        "importError": "Fehler beim Importieren der Datei: {{error}}"
     },
     "export": {
         "noActiveFile": "Keine aktive Datei",

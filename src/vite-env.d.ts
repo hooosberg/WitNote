@@ -50,6 +50,7 @@ interface FileSystemAPI {
 interface ChatStorageAPI {
     load(filePath: string): Promise<unknown[]>
     save(filePath: string, messages: unknown[]): Promise<boolean>
+    deleteAll(): Promise<boolean>
 }
 
 // 平台信息 API

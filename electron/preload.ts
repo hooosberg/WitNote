@@ -121,7 +121,10 @@ contextBridge.exposeInMainWorld('chat', {
         ipcRenderer.invoke('chat:load', filePath),
 
     save: (filePath: string, messages: unknown[]): Promise<boolean> =>
-        ipcRenderer.invoke('chat:save', filePath, messages)
+        ipcRenderer.invoke('chat:save', filePath, messages),
+
+    deleteAll: (): Promise<boolean> =>
+        ipcRenderer.invoke('chat:deleteAll')
 })
 
 // 暴露平台信息

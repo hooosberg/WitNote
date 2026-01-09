@@ -22,18 +22,32 @@ import { getCurrentLanguage } from '../i18n';
 // 上下文最大长度
 const MAX_CONTEXT_LENGTH = 4000;
 
-// 聊天记录存储限制
-const MAX_CHAT_MESSAGES = 20;  // 最多保存 20 条消息
-const MAX_CHAT_SIZE_BYTES = 10000;  // 最大 10KB
+// 聊天记录存储限制的默认值在 useSettings 中定义
 
 /**
  * 限制聊天消息数量和大小
+ * @param retentionDays 保留天数，0=永久
  */
-function limitMessages(messages: ChatMessage[], maxCount: number, maxBytes: number): ChatMessage[] {
+function limitMessages(
+    messages: ChatMessage[],
+    maxCount: number,
+    maxSizeKB: number,
+    retentionDays: number = 0
+): ChatMessage[] {
+    // 过滤掉 content 为空的消息（防止空气泡）
+    let filtered = messages.filter(m => m.content && m.content.trim() !== '');
+
+    // 按时间过滤（如果设置了保留天数）
+    if (retentionDays > 0) {
+        const cutoffTime = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+        filtered = filtered.filter(m => m.timestamp >= cutoffTime);
+    }
+
     // 保留最近的消息
-    let limited = messages.slice(-maxCount);
+    let limited = filtered.slice(-maxCount);
 
     // 检查字节数限制
+    const maxBytes = maxSizeKB * 1024;
     let jsonStr = JSON.stringify(limited);
     while (jsonStr.length > maxBytes && limited.length > 2) {
         limited = limited.slice(1);  // 移除最早的消息，保留至少最后一对问答
@@ -130,6 +144,12 @@ export function useLLM(engineStore: UseEngineStoreReturn): UseLLMReturn {
 
     // 服务引用
     const ollamaServiceRef = useRef<OllamaService | null>(null);
+
+    // 消息状态引用（用于在回调中获取最新消息）
+    const messagesRef = useRef<ChatMessage[]>([]);
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
 
     // 动态状态映射（根据引擎类型）
     useEffect(() => {
@@ -652,29 +672,38 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         };
 
         const onComplete = async () => {
+            // 在 setMessages 回调中获取最新消息并保存，避免异步竞态问题
+            let messagesToSave: ChatMessage[] = [];
+
             setMessages(prev => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
                 if (lastMsg) lastMsg.isStreaming = false;
+                // 在回调中同步捕获最新消息
+                messagesToSave = updated.map(m => ({ ...m, isStreaming: false }));
                 return updated;
             });
             setIsGenerating(false);
 
-            // 保存聊天记录（统一持久化到磁盘，包括文件夹聊天）
-            if (activeChatPath && window.chat) {
-                const finalMessages = [...newMessages];
-                finalMessages[finalMessages.length - 1].isStreaming = false;
+            // 使用微任务延迟保存，确保 setMessages 同步回调已执行完毕
+            setTimeout(async () => {
+                if (activeChatPath && window.chat && messagesToSave.length > 0) {
+                    // 应用存储限制（使用用户设置）
+                    const limitedMessages = limitMessages(
+                        messagesToSave,
+                        settings.chatMaxMessages,
+                        settings.chatMaxSizeKB,
+                        settings.chatRetentionDays
+                    );
 
-                // 应用存储限制
-                const limitedMessages = limitMessages(finalMessages, MAX_CHAT_MESSAGES, MAX_CHAT_SIZE_BYTES);
-
-                try {
-                    await window.chat.save(activeChatPath, limitedMessages);
-                    console.log('💾 聊天记录已保存:', activeChatPath, `(${limitedMessages.length} 条消息)`);
-                } catch (error) {
-                    console.error('保存聊天记录失败:', error);
+                    try {
+                        await window.chat.save(activeChatPath, limitedMessages);
+                        console.log('💾 聊天记录已保存:', activeChatPath, `(${limitedMessages.length} 条消息)`);
+                    } catch (error) {
+                        console.error('保存聊天记录失败:', error);
+                    }
                 }
-            }
+            }, 0);
         };
 
         const onError = (error: Error) => {
@@ -731,6 +760,30 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
 
                         onToken(response);
                         onComplete();
+
+                        // WebLLM 是同步调用，手动将 response 更新到 assistantMessage 并保存
+                        // 因为 React state 更新是异步的，onComplete 中的保存可能拿不到最新内容
+                        if (activeChatPath && window.chat && response) {
+                            // 直接构建完整消息（不依赖 React state）
+                            const messagesWithResponse = [...newMessages];
+                            messagesWithResponse[messagesWithResponse.length - 1] = {
+                                ...assistantMessage,
+                                content: response,
+                                isStreaming: false
+                            };
+                            const limitedMessages = limitMessages(
+                                messagesWithResponse,
+                                settings.chatMaxMessages,
+                                settings.chatMaxSizeKB,
+                                settings.chatRetentionDays
+                            );
+                            try {
+                                await window.chat.save(activeChatPath, limitedMessages);
+                                console.log('💾 [WebLLM] 聊天记录已保存:', activeChatPath, `(${limitedMessages.length} 条消息)`);
+                            } catch (error) {
+                                console.error('保存聊天记录失败:', error);
+                            }
+                        }
                     } catch (webllmError) {
                         const errorMsg = webllmError instanceof Error ? webllmError.message : String(webllmError);
                         console.error('WebLLM 内部错误:', webllmError);
@@ -810,7 +863,8 @@ ${fileListWithPreviews}${hasMore ? '\n... (更多文章)' : ''}`;
         if (!window.chat) return [];
         try {
             const history = await window.chat.load(chatPath) as ChatMessage[];
-            const loadedMessages = history || [];
+            // 过滤掉 content 为空的消息（防止空气泡）
+            const loadedMessages = (history || []).filter(m => m.content && m.content.trim() !== '');
             setMessages(loadedMessages);
             console.log('📂 加载聊天记录:', chatPath, `(${loadedMessages.length} 条消息)`);
             return loadedMessages;

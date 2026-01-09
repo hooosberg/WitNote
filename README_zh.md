@@ -16,16 +16,27 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
+  <br>
+  <img src="https://img.shields.io/badge/Editable-md%20%7C%20txt-007AFF.svg" alt="Editable">
+  <img src="https://img.shields.io/badge/Preview-pdf%20%7C%20docx%20%7C%20images-FF9500.svg" alt="Preview">
 </p>
 
-> **🎉 即将登陆 Mac App Store！**
+<p align="center">
+  <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
+    <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+  </a>
+</p>
+
+> **🎉 现已上架 Mac App Store！**
 > 
-> 本应用完全符合 Apple 安全与隐私标准，目前正在审核中。请大家多多支持，您的 Star ⭐️ 是我们最大的动力！
+> 智简笔记本已正式登陆 Mac App Store，感谢大家一路以来的支持！您的 Star ⭐️ 是我们继续前进的最大动力！
 
 **智简笔记本** 是一款本地优先的 AI 写作伴侣，支持 macOS、Windows 和 Linux 平台。
 支持 **Ollama / WebLLM / 云端 API** 三种引擎自由切换，搭配极简**原生卡片界面**，开箱即用。除模型下载外无云端依赖，无隐私焦虑，让智能回归轻盈。
 
-![本地 AI](src/pic/witnote%20宣传截图/中文版设计/本地离线ai.jpg)
+![本地离线AI记事本](src/pic/witnote%20宣传截图/中文/本地离线AI记事本.jpg)
+
+
 
 ---
 
@@ -43,18 +54,26 @@
 
 ---
 
-## ✨ 功能亮点 (v1.3.2)
+## ✨ 功能亮点 (v1.3.3)
 
-### 🆕 v1.3.2 新功能
-- ✨ **增强型智能续写** — 三档预设 (Lite/Standard/Full)，适配不同大小模型，让写作因材施教
-- ⌨️ **智能 Tab 键** — 按 Tab 逐句/逐段接受建议，更加精准可控，告别此消彼长
-- 🛠️ **自定义提示词** — 设置中直接编辑系统提示词，支持一键恢复默认
-- 🌓 **双栏预览** — 所见即所得，左侧编辑右侧实时预览
-- ⚡️ **快捷编辑** — 悬浮菜单增强，选中文字快速修改格式
+### 🆕 v1.3.3 新功能
+
+- 🪟 **磨砂玻璃 UI** — 全新视觉设计，现代磨砂玻璃效果贯穿全局
+- 📐 **灵活三栏布局** — 侧边栏、编辑区、AI 面板三栏均可自由调整宽度和独立关闭
+- ✋ **双栏拖拽编辑** — 双栏预览模式下，自由拖拽分割线调整编辑区与预览区比例
+- 📂 **Finder 风格文件树** — 颜色标记、拖拽移动、悬停展开文件夹，右键菜单全面升级
+- 📄 **多格式支持** — 新增 PDF、Word 文档预览，支持常见图片格式查看
+  - 可编辑：`.md` `.txt`
+  - 只读预览：`.pdf` `.docx`
+  - 图片查看：`.jpg` `.png` `.gif` `.webp`
+- 🚀 **快速启动** — 优化启动画面，大幅减少白屏等待时间
+- 🔒 **App Store 上架** — 完全符合 Apple 沙盒安全标准，已正式上架 Mac App Store
 
 ### 🔧 核心功能
+
 - 📝 **纯本地笔记** — 选择任意文件夹作为笔记库，支持 `.txt` 和 `.md`
 - 🤖 **三擎合一** — 自由切换 **WebLLM** (轻量)、**Ollama** (本地强力) 或 **云端 API** (自定连接)
+- ✨ **智能续写** — 三档预设 (Lite/Standard/Full)，按 Tab 逐句接受建议
 - 🎭 **丰富角色库** — 内置 10+ 种精选角色提示词 (写作、翻译、润色等)，支持一键切换与自定义
 - 🌍 **全球沟通** — **支持 8 种语言**: 
   - 简体中文, English, 繁體中文, 日本語, 한국어, Français, Deutsch, Español
@@ -72,13 +91,23 @@
 
 ### 下载
 
+#### 🍎 Mac App Store (推荐)
+
+<a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
+  <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+</a>
+
+#### 📦 GitHub Releases
+
 从 [Releases](https://github.com/hooosberg/WitNote/releases) 下载最新安装包：
 
-| 🍎 macOS | `WitNote-1.3.2.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
-| 🪟 Windows (x64) | `WitNote-1.3.2-setup-x64.exe` | 普通电脑 (Intel/AMD) |
-| 🪟 Windows (ARM64) | `WitNote-1.3.2-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
-| 🐧 Linux (AppImage) | `WitNote-1.3.2-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
-| 📦 Linux (Deb) | `WitNote-1.3.2-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
+| 平台 | 文件 | 说明 |
+|------|------|------|
+| 🍎 macOS | `WitNote-1.3.3.dmg` | 仅支持 Apple Silicon (M1/M2/M3/M4/M5) |
+| 🪟 Windows (x64) | `WitNote-1.3.3-setup-x64.exe` | 普通电脑 (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.3-setup-arm64.exe` | 骁龙芯片电脑 (如 Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.3-x86_64.AppImage` | x64 通用格式 (另有 ARM64 版本) |
+| 📦 Linux (Deb) | `WitNote-1.3.3-amd64.deb` | Ubuntu/Debian x64 (另有 ARM64 版本) |
 
 ---
 
@@ -122,18 +151,22 @@
 | 架构 | x64 / ARM64 | x64 / ARM64 |
 | 内存 | 8GB | 16GB+ |
 
-> ⚠️ **注意**: Windows 版本为首次发布，欢迎反馈问题！
-
 ---
 
 ## 📦 安装说明
 
 ### 🍎 macOS 安装
 
+**方式一：Mac App Store (推荐)**
+
+直接在 App Store 搜索 "WitNote" 或 [点击此处](https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12) 下载安装，享受自动更新。
+
+**方式二：DMG 安装包**
+
 1. 下载 `.dmg` 文件
 2. 双击打开 DMG
 3. 将应用拖入 Applications 文件夹
-4. 首次运行可能需要信任开发者（见下方说明）
+4. 从启动台运行
 
 > 🎉 **好消息！**
 >
@@ -157,10 +190,10 @@
 3. 双击运行
 
 **Deb (Ubuntu/Debian):**
-1. 下载 `.deb` 文件 (如 `WitNote-1.3.1-amd64.deb`)
+1. 下载 `.deb` 文件 (如 `WitNote-1.3.3-amd64.deb`)
 2. 在终端运行安装命令 (这将自动处理依赖):
    ```bash
-   sudo apt install ./WitNote-1.3.2-amd64.deb
+   sudo apt install ./WitNote-1.3.3-amd64.deb
    ```
 
 > 📝 **注意事项 (Windows 用户必读)**:
@@ -191,43 +224,33 @@
 
 ---
 
-## 📸 截图
+## 📸 截图展示
 
-### ✨ 增强型智能续写 (v1.3.2 新功能)
-![智能续写](src/pic/witnote%20宣传截图/中文版设计/智能续写.jpg)
 
-### 🌓 双栏实时预览
-![双栏实时预览](src/pic/witnote%20宣传截图/中文版设计/双栏实时预览.jpg)
+### 📐 双栏预览编辑
+![双栏预览编辑](src/pic/witnote%20宣传截图/中文/双栏预览编辑.jpg)
 
-### ⚡️ 快捷编辑
-![快捷编辑](src/pic/witnote%20宣传截图/中文版设计/快捷编辑.jpg)
+### 🤖 三种AI引擎
+![三种AI引擎](src/pic/witnote%20宣传截图/中文/三种AI引擎.jpg)
+
+### ✨ 智能续写
+![智能续写](src/pic/witnote%20宣传截图/中文/智能续写.jpg)
+
+### 🎭 个性化角色
+![个性化角色](src/pic/witnote%20宣传截图/中文/个性化角色.jpg)
+
+### 📄 Word/PDF/JPG 多格式支持
+![Word PDF JPG 支持](src/pic/witnote%20宣传截图/中文/word%20pdf%20jpg%20多种格式支持.jpg)
 
 ### 🎯 专注模式
-![专注模式](src/pic/witnote%20宣传截图/中文版设计/专注模式.jpg)
+![专注模式](src/pic/witnote%20宣传截图/中文/专注模式.jpg)
 
-### 🎨 多种主题
-![多种主题](src/pic/witnote%20宣传截图/中文版设计/多种主题.jpg)
+### 🎨 多种主题外观
+![多种主题](src/pic/witnote%20宣传截图/中文/多种主题外观.jpg)
 
-### 🤖 本地离线 AI
-![本地离线AI](src/pic/witnote%20宣传截图/中文版设计/本地离线ai.jpg)
+### 🗂️ 卡片管理文件
+![卡片管理文件](src/pic/witnote%20宣传截图/中文/卡片管理文件.jpg)
 
-### 💾 本地离线存储
-![本地存储](src/pic/witnote%20宣传截图/中文版设计/本地离线存储.jpg)
-
-### 🔄 格式转换
-![格式转换](src/pic/witnote%20宣传截图/中文版设计/格式转换.jpg)
-
-### 🔄 三种引擎自由切换
-![三种引擎自由切换](src/pic/witnote%20宣传截图/中文版设计/三种引擎自由切换.jpg)
-
-### 🎭 多角色提示词
-![多角色提示词](src/pic/witnote%20宣传截图/中文版设计/多角色提示词.jpg)
-
-### ⌨️ 快捷键
-![快捷键](src/pic/witnote%20宣传截图/中文版设计/快捷键.jpg)
-
-### 🖼️ 插入图片
-![插入图片](src/pic/witnote%20宣传截图/中文版设计/插入图片.jpg)
 
 ---
 

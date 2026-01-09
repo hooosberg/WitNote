@@ -10,8 +10,10 @@
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
     "build:mas": "tsc && vite build && electron-builder --mac mas",
+    "build:mac:dmg": "tsc && vite build && electron-builder --mac dmg",
     "build:mac:dmg-test": "tsc && vite build && SKIP_NOTARIZE=true electron-builder --mac dmg",
     "build:win": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --win",
+    "build:win:arm64": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --win --arm64",
     "build:linux": "DISABLE_WEBLLM=true tsc && DISABLE_WEBLLM=true vite build && electron-builder --linux",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""

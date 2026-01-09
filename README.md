@@ -16,16 +16,27 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
+  <br>
+  <img src="https://img.shields.io/badge/Editable-md%20%7C%20txt-007AFF.svg" alt="Editable">
+  <img src="https://img.shields.io/badge/Preview-pdf%20%7C%20docx%20%7C%20images-FF9500.svg" alt="Preview">
 </p>
 
-> **🎉 Coming Soon to Mac App Store!**
+<p align="center">
+  <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
+    <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+  </a>
+</p>
+
+> **🎉 Now Available on Mac App Store!**
 > 
-> Fully compliant with Apple's security & privacy standards. Currently under review. Your support and stars ⭐️ keep us going!
+> WitNote has officially landed on the Mac App Store. Thank you for your support! Your Star ⭐️ is our biggest motivation to keep moving forward!
 
 **WitNote** is a local-first AI writing companion for macOS, Windows, and Linux.
 Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired with an ultra-minimalist **native card interface**, it works right out of the box. No continuous cloud dependency, no privacy concerns — intelligence made lightweight.
 
-![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
+![Local Offline AI Note](src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
+
+
 
 ---
 
@@ -43,18 +54,26 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ---
 
-## ✨ Features (v1.3.2)
+## ✨ Features (v1.3.3)
 
-### 🆕 What's New in v1.3.2
-- ✨ **Enhanced Autocomplete** — 3 selectable levels (Lite/Standard/Full) for different model sizes.
-- ⌨️ **Smart Tab** — Press Tab to accept sentence by sentence, or segments, for precise control.
-- 🛠️ **Customizable Prompts** — Edit system prompts directly in settings with a one-click restore option.
-- 🌓 **Dual-Pane Preview** — WYSIWYG, edit on the left, real-time preview on the right
-- ⚡️ **Quick Edit** — Enhanced floating menu for styling selected text
+### 🆕 What's New in v1.3.3
+
+- 🪟 **Frosted Glass UI** — Brand new visual design, modern frosted glass effect throughout
+- 📐 **Flexible Three-Pane Layout** — Sidebar, Editor, and AI Panel can be resized and closed independently
+- ✋ **Dual-Pane Drag & Edit** — In split view, drag the divider freely to adjust editor/preview ratio
+- 📂 **Finder-Style File Tree** — Color tags, drag-to-move, hover-to-expand, fully upgraded context menu
+- 📄 **Multi-Format Support** — Added PDF/Word preview, supports common image formats
+  - Editable: `.md` `.txt`
+  - Read-only Preview: `.pdf` `.docx`
+  - Image Viewer: `.jpg` `.png` `.gif` `.webp`
+- 🚀 **Faster Startup** — Optimized splash screen, significantly reduced white screen wait time
+- 🔒 **App Store Release** — Fully compliant with Apple Sandbox security standards, now on Mac App Store
 
 ### 🔧 Core Features
+
 - 📝 **Pure Local Notes** — Choose any folder as your notes vault, supports `.txt` and `.md`
 - 🤖 **Three-in-One Engine** — Switch freely between **WebLLM** (Light), **Ollama** (Local Power), or **Cloud API** (Custom Connection)
+- ✨ **Smart Autocomplete** — 3 presets (Lite/Standard/Full), Press Tab to accept suggestions sentence by sentence
 - 🎭 **Rich Role Library** — Built-in 10+ selected role prompts (Writer, Translator, Polisher, etc.), one-click switch & custom support
 - 🌍 **Global Communication** — **Supports 8 Languages**: 
   - English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch, Español
@@ -68,20 +87,27 @@ Supports free switching between **Ollama / WebLLM / Cloud API** engines, paired 
 
 ---
 
-
 ## 🚀 Quick Start
 
 ### Download
+
+#### 🍎 Mac App Store (Recommended)
+
+<a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
+  <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+</a>
+
+#### 📦 GitHub Releases
 
 Download the latest installer from [Releases](https://github.com/hooosberg/WitNote/releases):
 
 | Platform | File | Note |
 |----------|------|------|
-| 🍎 macOS | `WitNote-1.3.2.dmg` | Apple Silicon (M1/M2/M3/M4/M5) Only |
-| 🪟 Windows (x64) | `WitNote-1.3.2-setup-x64.exe` | Standard PC (Intel/AMD) |
-| 🪟 Windows (ARM64) | `WitNote-1.3.2-setup-arm64.exe` | Snapdragon PCs (e.g. Surface Pro X) |
-| 🐧 Linux (AppImage) | `WitNote-1.3.2-x86_64.AppImage` | x64 Universal (ARM64 available) |
-| 📦 Linux (Deb) | `WitNote-1.3.2-amd64.deb` | Ubuntu/Debian x64 (ARM64 available) |
+| 🍎 macOS | `WitNote-1.3.3.dmg` | Apple Silicon (M1/M2/M3/M4/M5) Only |
+| 🪟 Windows (x64) | `WitNote-1.3.3-setup-x64.exe` | Standard PC (Intel/AMD) |
+| 🪟 Windows (ARM64) | `WitNote-1.3.3-setup-arm64.exe` | Snapdragon PCs (e.g. Surface Pro X) |
+| 🐧 Linux (AppImage) | `WitNote-1.3.3-x86_64.AppImage` | x64 Universal (ARM64 available) |
+| 📦 Linux (Deb) | `WitNote-1.3.3-amd64.deb` | Ubuntu/Debian x64 (ARM64 available) |
 
 ---
 
@@ -125,13 +151,17 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 | Arch | x64 / ARM64 | x64 / ARM64 |
 | RAM | 8GB | 16GB+ |
 
-> ⚠️ **Note**: Windows version is newly released. Feedback welcome!
-
 ---
 
 ## 📦 Installation
 
 ### 🍎 macOS Installation
+
+**Method 1: Mac App Store (Recommended)**
+
+Search for "WitNote" in the App Store or [Click Here](https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12) to download and install, enjoying automatic updates.
+
+**Method 2: DMG Installer**
 
 1. Download the `.dmg` file
 2. Double-click to open the DMG
@@ -143,7 +173,7 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 > This app is now **Apple Notarized**! No more "unverified developer" warnings!
 >
 > 😅 *~~The developer bravely took out a loan to afford the $99 Apple Developer account...~~*
-> **(Yes, this actually happened. Thanks to all users for your support!)*
+> *(Yes, this actually happened. Thanks to all users for your support!)*
 
 ### 🪟 Windows Installation
 
@@ -160,12 +190,11 @@ Download the latest installer from [Releases](https://github.com/hooosberg/WitNo
 3. Double-click to run
 
 **Deb (Ubuntu/Debian):**
-1. Download `.deb` file (e.g., `WitNote-1.3.1-amd64.deb`)
+1. Download `.deb` file (e.g., `WitNote-1.3.3-amd64.deb`)
 2. Run installation via terminal (automatically handles dependencies):
    ```bash
-   sudo apt install ./WitNote-1.3.2-amd64.deb
+   sudo apt install ./WitNote-1.3.3-amd64.deb
    ```
-
 
 > 📝 **Important Notes for Windows Users**:
 > 
@@ -197,41 +226,31 @@ Supports connecting to OpenAI-compatible Cloud APIs.
 
 ## 📸 Screenshots
 
-### ✨ Enhanced Autocomplete (v1.3.2 New)
-![AI Autocomplete](src/pic/witnote%20宣传截图/英文版设计/智能续写en.jpg)
 
-### 🌓 Dual-Pane Preview
-![Dual-Pane Preview](src/pic/witnote%20宣传截图/英文版设计/双栏实时预览.jpg)
+### 📐 Dual-Pane Editor
+![Dual-Pane Editor](src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
 
-### ⚡️ Quick Edit
-![Quick Edit](src/pic/witnote%20宣传截图/英文版设计/快捷编辑.jpg)
+### 🤖 Three AI Engines
+![Three AI Engines](src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
+
+### ✨ Smart Autocomplete
+![Smart Autocomplete](src/pic/witnote%20宣传截图/English/智能续写.jpg)
+
+### 🎭 Personalized Persona
+![Personalized Persona](src/pic/witnote%20宣传截图/English/个性化角色.jpg)
+
+### 📄 Multi-Format Support
+![Multi-Format Support](src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
 
 ### 🎯 Focus Mode
-![Focus Mode](src/pic/witnote%20宣传截图/英文版设计/专注模式.jpg)
+![Focus Mode](src/pic/witnote%20宣传截图/English/专注模式.jpg)
 
 ### 🎨 Multiple Themes
-![Themes](src/pic/witnote%20宣传截图/英文版设计/多种主题.jpg)
+![Multiple Themes](src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
 
-### 🤖 Local Offline AI
-![Local AI](src/pic/witnote%20宣传截图/英文版设计/本地离线ai.jpg)
+### 🗂️ Card File Management
+![Card File Management](src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
 
-### 💾 Offline Storage
-![Storage](src/pic/witnote%20宣传截图/英文版设计/离线存储.jpg)
-
-### 🔄 Format Conversion
-![Format](src/pic/witnote%20宣传截图/英文版设计/格式转换.jpg)
-
-### 🔄 Three Engines
-![Three Engines](src/pic/witnote%20宣传截图/英文版设计/THREE%20ENGINES%20CAN%20BE%20SWITCHED%20FREELY.jpg)
-
-### 🎭 Multi-Role Prompts
-![Multi-Role Prompts](src/pic/witnote%20宣传截图/英文版设计/MULTI-ROLE%20PROMPTS.jpg)
-
-### ⌨️ Shortcuts
-![Shortcuts](src/pic/witnote%20宣传截图/英文版设计/SHORTCUT%20KEY.jpg)
-
-### 🖼️ Image Insertion
-![Image Insertion](src/pic/witnote%20宣传截图/英文版设计/插入图片.jpg)
 
 ---
 

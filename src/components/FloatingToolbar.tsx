@@ -101,10 +101,10 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
             selectionCenterX = (startX + endX) / 2
         } else {
             // 跨多行：工具栏显示在第一行上方
-            // 水平居中于第一行 - 从起始位置到该行末尾的中点
+            // 水平靠左对齐 - 以选区起始位置为基准，而非居中
             const startX = textareaRect.left + paddingLeft + borderLeft + startPos.left
-            const lineEndX = textareaRect.right - parseFloat(textareaStyle.paddingRight || '0') - 20
-            selectionCenterX = (startX + lineEndX) / 2
+            // 工具栏左边缘对齐到选区起始位置
+            selectionCenterX = startX + (toolbarWidth / 2)
         }
 
         let left = selectionCenterX - (toolbarWidth / 2) + horizontalOffset

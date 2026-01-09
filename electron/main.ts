@@ -839,8 +839,11 @@ function setupIpcHandlers() {
     // ============ 外部文件打开支持 ============
 
     // 获取启动时的外部文件路径（用于文件关联功能）
+    // 注意：调用后会清除状态，防止重复处理
     ipcMain.handle('fs:getExternalFilePath', () => {
         const filePath = pendingFilePath || getFileFromArgs()
+        // 清除状态，防止下次调用时重复返回
+        pendingFilePath = null
         return filePath
     })
 
@@ -1241,6 +1244,29 @@ function setupIpcHandlers() {
 
         await fs.writeFile(chatPath, JSON.stringify(messages, null, 2), 'utf-8')
         return true
+    })
+
+    // 删除所有聊天记录
+    ipcMain.handle('chat:deleteAll', async () => {
+        const vaultPath = store.get('vaultPath')
+        if (!vaultPath) return false
+
+        const chatsDir = join(vaultPath, '.zennote', 'chats')
+        try {
+            if (existsSync(chatsDir)) {
+                const files = await fs.readdir(chatsDir)
+                for (const file of files) {
+                    if (file.endsWith('.json')) {
+                        await fs.unlink(join(chatsDir, file))
+                    }
+                }
+                console.log('🗑️ 已清除所有聊天记录:', files.length, '个文件')
+            }
+            return true
+        } catch (error) {
+            console.error('清除聊天记录失败:', error)
+            return false
+        }
     })
 
     // ============ PDF 导出功能 ============
@@ -2081,51 +2107,81 @@ function createWindow() {
 
     mainWindow.webContents.on('did-finish-load', () => {
         console.log('✅ 页面加载完成')
-
-        // 发送待打开的外部文件
-        const filePath = pendingFilePath || getFileFromArgs()
-        if (filePath && mainWindow) {
-            console.log('📤 发送外部文件给渲染进程:', filePath)
-            mainWindow.webContents.send('open-external-file', filePath)
-            pendingFilePath = null
-        }
+        // 注意：外部文件路径通过 getExternalFilePath IPC 由渲染进程主动获取
+        // 不在这里发送，避免重复触发
     })
 }
 
 // ============ 应用启动 ============
 
-app.whenReady().then(async () => {
-    // 注册自定义协议 local-file:// 用于加载本地图片
-    protocol.handle('local-file', (request) => {
-        // 将 local-file:// URL 转换为 file:// URL
-        const url = request.url.replace('local-file://', 'file://')
-        console.log('🖼️ 加载本地图片:', url)
-        return net.fetch(url)
-    })
-    console.log('✅ 注册 local-file:// 协议')
+// Windows/Linux: 请求单实例锁，确保只有一个应用实例运行
+// 当用户通过文件关联打开第二个文件时，会触发 second-instance 事件
+const gotTheLock = app.requestSingleInstanceLock()
 
-    // 检测系统语言并加载菜单翻译
-    const systemLang = detectSystemLanguage()
-    loadMenuLanguage(systemLang)
-    console.log(`🌍 系统语言: ${app.getLocale()} → 菜单语言: ${systemLang}`)
+if (!gotTheLock) {
+    // 如果无法获取锁，说明已有另一个实例在运行，退出当前实例
+    console.log('🔒 另一个实例正在运行，退出当前实例')
+    app.quit()
+} else {
+    // Windows/Linux: 处理第二实例启动（用户在应用运行时通过文件关联打开文件）
+    app.on('second-instance', (_event, commandLine, _workingDirectory) => {
+        console.log('📂 检测到第二实例启动，命令行参数:', commandLine)
 
-    setupIpcHandlers()
-    createApplicationMenu()  // 创建应用菜单
-    createDockMenu()         // 创建 Dock 菜单 (仅 macOS)
-    createWindow()
-
-    app.on('activate', () => {
-        // macOS: 点击 Dock 图标时重新显示或创建窗口
+        // 聚焦主窗口
         if (mainWindow) {
-            // 窗口存在但可能被隐藏或最小化
-            mainWindow.show()
+            if (mainWindow.isMinimized()) mainWindow.restore()
             mainWindow.focus()
-        } else if (BrowserWindow.getAllWindows().length === 0) {
-            // 没有任何窗口，创建新窗口
-            createWindow()
+
+            // 从命令行参数中提取文件路径
+            // 跳过以 - 开头的参数和应用路径本身
+            for (const arg of commandLine.slice(1)) {
+                if (arg.startsWith('-')) continue
+
+                if (existsSync(arg)) {
+                    const ext = extname(arg).toLowerCase()
+                    if (SUPPORTED_FILE_EXTENSIONS.includes(ext)) {
+                        console.log('📤 发送外部文件给渲染进程 (second-instance):', arg)
+                        mainWindow.webContents.send('open-external-file', arg)
+                        break  // 只处理第一个有效文件
+                    }
+                }
+            }
         }
     })
-})
+
+    app.whenReady().then(async () => {
+        // 注册自定义协议 local-file:// 用于加载本地图片
+        protocol.handle('local-file', (request) => {
+            // 将 local-file:// URL 转换为 file:// URL
+            const url = request.url.replace('local-file://', 'file://')
+            console.log('🖼️ 加载本地图片:', url)
+            return net.fetch(url)
+        })
+        console.log('✅ 注册 local-file:// 协议')
+
+        // 检测系统语言并加载菜单翻译
+        const systemLang = detectSystemLanguage()
+        loadMenuLanguage(systemLang)
+        console.log(`🌍 系统语言: ${app.getLocale()} → 菜单语言: ${systemLang}`)
+
+        setupIpcHandlers()
+        createApplicationMenu()  // 创建应用菜单
+        createDockMenu()         // 创建 Dock 菜单 (仅 macOS)
+        createWindow()
+
+        app.on('activate', () => {
+            // macOS: 点击 Dock 图标时重新显示或创建窗口
+            if (mainWindow) {
+                // 窗口存在但可能被隐藏或最小化
+                mainWindow.show()
+                mainWindow.focus()
+            } else if (BrowserWindow.getAllWindows().length === 0) {
+                // 没有任何窗口，创建新窗口
+                createWindow()
+            }
+        })
+    })
+}
 
 // macOS: 处理通过文件关联或拖拽打开文件的事件
 app.on('open-file', (event, filePath) => {

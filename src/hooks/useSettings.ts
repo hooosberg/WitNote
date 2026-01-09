@@ -66,6 +66,11 @@ export interface AppSettings {
     autocompleteDelay: number;     // 延迟时间（毫秒）
     autocompleteUseRolePrompt: boolean;  // 是否使用角色设定影响续写风格
     autocompleteContextLength: number;   // 上下文长度（字符数）
+
+    // 聊天记录管理
+    chatRetentionDays: number;     // 保留天数: 0=永久, 1/3/7/30
+    chatMaxMessages: number;       // 最大消息数量: 10/20/50/100
+    chatMaxSizeKB: number;         // 最大文件大小: 10/50/100 KB
 }
 
 // 默认设置
@@ -96,7 +101,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     autocompletePrompt: '', // 空则使用默认提示词
     autocompleteDelay: 500,
     autocompleteUseRolePrompt: false,  // 默认不使用角色设定
-    autocompleteContextLength: 500     // 默认上下文长度
+    autocompleteContextLength: 500,    // 默认上下文长度
+
+    // 聊天记录管理
+    chatRetentionDays: 0,      // 默认永久保留
+    chatMaxMessages: 20,       // 默认 20 条
+    chatMaxSizeKB: 10          // 默认 10KB
 };
 
 export interface UseSettingsReturn {

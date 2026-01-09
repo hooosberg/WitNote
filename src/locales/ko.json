@@ -232,7 +232,25 @@
         "resetDetail3": "기본 프롬프트 복원",
         "resetDetail4": "작성한 노트는 영향을 받지 않습니다",
         "loading": "로딩 중...",
-        "version": "버전"
+        "version": "버전",
+        "clearChatHistory": "채팅 기록 삭제",
+        "clearChatHistoryHint": "모든 노트의 채팅 기록을 삭제합니다",
+        "clearChatHistoryConfirmTitle": "모든 채팅 기록을 삭제하시겠습니까?",
+        "clearChatHistoryConfirmMessage": "모든 노트와 관련된 채팅 기록을 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
+        "clearChatHistorySuccess": "채팅 기록이 삭제되었습니다",
+        "chatManagement": {
+            "title": "채팅 기록 관리",
+            "hint": "채팅 기록 저장 설정 관리",
+            "retention": "보관 기간",
+            "retentionForever": "영구 보관",
+            "retention1Day": "1일",
+            "retention3Days": "3일",
+            "retention7Days": "7일",
+            "retention30Days": "30일",
+            "maxMessages": "최대 메시지 수",
+            "messages": "개",
+            "maxSize": "최대 파일 크기"
+        }
     },
     "guide": {
         "aboutTitle": "WitNote 소개",
@@ -491,7 +509,13 @@
         "previewImage": "이미지 미리보기",
         "moveErrorSubdirectory": "폴더를 자신의 하위 디렉터리로 이동할 수 없습니다",
         "moveErrorDuplicate": "대상 위치에 같은 이름의 파일이나 폴더가 이미 있습니다",
-        "dragParseFailed": "드래그 데이터 파싱 실패"
+        "dragParseFailed": "드래그 데이터 파싱 실패",
+        "importingFile": "파일 가져오는 중...",
+        "importedAndOpened": "가져오기 및 열기 완료: {{name}}",
+        "openedFile": "파일 열림: {{name}}",
+        "externalFileNoVault": "먼저 노트북 폴더를 선택하세요",
+        "importFailed": "파일 가져오기 실패",
+        "importError": "파일 가져오기 오류: {{error}}"
     },
     "export": {
         "noActiveFile": "활성 파일 없음",

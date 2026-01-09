@@ -228,7 +228,25 @@
         "resetDetail3": "恢復默認提示詞",
         "resetDetail4": "您的筆記內容不會受到影響",
         "loading": "載入中...",
-        "version": "版本"
+        "version": "版本",
+        "clearChatHistory": "清除聊天記錄",
+        "clearChatHistoryHint": "刪除所有筆記的聊天歷史記錄",
+        "clearChatHistoryConfirmTitle": "確定要清除所有聊天記錄嗎？",
+        "clearChatHistoryConfirmMessage": "這將刪除與所有筆記關聯的聊天歷史，此操作不可撤銷。",
+        "clearChatHistorySuccess": "聊天記錄已清除",
+        "chatManagement": {
+            "title": "聊天記錄管理",
+            "hint": "控制聊天記錄的保存策略",
+            "retention": "保存時長",
+            "retentionForever": "永久保留",
+            "retention1Day": "1 天",
+            "retention3Days": "3 天",
+            "retention7Days": "7 天",
+            "retention30Days": "30 天",
+            "maxMessages": "訊息數量上限",
+            "messages": "條",
+            "maxSize": "檔案大小上限"
+        }
     },
     "shortcuts": {
         "title": "鍵盤快捷鍵",
@@ -487,7 +505,13 @@
         "previewImage": "預覽圖片",
         "moveErrorSubdirectory": "不能將資料夾移動到其子目錄中",
         "moveErrorDuplicate": "目標位置已存在同名檔案或資料夾",
-        "dragParseFailed": "拖曳資料解析失敗"
+        "dragParseFailed": "拖曳資料解析失敗",
+        "importingFile": "正在匯入檔案...",
+        "importedAndOpened": "已匯入並開啟: {{name}}",
+        "openedFile": "已開啟檔案: {{name}}",
+        "externalFileNoVault": "請先選擇一個筆記本目錄",
+        "importFailed": "檔案匯入失敗",
+        "importError": "匯入檔案時發生錯誤: {{error}}"
     },
     "export": {
         "noActiveFile": "沒有活動檔案",

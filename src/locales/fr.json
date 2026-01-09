@@ -490,7 +490,13 @@
         "previewImage": "Aperçu de l'image",
         "moveErrorSubdirectory": "Impossible de déplacer un dossier dans son propre sous-dossier",
         "moveErrorDuplicate": "Un fichier ou un dossier portant le même nom existe déjà à l'emplacement cible",
-        "dragParseFailed": "Échec de l'analyse des données de glisser-déposer"
+        "dragParseFailed": "Échec de l'analyse des données de glisser-déposer",
+        "importingFile": "Importation du fichier...",
+        "importedAndOpened": "Importé et ouvert : {{name}}",
+        "openedFile": "Fichier ouvert : {{name}}",
+        "externalFileNoVault": "Veuillez d'abord sélectionner un dossier de notes",
+        "importFailed": "Échec de l'importation du fichier",
+        "importError": "Erreur lors de l'importation du fichier : {{error}}"
     },
     "export": {
         "noActiveFile": "Aucun fichier actif",

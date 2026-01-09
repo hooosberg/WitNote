@@ -239,7 +239,25 @@
         "loading": "加载中...",
         "windowsOllamaTip": "Windows 版本推荐使用 Ollama。请先安装 Ollama：",
         "downloadOllama": "下载 Ollama",
-        "version": "版本"
+        "version": "版本",
+        "clearChatHistory": "清除聊天记录",
+        "clearChatHistoryHint": "删除所有笔记的聊天历史记录",
+        "clearChatHistoryConfirmTitle": "确定要清除所有聊天记录吗？",
+        "clearChatHistoryConfirmMessage": "这将删除与所有笔记关联的聊天历史，此操作不可撤销。",
+        "clearChatHistorySuccess": "聊天记录已清除",
+        "chatManagement": {
+            "title": "聊天记录管理",
+            "hint": "控制聊天记录的保存策略",
+            "retention": "保存时长",
+            "retentionForever": "永久保留",
+            "retention1Day": "1 天",
+            "retention3Days": "3 天",
+            "retention7Days": "7 天",
+            "retention30Days": "30 天",
+            "maxMessages": "消息数量上限",
+            "messages": "条",
+            "maxSize": "文件大小上限"
+        }
     },
     "shortcuts": {
         "title": "键盘快捷键",
@@ -506,7 +524,13 @@
         "moveErrorSubdirectory": "不能将文件夹移动到其子目录中",
         "moveErrorDuplicate": "目标位置已存在同名文件或文件夹",
         "dragParseFailed": "拖拽数据解析失败",
-        "untitledFolder": "未命名文件夹"
+        "untitledFolder": "未命名文件夹",
+        "importingFile": "正在导入文件...",
+        "importedAndOpened": "已导入并打开: {{name}}",
+        "openedFile": "已打开文件: {{name}}",
+        "externalFileNoVault": "请先选择一个笔记本目录",
+        "importFailed": "文件导入失败",
+        "importError": "导入文件时出错: {{error}}"
     },
     "export": {
         "noActiveFile": "没有活动文件",

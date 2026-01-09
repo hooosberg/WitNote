@@ -361,6 +361,11 @@ const AppContent: React.FC = () => {
     // 是否正在调整面板大小
     const [isResizingPanels, setIsResizingPanels] = useState(false)
 
+    // 外部文件打开去重：记录最后处理的文件路径和时间，防止重复处理
+    const lastProcessedExternalFileRef = React.useRef<{ path: string; timestamp: number } | null>(null)
+    // 标记是否已经检查过启动时的外部文件（防止 useEffect 重新执行时重复检查）
+    const hasCheckedExternalFileRef = React.useRef(false)
+
     // 记录拖动开始时的初始宽度
     const initialSidebarWidthRef = React.useRef(sidebarWidth)
     const initialChatWidthRef = React.useRef(chatWidth)
@@ -605,7 +610,9 @@ const AppContent: React.FC = () => {
                     // 已有内容的文件：加载聊天记录
                     llm.loadChatHistory(activeFile.path)
                 }
-                llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
+                // 对于不可编辑文件（图片/PDF等）不传内容给AI，避免乱码
+                const contentForAI = isEditable(activeFile) ? fileContent : null
+                llm.setActiveFileContext(activeFile.path, activeFile.name, contentForAI)
             } else if (activeFolder) {
                 // 文件夹：使用虚拟路径 __folder__/文件夹名
                 const chatPath = `__folder__/${activeFolder.name}`
@@ -633,9 +640,15 @@ const AppContent: React.FC = () => {
     // 单独处理 fileContent 变化（编辑文件时）
     useEffect(() => {
         if (activeFile && fileContent !== null) {
-            llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
+            // 只对可编辑文件传递内容给 AI
+            if (isEditable(activeFile)) {
+                llm.setActiveFileContext(activeFile.path, activeFile.name, fileContent)
+            } else {
+                // 不可编辑文件（图片/PDF等）不传内容，避免AI收到乱码
+                llm.setActiveFileContext(activeFile.path, activeFile.name, null)
+            }
         }
-    }, [fileContent])  // 只监听 fileContent
+    }, [fileContent, activeFile, isEditable])  // 添加 activeFile 和 isEditable 依赖
 
     // 加载文件预览
     useEffect(() => {
@@ -743,6 +756,16 @@ const AppContent: React.FC = () => {
         const handleExternalFileOpen = async (absolutePath: string) => {
             console.log('📂 收到外部文件打开请求:', absolutePath)
 
+            // 去重检查：防止短时间内重复处理同一个文件（例如 Windows 文件关联可能触发多次事件）
+            const now = Date.now()
+            const lastProcessed = lastProcessedExternalFileRef.current
+            if (lastProcessed && lastProcessed.path === absolutePath && (now - lastProcessed.timestamp) < 2000) {
+                console.log('📂 跳过重复的外部文件打开事件:', absolutePath)
+                return
+            }
+            // 更新最后处理的文件记录
+            lastProcessedExternalFileRef.current = { path: absolutePath, timestamp: now }
+
             // 如果还没有连接笔记本，提示用户
             if (!vaultPath) {
                 showToast('warning', t('file.externalFileNoVault', '请先选择一个笔记本目录'))
@@ -824,12 +847,15 @@ const AppContent: React.FC = () => {
         // 监听外部文件打开事件（应用运行时触发）
         const unsubscribe = window.externalFile.onOpenExternalFile(handleExternalFileOpen)
 
-        // 应用启动时检查是否有待打开的文件
-        window.externalFile.getExternalFilePath().then((filePath) => {
-            if (filePath) {
-                handleExternalFileOpen(filePath)
-            }
-        })
+        // 应用启动时检查是否有待打开的文件（只检查一次）
+        if (!hasCheckedExternalFileRef.current) {
+            hasCheckedExternalFileRef.current = true
+            window.externalFile.getExternalFilePath().then((filePath) => {
+                if (filePath) {
+                    handleExternalFileOpen(filePath)
+                }
+            })
+        }
 
         return () => {
             unsubscribe()
@@ -2190,6 +2216,13 @@ const AppContent: React.FC = () => {
                                                             }}
                                                             onDrop={async (e) => {
                                                                 e.preventDefault()
+                                                                // 检查是否为外部文件拖拽（dataTransfer.files 有内容且没有 internal data）
+                                                                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                                                    // 如果是外部文件，不要阻止冒泡，让 gallery-wrapper 处理导入
+                                                                    // 同时也不要执行下面的内部排序逻辑
+                                                                    return
+                                                                }
+
                                                                 e.stopPropagation()
                                                                 // 检查是否是从文件树拖拽的外部文件
                                                                 try {

@@ -232,7 +232,25 @@
         "resetDetail3": "プロンプトを復元",
         "resetDetail4": "ノートは影響を受けません",
         "loading": "読み込み中...",
-        "version": "バージョン"
+        "version": "バージョン",
+        "clearChatHistory": "チャット履歴を消去",
+        "clearChatHistoryHint": "すべてのノートのチャット履歴を削除します",
+        "clearChatHistoryConfirmTitle": "すべてのチャット履歴を消去しますか？",
+        "clearChatHistoryConfirmMessage": "すべてのノートに関連するチャット履歴を削除します。この操作は元に戻せません。",
+        "clearChatHistorySuccess": "チャット履歴を消去しました",
+        "chatManagement": {
+            "title": "チャット履歴管理",
+            "hint": "チャット履歴の保存設定を管理",
+            "retention": "保存期間",
+            "retentionForever": "永久保存",
+            "retention1Day": "1日",
+            "retention3Days": "3日",
+            "retention7Days": "7日",
+            "retention30Days": "30日",
+            "maxMessages": "最大メッセージ数",
+            "messages": "件",
+            "maxSize": "最大ファイルサイズ"
+        }
     },
     "guide": {
         "aboutTitle": "WitNoteについて",
@@ -491,7 +509,13 @@
         "previewImage": "画像プレビュー",
         "moveErrorSubdirectory": "フォルダを自身のサブディレクトリに移動することはできません",
         "moveErrorDuplicate": "同じ名前のファイルまたはフォルダが既に存在します",
-        "dragParseFailed": "ドラッグデータの解析に失敗しました"
+        "dragParseFailed": "ドラッグデータの解析に失敗しました",
+        "importingFile": "ファイルをインポート中...",
+        "importedAndOpened": "インポートして開きました: {{name}}",
+        "openedFile": "ファイルを開きました: {{name}}",
+        "externalFileNoVault": "最初にノートブックフォルダを選択してください",
+        "importFailed": "ファイルのインポートに失敗しました",
+        "importError": "ファイルのインポート中にエラー: {{error}}"
     },
     "export": {
         "noActiveFile": "アクティブなファイルがありません",

@@ -1135,6 +1135,131 @@ export function Settings({ isOpen, onClose, llm, defaultTab, onTabChange, engine
                             )}
                         </div>
 
+                        {/* 聊天记录管理区块 */}
+                        <div className="settings-section" style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                            <h3 className="settings-section-title">{t('settings.chatManagement.title')}</h3>
+                            <p className="settings-hint" style={{ marginBottom: '16px' }}>
+                                {t('settings.chatManagement.hint')}
+                            </p>
+
+                            {/* 保存时长 */}
+                            <div className="setting-item" style={{ marginBottom: '16px' }}>
+                                <label className="setting-label">{t('settings.chatManagement.retention')}</label>
+                                <select
+                                    className="setting-select"
+                                    value={settings.chatRetentionDays}
+                                    onChange={(e) => setSetting('chatRetentionDays', parseInt(e.target.value))}
+                                    style={{
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--bg-secondary)',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '13px',
+                                        minWidth: '120px'
+                                    }}
+                                >
+                                    <option value={0}>{t('settings.chatManagement.retentionForever')}</option>
+                                    <option value={1}>{t('settings.chatManagement.retention1Day')}</option>
+                                    <option value={3}>{t('settings.chatManagement.retention3Days')}</option>
+                                    <option value={7}>{t('settings.chatManagement.retention7Days')}</option>
+                                    <option value={30}>{t('settings.chatManagement.retention30Days')}</option>
+                                </select>
+                            </div>
+
+                            {/* 消息数量限制 */}
+                            <div className="setting-item" style={{ marginBottom: '16px' }}>
+                                <label className="setting-label">{t('settings.chatManagement.maxMessages')}</label>
+                                <select
+                                    className="setting-select"
+                                    value={settings.chatMaxMessages}
+                                    onChange={(e) => setSetting('chatMaxMessages', parseInt(e.target.value))}
+                                    style={{
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--bg-secondary)',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '13px',
+                                        minWidth: '120px'
+                                    }}
+                                >
+                                    <option value={10}>10 {t('settings.chatManagement.messages')}</option>
+                                    <option value={20}>20 {t('settings.chatManagement.messages')}</option>
+                                    <option value={50}>50 {t('settings.chatManagement.messages')}</option>
+                                    <option value={100}>100 {t('settings.chatManagement.messages')}</option>
+                                </select>
+                            </div>
+
+                            {/* 文件大小限制 */}
+                            <div className="setting-item" style={{ marginBottom: '8px' }}>
+                                <label className="setting-label">{t('settings.chatManagement.maxSize')}</label>
+                                <select
+                                    className="setting-select"
+                                    value={settings.chatMaxSizeKB}
+                                    onChange={(e) => setSetting('chatMaxSizeKB', parseInt(e.target.value))}
+                                    style={{
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--bg-secondary)',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '13px',
+                                        minWidth: '120px'
+                                    }}
+                                >
+                                    <option value={10}>10 KB</option>
+                                    <option value={50}>50 KB</option>
+                                    <option value={100}>100 KB</option>
+                                    <option value={500}>500 KB</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* 清除聊天记录区块 */}
+                        <div className="settings-section" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                            <h3 className="settings-section-title">{t('settings.clearChatHistory')}</h3>
+                            <p className="settings-hint" style={{ marginBottom: '12px' }}>
+                                {t('settings.clearChatHistoryHint')}
+                            </p>
+                            <button
+                                className="reset-btn"
+                                onClick={() => {
+                                    setConfirmDialog({
+                                        isOpen: true,
+                                        title: t('settings.clearChatHistoryConfirmTitle'),
+                                        message: t('settings.clearChatHistoryConfirmMessage'),
+                                        onConfirm: async () => {
+                                            if (window.chat?.deleteAll) {
+                                                const success = await window.chat.deleteAll();
+                                                if (success) {
+                                                    // 清空当前显示的消息
+                                                    llm?.clearMessages();
+                                                    console.log('✅ 聊天记录已清除');
+                                                }
+                                            }
+                                            setConfirmDialog(null);
+                                        }
+                                    });
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '8px 16px',
+                                    background: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '8px',
+                                    color: 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    fontSize: '13px'
+                                }}
+                            >
+                                <Trash2 size={14} />
+                                {t('settings.clearChatHistory')}
+                            </button>
+                        </div>
+
 
                     </div>
                 );
@@ -1582,7 +1707,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, onTabChange, engine
                             <p className="guide-contact">
                                 🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub</a>
                             </p>
-                            <p className="guide-version">{t('settings.version')} {appVersion} · 2025</p>
+                            <p className="guide-version">{t('settings.version')} {appVersion} · 2026</p>
                             <p className="guide-license">
                                 {t('guide.license')} <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
                             </p>
