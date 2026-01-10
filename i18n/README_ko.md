@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
+  <img src="../src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
 </p>
 
 <h1 align="center">WitNote</h1>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> |
+  <a href="../README.md">English</a> |
   <a href="README_zh.md">简体中文</a> |
   <a href="README_zh-TW.md">繁體中文</a> |
   <a href="README_ja.md">日本語</a> |
@@ -30,7 +30,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
   <br>
@@ -40,7 +40,7 @@
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-    <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+    <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
   </a>
 </p>
 
@@ -51,7 +51,7 @@
 **WitNote**는 macOS, Windows 및 Linux용 로컬 우선 AI 글쓰기 동반자입니다.
 **Ollama / WebLLM / Cloud API** 엔진 간 자유로운 전환을 지원하며, 매우 미니멀한 **네이티브 카드 인터페이스**와 결합되어 즉시 사용할 수 있습니다. 모델 다운로드 외에는 클라우드 의존성이 없으며 개인 정보 보호 문제도 없습니다. 지능을 가볍게 만들었습니다.
 
-![Local Offline AI Note](src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
+![Local Offline AI Note](../src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
 
 
 
@@ -111,7 +111,7 @@
 #### 🍎 Mac App Store (권장)
 
 <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-  <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+  <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
 </a>
 
 #### 📦 GitHub Releases
@@ -245,28 +245,28 @@ OpenAI 호환 Cloud API 연결을 지원합니다.
 
 
 ### 📐 듀얼 패인 에디터
-![Dual-Pane Editor](src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
+![Dual-Pane Editor](../src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
 
 ### 🤖 3가지 AI 엔진
-![Three AI Engines](src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
+![Three AI Engines](../src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
 
 ### ✨ 스마트 자동 완성
-![Smart Autocomplete](src/pic/witnote%20宣传截图/English/智能续写.jpg)
+![Smart Autocomplete](../src/pic/witnote%20宣传截图/English/智能续写.jpg)
 
 ### 🎭 개인화된 페르소나
-![Personalized Persona](src/pic/witnote%20宣传截图/English/个性化角色.jpg)
+![Personalized Persona](../src/pic/witnote%20宣传截图/English/个性化角色.jpg)
 
 ### 📄 다중 형식 지원
-![Multi-Format Support](src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
+![Multi-Format Support](../src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
 
 ### 🎯 포커스 모드
-![Focus Mode](src/pic/witnote%20宣传截图/English/专注模式.jpg)
+![Focus Mode](../src/pic/witnote%20宣传截图/English/专注模式.jpg)
 
 ### 🎨 다양한 테마
-![Multiple Themes](src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
+![Multiple Themes](../src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
 
 ### 🗂️ 카드 파일 관리
-![Card File Management](src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
+![Card File Management](../src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
 
 
 ---
@@ -307,7 +307,7 @@ MIT License
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
-📖 [개발 일기](public/dev-diaries/dev-diary_en.md)
+📖 [개발 일기](../public/dev-diaries/dev-diary_en.md)
 
 ---
 

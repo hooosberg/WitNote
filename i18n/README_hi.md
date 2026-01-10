@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
+  <img src="../src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
 </p>
 
 <h1 align="center">WitNote</h1>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> |
+  <a href="../README.md">English</a> |
   <a href="README_zh.md">简体中文</a> |
   <a href="README_zh-TW.md">繁體中文</a> |
   <a href="README_ja.md">日本語</a> |
@@ -30,7 +30,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
   <br>
@@ -40,7 +40,7 @@
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-    <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+    <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
   </a>
 </p>
 
@@ -51,7 +51,7 @@
 **WitNote** macOS, Windows और Linux के लिए एक स्थानीय-प्रथम (local-first) AI लेखन साथी है।
 यह **Ollama / WebLLM / Cloud API** इंजनों के बीच मुक्त स्विचिंग का समर्थन करता है, और एक अति-न्यूनतम **मूल कार्ड इंटरफ़ेस** के साथ जोड़ा गया है, यह बॉक्स से बाहर काम करता है। कोई निरंतर क्लाउड निर्भरता नहीं, कोई गोपनीयता चिंता नहीं — बुद्धिमत्ता को हल्का बनाया गया।
 
-![Local Offline AI Note](src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
+![Local Offline AI Note](../src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
 
 
 
@@ -111,7 +111,7 @@
 #### 🍎 Mac App Store (अनुशंसित)
 
 <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-  <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+  <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
 </a>
 
 #### 📦 GitHub Releases
@@ -245,28 +245,28 @@ OpenAI-संगत क्लाउड API से कनेक्ट करन�
 
 
 ### 📐 डुअल-पेन एडिटर
-![Dual-Pane Editor](src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
+![Dual-Pane Editor](../src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
 
 ### 🤖 तीन AI इंजन
-![Three AI Engines](src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
+![Three AI Engines](../src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
 
 ### ✨ स्मार्ट ऑटोकम्प्लीट
-![Smart Autocomplete](src/pic/witnote%20宣传截图/English/智能续写.jpg)
+![Smart Autocomplete](../src/pic/witnote%20宣传截图/English/智能续写.jpg)
 
 ### 🎭 वैयक्तिकृत व्यक्तित्व
-![Personalized Persona](src/pic/witnote%20宣传截图/English/个性化角色.jpg)
+![Personalized Persona](../src/pic/witnote%20宣传截图/English/个性化角色.jpg)
 
 ### 📄 मल्टी-फॉर्मेट समर्थन
-![Multi-Format Support](src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
+![Multi-Format Support](../src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
 
 ### 🎯 फोकस मोड
-![Focus Mode](src/pic/witnote%20宣传截图/English/专注模式.jpg)
+![Focus Mode](../src/pic/witnote%20宣传截图/English/专注模式.jpg)
 
 ### 🎨 कई थीम
-![Multiple Themes](src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
+![Multiple Themes](../src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
 
 ### 🗂️ कार्ड फ़ाइल प्रबंधन
-![Card File Management](src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
+![Card File Management](../src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
 
 
 ---
@@ -307,7 +307,7 @@ MIT License
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
-📖 [विकास डायरी](public/dev-diaries/dev-diary_en.md)
+📖 [विकास डायरी](../public/dev-diaries/dev-diary_en.md)
 
 ---
 

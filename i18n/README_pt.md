@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
+  <img src="../src/icon/智简icon 拷贝.png" alt="WitNote" width="128" height="128">
 </p>
 
 <h1 align="center">WitNote</h1>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> |
+  <a href="../README.md">English</a> |
   <a href="README_zh.md">简体中文</a> |
   <a href="README_zh-TW.md">繁體中文</a> |
   <a href="README_ja.md">日本語</a> |
@@ -30,7 +30,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
   <br>
@@ -40,7 +40,7 @@
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-    <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+    <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
   </a>
 </p>
 
@@ -51,7 +51,7 @@
 **WitNote** é um companheiro de escrita de IA local-first para macOS, Windows e Linux.
 Suporta alternância livre entre os motores **Ollama / WebLLM / Cloud API**, emparelhado com uma interface nativa de **cartões ultra-minimalista**, funciona imediatamente. Sem dependência contínua da nuvem, sem preocupações com privacidade — inteligência feita leve.
 
-![Local Offline AI Note](src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
+![Local Offline AI Note](../src/pic/witnote%20宣传截图/English/本地离线AI记事本.jpg)
 
 
 
@@ -111,7 +111,7 @@ Suporta alternância livre entre os motores **Ollama / WebLLM / Cloud API**, emp
 #### 🍎 Mac App Store (Recomendado)
 
 <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-  <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+  <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
 </a>
 
 #### 📦 GitHub Releases
@@ -245,28 +245,28 @@ Suporta conexão a APIs Cloud compatíveis com OpenAI.
 
 
 ### 📐 Editor de Painel Duplo
-![Dual-Pane Editor](src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
+![Dual-Pane Editor](../src/pic/witnote%20宣传截图/English/双栏预览编辑.jpg)
 
 ### 🤖 Três Motores de IA
-![Three AI Engines](src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
+![Three AI Engines](../src/pic/witnote%20宣传截图/English/三种AI引擎.jpg)
 
 ### ✨ Autocompletar Inteligente
-![Smart Autocomplete](src/pic/witnote%20宣传截图/English/智能续写.jpg)
+![Smart Autocomplete](../src/pic/witnote%20宣传截图/English/智能续写.jpg)
 
 ### 🎭 Persona Personalizada
-![Personalized Persona](src/pic/witnote%20宣传截图/English/个性化角色.jpg)
+![Personalized Persona](../src/pic/witnote%20宣传截图/English/个性化角色.jpg)
 
 ### 📄 Suporte Multi-Formato
-![Multi-Format Support](src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
+![Multi-Format Support](../src/pic/witnote%20宣传截图/English/word%20pdf%20jpg%20多种格式支持.jpg)
 
 ### 🎯 Modo de Foco
-![Focus Mode](src/pic/witnote%20宣传截图/English/专注模式.jpg)
+![Focus Mode](../src/pic/witnote%20宣传截图/English/专注模式.jpg)
 
 ### 🎨 Múltiplos Temas
-![Multiple Themes](src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
+![Multiple Themes](../src/pic/witnote%20宣传截图/English/多种主题外观.jpg)
 
 ### 🗂️ Gestão de Arquivos de Cartões
-![Card File Management](src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
+![Card File Management](../src/pic/witnote%20宣传截图/English/卡片管理文件.jpg)
 
 
 ---
@@ -307,7 +307,7 @@ MIT License
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
-📖 [Diário de Desenvolvimento](public/dev-diaries/dev-diary_en.md)
+📖 [Diário de Desenvolvimento](../public/dev-diaries/dev-diary_en.md)
 
 ---
 

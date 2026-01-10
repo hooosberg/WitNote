@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/icon/智简icon 拷贝.png" alt="智简笔记本" width="128" height="128">
+  <img src="../src/icon/智简icon 拷贝.png" alt="智简笔记本" width="128" height="128">
 </p>
 
 <h1 align="center">智简笔记本</h1>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> |
+  <a href="../README.md">English</a> |
   <a href="README_zh.md">简体中文</a> |
   <a href="README_zh-TW.md">繁體中文</a> |
   <a href="README_ja.md">日本語</a> |
@@ -30,7 +30,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20|%20Windows%20|%20Linux-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Apple%20Silicon-M1%20|%20M2%20|%20M3%20|%20M4%20|%20M5-green.svg" alt="Apple Silicon">
   <br>
@@ -40,7 +40,7 @@
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-    <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+    <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
   </a>
 </p>
 
@@ -51,7 +51,7 @@
 **智简笔记本** 是一款本地优先的 AI 写作伴侣，支持 macOS、Windows 和 Linux 平台。
 支持 **Ollama / WebLLM / 云端 API** 三种引擎自由切换，搭配极简**原生卡片界面**，开箱即用。除模型下载外无云端依赖，无隐私焦虑，让智能回归轻盈。
 
-![本地离线AI记事本](src/pic/witnote%20宣传截图/中文/本地离线AI记事本.jpg)
+![本地离线AI记事本](../src/pic/witnote%20宣传截图/中文/本地离线AI记事本.jpg)
 
 
 
@@ -111,7 +111,7 @@
 #### 🍎 Mac App Store (推荐)
 
 <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12">
-  <img src="src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
+  <img src="../src/icon/Download_on_the_App_Store_Badge.svg" alt="Download on the Mac App Store" height="50">
 </a>
 
 #### 📦 GitHub Releases
@@ -245,28 +245,28 @@
 
 
 ### 📐 双栏预览编辑
-![双栏预览编辑](src/pic/witnote%20宣传截图/中文/双栏预览编辑.jpg)
+![双栏预览编辑](../src/pic/witnote%20宣传截图/中文/双栏预览编辑.jpg)
 
 ### 🤖 三种AI引擎
-![三种AI引擎](src/pic/witnote%20宣传截图/中文/三种AI引擎.jpg)
+![三种AI引擎](../src/pic/witnote%20宣传截图/中文/三种AI引擎.jpg)
 
 ### ✨ 智能续写
-![智能续写](src/pic/witnote%20宣传截图/中文/智能续写.jpg)
+![智能续写](../src/pic/witnote%20宣传截图/中文/智能续写.jpg)
 
 ### 🎭 个性化角色
-![个性化角色](src/pic/witnote%20宣传截图/中文/个性化角色.jpg)
+![个性化角色](../src/pic/witnote%20宣传截图/中文/个性化角色.jpg)
 
 ### 📄 Word/PDF/JPG 多格式支持
-![Word PDF JPG 支持](src/pic/witnote%20宣传截图/中文/word%20pdf%20jpg%20多种格式支持.jpg)
+![Word PDF JPG 支持](../src/pic/witnote%20宣传截图/中文/word%20pdf%20jpg%20多种格式支持.jpg)
 
 ### 🎯 专注模式
-![专注模式](src/pic/witnote%20宣传截图/中文/专注模式.jpg)
+![专注模式](../src/pic/witnote%20宣传截图/中文/专注模式.jpg)
 
 ### 🎨 多种主题外观
-![多种主题](src/pic/witnote%20宣传截图/中文/多种主题外观.jpg)
+![多种主题](../src/pic/witnote%20宣传截图/中文/多种主题外观.jpg)
 
 ### 🗂️ 卡片管理文件
-![卡片管理文件](src/pic/witnote%20宣传截图/中文/卡片管理文件.jpg)
+![卡片管理文件](../src/pic/witnote%20宣传截图/中文/卡片管理文件.jpg)
 
 
 ---
@@ -307,7 +307,7 @@ MIT License
 
 🔗 [https://github.com/hooosberg/WitNote](https://github.com/hooosberg/WitNote)
 
-📖 [开发学习日记](public/dev-diaries/dev-diary_zh.md)
+📖 [开发学习日记](../public/dev-diaries/dev-diary_zh.md)
 
 ---
 
