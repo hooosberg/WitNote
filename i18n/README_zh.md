@@ -6,6 +6,8 @@
 
 <p align="center">
   <strong>大智若简，落笔生花</strong>
+  <br>
+  <a href="https://hooosberg.github.io/WitNote/">🌐 Official Website</a>
 </p>
 
 <p align="center">
