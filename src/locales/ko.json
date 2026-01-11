@@ -279,6 +279,7 @@
         "ollamaModels": "필요. Qwen, Llama 지원",
         "developer": "개발자",
         "developedBy": "개발:",
+        "officialWebsite": "공식 웹사이트",
         "version": "버전 1.0.0 · 2025",
         "license": "📜 라이선스:"
     },

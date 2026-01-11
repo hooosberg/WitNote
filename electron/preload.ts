@@ -242,7 +242,11 @@ contextBridge.exposeInMainWorld('shortcuts', {
 
     // 同步智能续写状态到主进程菜单
     syncSmartAutocomplete: (enabled: boolean): Promise<boolean> =>
-        ipcRenderer.invoke('menu:syncSmartAutocomplete', enabled)
+        ipcRenderer.invoke('menu:syncSmartAutocomplete', enabled),
+
+    // 切换菜单语言（用于同步渲染进程语言设置到主进程菜单）
+    changeMenuLanguage: (lang: string): Promise<boolean> =>
+        ipcRenderer.invoke('menu:changeLanguage', lang)
 })
 
 // 暴露外部文件打开 API（用于文件关联功能）

@@ -392,6 +392,7 @@
         "ollamaModels": "後使用，支持 Qwen、Llama、Gemma 等",
         "developer": "開發者",
         "developedBy": "由",
+        "officialWebsite": "官方網站",
         "version": "版本 1.0.0 · 2025",
         "license": "📜 開源協議："
     },

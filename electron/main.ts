@@ -109,6 +109,7 @@ const allMenuTranslations: Record<string, any> = {
         close: '关闭',
         help: '帮助',
         visitGitHub: '访问 GitHub',
+        visitWebsite: '访问官网',
         openSettings: '打开设置',
         toggleFocusMode: '切换专注模式',
         showMainWindow: '显示主窗口',
@@ -152,6 +153,7 @@ const allMenuTranslations: Record<string, any> = {
         close: '關閉',
         help: '說明',
         visitGitHub: '造訪 GitHub',
+        visitWebsite: '造訪官網',
         openSettings: '開啟設定',
         toggleFocusMode: '切換專注模式',
         showMainWindow: '顯示主視窗',
@@ -196,6 +198,7 @@ const allMenuTranslations: Record<string, any> = {
         close: 'Close',
         help: 'Help',
         visitGitHub: 'Visit GitHub',
+        visitWebsite: 'Official Website',
         openSettings: 'Open Settings',
         toggleFocusMode: 'Toggle Focus Mode',
         showMainWindow: 'Show Main Window',
@@ -239,6 +242,7 @@ const allMenuTranslations: Record<string, any> = {
         close: '閉じる',
         help: 'ヘルプ',
         visitGitHub: 'GitHub を開く',
+        visitWebsite: '公式サイトを開く',
         openSettings: '設定を開く',
         toggleFocusMode: '集中モードを切り替え',
         showMainWindow: 'メインウィンドウを表示',
@@ -282,6 +286,7 @@ const allMenuTranslations: Record<string, any> = {
         close: '닫기',
         help: '도움말',
         visitGitHub: 'GitHub 방문',
+        visitWebsite: '공식 웹사이트 방문',
         openSettings: '설정 열기',
         toggleFocusMode: '집중 모드 전환',
         showMainWindow: '메인 윈도우 표시',
@@ -325,6 +330,7 @@ const allMenuTranslations: Record<string, any> = {
         close: 'Fermer',
         help: 'Aide',
         visitGitHub: 'Visiter GitHub',
+        visitWebsite: 'Site officiel',
         openSettings: 'Ouvrir les Paramètres',
         toggleFocusMode: 'Basculer Mode Focus',
         showMainWindow: 'Afficher la fenêtre principale',
@@ -368,6 +374,7 @@ const allMenuTranslations: Record<string, any> = {
         close: 'Schließen',
         help: 'Hilfe',
         visitGitHub: 'GitHub besuchen',
+        visitWebsite: 'Offizielle Webseite',
         openSettings: 'Einstellungen öffnen',
         toggleFocusMode: 'Fokus-Modus umschalten',
         showMainWindow: 'Hauptfenster anzeigen',
@@ -411,6 +418,7 @@ const allMenuTranslations: Record<string, any> = {
         close: 'Cerrar',
         help: 'Ayuda',
         visitGitHub: 'Visitar GitHub',
+        visitWebsite: 'Sitio web oficial',
         openSettings: 'Abrir Ajustes',
         toggleFocusMode: 'Alternar Modo Enfoque',
         showMainWindow: 'Mostrar ventana principal',
@@ -1985,6 +1993,12 @@ function createApplicationMenu() {
             label: tm('menu.help'),
             submenu: [
                 {
+                    label: tm('menu.visitWebsite'),
+                    click: async () => {
+                        await shell.openExternal('https://hooosberg.github.io/WitNote/')
+                    }
+                },
+                {
                     label: tm('menu.visitGitHub'),
                     click: async () => {
                         await shell.openExternal('https://github.com/hooosberg/WitNote')
@@ -2056,8 +2070,8 @@ function createWindow() {
     const windowOptions: Electron.BrowserWindowConstructorOptions = {
         width: 1400,
         height: 900,
-        minWidth: 400,  // 允许更小的窗口（触发专注模式）
-        minHeight: 300,
+        minWidth: 540,   // 最小宽度
+        minHeight: 606,  // 最小高度
         hasShadow: true,
         webPreferences: {
             preload: join(__dirname, 'preload.js'),

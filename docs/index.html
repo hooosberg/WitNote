@@ -8,27 +8,30 @@
     <link rel="icon" type="image/png" href="assets/icon.png">
     <style>
         :root {
+            /* Default variables, will be overridden by theme.js immediately */
             --bg-color: #fbfbfd;
+            --bg-gradient-start: #fbfbfd;
+            --bg-gradient-end: #f0f0f2;
             --text-color: #1d1d1f;
             --secondary-text: #86868b;
             --accent-color: #0071e3;
             --card-bg: rgba(255, 255, 255, 0.8);
             --border-color: rgba(0, 0, 0, 0.1);
             --shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+            --orb-color: rgba(0, 113, 227, 0.08);
+            --orb-x: 50%;
+            --orb-y: 40%;
+            --orb-size: 800px;
             --nav-blur: blur(20px);
+
+            /* Button Variables Default (Day) */
+            --btn-primary-bg: rgba(0, 113, 227, 0.9);
+            --btn-primary-shadow: rgba(0, 113, 227, 0.3);
+            --btn-secondary-bg: rgba(255, 255, 255, 0.65);
+            --btn-secondary-text: #1d1d1f;
+            --btn-secondary-border: rgba(255, 255, 255, 0.1);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #000000;
-                --text-color: #f5f5f7;
-                --secondary-text: #86868b;
-                --accent-color: #2997ff;
-                --card-bg: rgba(28, 28, 30, 0.8);
-                --border-color: rgba(255, 255, 255, 0.1);
-                --shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-            }
-        }
 
         * {
             margin: 0;
@@ -40,9 +43,12 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
+            background-image: linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
             color: var(--text-color);
             line-height: 1.5;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 1s ease, color 1s ease;
+            min-height: 100vh;
         }
 
         .container {
@@ -90,21 +96,18 @@
         .hero::before {
             content: '';
             position: absolute;
-            top: 40%;
-            left: 50%;
+            top: var(--orb-y);
+            left: var(--orb-x);
             transform: translate(-50%, -50%);
-            width: 800px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(0, 113, 227, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            width: var(--orb-size);
+            height: var(--orb-size);
+            background: radial-gradient(circle, var(--orb-color) 0%, rgba(255, 255, 255, 0) 70%);
             z-index: -1;
             pointer-events: none;
+            transition: top 2s ease, left 2s ease, background 2s ease;
+            filter: blur(60px);
         }
 
-        @media (prefers-color-scheme: dark) {
-            .hero::before {
-                background: radial-gradient(circle, rgba(41, 151, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
-            }
-        }
 
         .hero-icon {
             width: 128px;
@@ -169,52 +172,38 @@
         }
 
         .btn-primary {
-            background-color: rgba(0, 113, 227, 0.9);
+            background-color: var(--btn-primary-bg);
             color: white;
-            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+            box-shadow: 0 4px 12px var(--btn-primary-shadow);
         }
 
         .btn-primary:hover {
-            background-color: #0077ed;
+            background-color: var(--accent-color);
             transform: scale(1.02);
-            box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4);
+            box-shadow: 0 8px 20px var(--btn-primary-shadow);
         }
 
         .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.65);
-            color: #1d1d1f;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background-color: var(--btn-secondary-bg);
+            color: var(--btn-secondary-text);
+            box-shadow: 0 4px 12px var(--shadow);
+            border: 1px solid var(--btn-secondary-border);
         }
 
         .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.85);
+            opacity: 0.9;
             transform: scale(1.02);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px var(--shadow);
         }
 
-        /* Dark Mode Overrides for Buttons */
-        @media (prefers-color-scheme: dark) {
-            .btn-primary {
-                background-color: rgba(41, 151, 255, 0.9);
-                box-shadow: 0 4px 12px rgba(41, 151, 255, 0.3);
-            }
+        /* Dark Mode Overrides for Buttons removed - relying on class or generic variables if needed. 
+           But actually, since we are switching root variables, the buttons should adapt if they use variables.
+           However, the existing code for dark mode was explicit media query. 
+           Let's update buttons to use variables so they auto-switch. */
 
-            .btn-primary:hover {
-                background-color: #2997ff;
-            }
-
-            .btn-secondary {
-                background-color: rgba(60, 60, 60, 0.65);
-                color: #f5f5f7;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            }
-
-            .btn-secondary:hover {
-                background-color: rgba(80, 80, 80, 0.85);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            }
-        }
+        /* Note: Original code hardcoded some rgba values for dark mode in media query. 
+           Ideally we would map these to variables, but for now our theme.js handles general colors.
+           Specific button adjustments might be needed. Let's see. */
 
         .icon-symbol {
             font-size: 1.2em;
@@ -364,6 +353,7 @@
             text-decoration: none;
         }
     </style>
+    <script src="assets/theme.js"></script>
 </head>
 
 <body>

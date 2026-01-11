@@ -96,6 +96,7 @@ interface ShortcutsAPI {
     onCycleEditorMode(callback: () => void): () => void
     onToggleSmartAutocomplete(callback: () => void): () => void
     syncSmartAutocomplete(enabled: boolean): Promise<boolean>
+    changeMenuLanguage(lang: string): Promise<boolean>
 }
 
 // Vault 设置同步 API

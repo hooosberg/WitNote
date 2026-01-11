@@ -748,6 +748,15 @@ const AppContent: React.FC = () => {
         }
     }, [settings.autocompleteEnabled])
 
+    // 应用启动时同步菜单语言（确保主进程菜单与用户保存的语言设置一致）
+    useEffect(() => {
+        const currentLang = i18n.language
+        if (currentLang && window.shortcuts?.changeMenuLanguage) {
+            window.shortcuts.changeMenuLanguage(currentLang)
+            console.log('🌍 同步菜单语言:', currentLang)
+        }
+    }, []) // 仅在组件挂载时执行一次
+
     // 监听外部文件打开事件（通过文件关联或右键打开）
     useEffect(() => {
         if (!window.externalFile) return

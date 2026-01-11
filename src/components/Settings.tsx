@@ -246,6 +246,10 @@ export function Settings({ isOpen, onClose, llm, defaultTab, onTabChange, engine
     const handleLanguageChange = (lang: LanguageCode) => {
         changeLanguage(lang);
         setCurrentLang(lang);
+        // 同步更新顶部菜单栏的语言
+        if (window.shortcuts?.changeMenuLanguage) {
+            window.shortcuts.changeMenuLanguage(lang);
+        }
     };
 
     // Tab 内容
@@ -1703,6 +1707,9 @@ export function Settings({ isOpen, onClose, llm, defaultTab, onTabChange, engine
                             </p>
                             <p className="guide-contact">
                                 📧 <a href="mailto:zikedece@proton.me">zikedece@proton.me</a>
+                            </p>
+                            <p className="guide-contact">
+                                🌐 <a href="https://hooosberg.github.io/WitNote/" target="_blank" rel="noopener noreferrer">{t('guide.officialWebsite')}</a>
                             </p>
                             <p className="guide-contact">
                                 🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub</a>

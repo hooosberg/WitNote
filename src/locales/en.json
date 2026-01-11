@@ -315,6 +315,7 @@
         "ollamaModels": ", supports Qwen, Llama, Gemma, etc.",
         "developer": "Developer",
         "developedBy": "Independently developed by",
+        "officialWebsite": "Official Website",
         "version": "Version 1.0.0 · 2025",
         "license": "📜 License:"
     },
