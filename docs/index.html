@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WitNote - Smart Core, Simple Form</title>
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <style>
+        :root {
+            --bg-color: #fbfbfd;
+            --text-color: #1d1d1f;
+            --secondary-text: #86868b;
+            --accent-color: #0071e3;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+            --nav-blur: blur(20px);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --text-color: #f5f5f7;
+                --secondary-text: #86868b;
+                --accent-color: #2997ff;
+                --card-bg: rgba(28, 28, 30, 0.8);
+                --border-color: rgba(255, 255, 255, 0.1);
+                --shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        /* Language Switcher */
+        .header-nav {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .lang-switch {
+            appearance: none;
+            background: rgba(128, 128, 128, 0.1);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--text-color);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: background 0.2s;
+            outline: none;
+            text-align: center;
+        }
+
+        .lang-switch:hover {
+            background: rgba(128, 128, 128, 0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            text-align: center;
+            padding: 120px 0 80px;
+            /* Ensure the blob doesn't overflow and cause scrollbars if it gets too big */
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 113, 227, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .hero::before {
+                background: radial-gradient(circle, rgba(41, 151, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            }
+        }
+
+        .hero-icon {
+            width: 128px;
+            height: 128px;
+            /* No background or border-radius for the container itself, just the image */
+            margin-bottom: 24px;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
+            /* Shadow on the transparency */
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -0.005em;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: var(--secondary-text);
+            font-weight: 500;
+            margin-bottom: 40px;
+        }
+
+        /* Modern Apple-style Glass Buttons */
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 980px;
+            font-size: 17px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary {
+            background-color: rgba(0, 113, 227, 0.9);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #0077ed;
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.65);
+            color: #1d1d1f;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.85);
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark Mode Overrides for Buttons */
+        @media (prefers-color-scheme: dark) {
+            .btn-primary {
+                background-color: rgba(41, 151, 255, 0.9);
+                box-shadow: 0 4px 12px rgba(41, 151, 255, 0.3);
+            }
+
+            .btn-primary:hover {
+                background-color: #2997ff;
+            }
+
+            .btn-secondary {
+                background-color: rgba(60, 60, 60, 0.65);
+                color: #f5f5f7;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            }
+
+            .btn-secondary:hover {
+                background-color: rgba(80, 80, 80, 0.85);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        .icon-symbol {
+            font-size: 1.2em;
+        }
+
+        /* Features Grid */
+        .features {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 40px;
+            font-weight: 600;
+            margin-bottom: 60px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 15px;
+            color: var(--secondary-text);
+        }
+
+        /* Footer & Friend Links */
+        footer {
+            padding: 80px 0 40px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 80px;
+            background: var(--bg-color);
+        }
+
+        .friend-links {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .friend-links h3 {
+            font-size: 14px;
+            color: var(--secondary-text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 24px;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .friend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: opacity 0.2s;
+        }
+
+        .friend-item:hover {
+            opacity: 0.7;
+        }
+
+        .friend-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+            /* Removed background, border-radius, box-shadow for container */
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            object-fit: contain;
+        }
+
+        .friend-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .footer-bottom {
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 24px;
+        }
+
+        .footer-links a {
+            color: var(--secondary-text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-color);
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 13px;
+            color: var(--secondary-text);
+            line-height: 1.6;
+        }
+
+        .copyright a {
+            color: var(--secondary-text);
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Language Switcher -->
+        <div class="header-nav">
+            <select class="lang-switch" onchange="// Logic to implement if we had real translations">
+                <option value="en">English</option>
+                <option value="zh-CN">简体中文</option>
+                <option value="zh-TW">繁體中文</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="it">Italiano</option>
+                <option value="pt">Português</option>
+                <option value="ru">Русский</option>
+                <option value="ar">العربية</option>
+            </select>
+        </div>
+
+        <div class="hero">
+            <img src="assets/icon.png" alt="WitNote Icon" class="hero-icon">
+            <h1 data-i18n="title">WitNote</h1>
+            <p data-i18n="tagline">Smart Core, Simple Form</p>
+            <p data-i18n="description"
+                style="font-size: 18px; max-width: 600px; margin: 0 auto 40px; line-height: 1.6; color: var(--secondary-text);">
+                A local-first AI writing companion for macOS, Windows, and Linux. <br>
+                Experience the power of local intelligence with Ollama and WebLLM, wrapped in a minimalist, native
+                design.
+            </p>
+
+            <div class="cta-buttons">
+                <!-- Mac -->
+                <a href="https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873" class="btn btn-primary">
+                    <span class="icon-symbol"></span> <span data-i18n="btn-mac">Mac App Store</span>
+                </a>
+
+                <!-- Windows -->
+                <a href="https://github.com/hooosberg/WitNote/releases" class="btn btn-secondary">
+                    <span class="icon-symbol">⊞</span> <span data-i18n="btn-win">Windows</span>
+                </a>
+
+                <!-- Linux -->
+                <a href="https://github.com/hooosberg/WitNote/releases" class="btn btn-secondary">
+                    <span class="icon-symbol">🐧</span> <span data-i18n="btn-linux">Linux</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container features">
+        <h2 class="section-title" data-i18n="section-title">Design Philosophy</h2>
+
+        <div class="grid">
+            <div class="card">
+                <img src="assets/screenshots/本地离线AI记事本.jpg" alt="Local Offline AI" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card-local-title">Local First</h3>
+                    <p class="card-desc" data-i18n="card-local-desc">Your thoughts stay on your device. 100% offline
+                        capability with local AI
+                        models.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="assets/screenshots/双栏预览编辑.jpg" alt="Dual Pane" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card-dual-title">Dual-Pane Editor</h3>
+                    <p class="card-desc" data-i18n="card-dual-desc">Seamless writing and previewing experience. Drag to
+                        resize, just like you
+                        expect.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="assets/screenshots/三种AI引擎.jpg" alt="Three Engines" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card-engines-title">Three Engines</h3>
+                    <p class="card-desc" data-i18n="card-engines-desc">Freedom to choose between WebLLM, Ollama, or
+                        Cloud APIs.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="assets/screenshots/智能续写.jpg" alt="Smart Autocomplete" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card-auto-title">Smart Autocomplete</h3>
+                    <p class="card-desc" data-i18n="card-auto-desc">Let AI help you finish your sentences. Smooth,
+                        context-aware suggestions.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="assets/screenshots/多种主题外观.jpg" alt="Themes" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card-themes-title">Beautiful Themes</h3>
+                    <p class="card-desc" data-i18n="card-themes-desc">Light, Dark, and Zen Tea modes. Designed for focus
+                        and comfort.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="assets/screenshots/专注模式.jpg" alt="Focus Mode" class="card-image"
+                    onerror="this.src='assets/screenshots/专注模式.jpg'">
+                <div class="card-content">
+                    <h3 class="card-title" data-i18n="card-focus-title">Focus Mode</h3>
+                    <p class="card-desc" data-i18n="card-focus-desc">Distraction-free environment that adapts when you
+                        resize the window.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="friend-links">
+                <h3 data-i18n="section-projects">Our Projects</h3>
+                <div class="links-container">
+                    <a href="#" class="friend-item">
+                        <img src="assets/icon.png" alt="WitNote" class="friend-icon">
+                        <span class="friend-name">WitNote</span>
+                    </a>
+                    <a href="https://hooosberg.github.io/GlotShot/" class="friend-item" target="_blank">
+                        <img src="assets/glotshot.png" alt="GlotShot" class="friend-icon">
+                        <span class="friend-name">GlotShot</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-links">
+                    <a href="https://github.com/hooosberg/WitNote" data-i18n="footer-github">GitHub</a>
+                    <a href="https://github.com/hooosberg/WitNote#readme" data-i18n="footer-docs">Documentation</a>
+                    <a href="https://github.com/hooosberg/WitNote/blob/main/LICENSE"
+                        data-i18n="footer-license">License</a>
+                    <a href="https://github.com/hooosberg/WitNote/blob/main/PRIVACY.md"
+                        data-i18n="footer-privacy">Privacy</a>
+                </div>
+
+                <div class="copyright">
+                    © 2026 WitNote. <span data-i18n="copyright-text">Developed by hooosberg.</span> <br>
+                    <span data-i18n="contact-label">Contact:</span> <a
+                        href="mailto:zikedece@proton.me">zikedece@proton.me</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/i18n.js"></script>
+</body>
+
+</html>
