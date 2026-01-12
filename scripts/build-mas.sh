@@ -38,7 +38,9 @@ echo -e "\n${YELLOW}[Step 1] 前置条件检查...${NC}"
 
 # 检查版本号
 VERSION=$(grep '"version":' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
-echo -e "📦 当前版本: ${GREEN}$VERSION${NC}"
+BUILD_VERSION=$(grep '"buildVersion":' package.json | sed 's/.*"buildVersion": "\(.*\)".*/\1/')
+echo -e "📦 版本号: ${GREEN}$VERSION${NC}"
+echo -e "🔢 构建号: ${GREEN}$BUILD_VERSION${NC}"
 
 # 检查 provisioning profile
 if [ ! -f "build/embedded.provisionprofile" ]; then
@@ -105,8 +107,8 @@ if [ -z "$PKG_PATH" ]; then
     PKG_PATH="release/WitNote-${VERSION}-mas.pkg"
     
     echo -e "正在创建 PKG..."
-    # 动态查找安装程序证书
-    INSTALLER_CERT=$(security find-identity -v -p codesigning | grep "3rd Party Mac Developer Installer" | grep "$APPLE_TEAM_ID" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+    # 动态查找安装程序证书 (注意：安装程序证书不在 codesigning 策略中，不能用 -p codesigning)
+    INSTALLER_CERT=$(security find-identity -v | grep "3rd Party Mac Developer Installer" | grep "$APPLE_TEAM_ID" | head -1 | sed 's/.*"\(.*\)".*/\1/')
     
     if [ -z "$INSTALLER_CERT" ]; then
         echo -e "${RED}❌ 错误: 未找到匹配 Team ID ($APPLE_TEAM_ID) 的安装程序证书${NC}"

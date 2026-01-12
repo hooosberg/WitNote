@@ -58,6 +58,7 @@
   "build": {
     "appId": "com.zikedece.witnote",
     "productName": "WitNote",
+    "buildVersion": "1.3.3",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -193,6 +194,7 @@
       "provisioningProfile": "build/embedded.provisionprofile",
       "category": "public.app-category.productivity",
       "minimumSystemVersion": "12.0",
+      "identity": "76DF9C2D1E11B8F2A719BF00200B007F89B0F5C7",
       "binaries": [],
       "extraResources": [
         {
