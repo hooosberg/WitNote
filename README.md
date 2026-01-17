@@ -7,6 +7,8 @@
 <p align="center">
   <strong>Smart Core, Simple Form</strong>
   <br>
+  Everything is a file
+  <br>
   <a href="https://hooosberg.github.io/WitNote/">🌐 Official Website</a>
 </p>
 
@@ -314,5 +316,5 @@ MIT License
 ---
 
 <p align="center">
-  <i>Smart Core, Simple Form</i>
+  <i>Smart Core, Simple Form<br>Everything is a file</i>
 </p>

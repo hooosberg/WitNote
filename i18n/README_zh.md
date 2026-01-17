@@ -7,6 +7,8 @@
 <p align="center">
   <strong>大智若简，落笔生花</strong>
   <br>
+  一切皆文件
+  <br>
   <a href="https://hooosberg.github.io/WitNote/">🌐 Official Website</a>
 </p>
 
@@ -314,5 +316,5 @@ MIT License
 ---
 
 <p align="center">
-  <i>大智若简，落笔生花</i>
+  <i>大智若简，落笔生花<br>一切皆文件</i>
 </p>

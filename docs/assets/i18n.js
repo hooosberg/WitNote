@@ -2,6 +2,7 @@ const translations = {
     "en": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "A local-first AI writing companion for macOS, Windows, and Linux. <br> Experience the power of local intelligence with Ollama and WebLLM, wrapped in a minimalist, native design.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -30,6 +31,7 @@ const translations = {
     "zh-CN": {
         "title": "智简笔记本",
         "tagline": "大智若简，落笔生花",
+        "slogan-sub": "一切皆文件",
         "description": "一款 supports macOS、Windows 和 Linux 的本地优先 AI 写作伴侣。<br> 在极简的原生设计中，体验 Ollama 和 WebLLM 本地智能的强大力量。",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -58,6 +60,7 @@ const translations = {
     "zh-TW": {
         "title": "智簡筆記本",
         "tagline": "大智若簡，落筆生花",
+        "slogan-sub": "一切皆檔案",
         "description": "一款支持 macOS、Windows 和 Linux 的本地優先 AI 寫作伴侶。<br> 在極簡的原生設計中，體驗 Ollama 和 WebLLM 本地智能的強大力量。",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -86,6 +89,7 @@ const translations = {
     "ja": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "macOS、Windows、Linux向けのローカルファーストAIライティングコンパニオン。<br> ミニマルなネイティブデザインで、OllamaとWebLLMのローカルインテリジェンスを体験してください。",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -114,6 +118,7 @@ const translations = {
     "ko": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "macOS, Windows 및 Linux를 위한 로컬 우선 AI 작문 동반자.<br> 미니멀한 네이티브 디자인으로 Ollama 및 WebLLM의 로컬 지능을 경험하세요.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -142,6 +147,7 @@ const translations = {
     "es": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "Un compañero de escritura AI local para macOS, Windows y Linux. <br> Experimente el poder de la inteligencia local con Ollama y WebLLM, envuelto en un diseño nativo minimalista.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -170,6 +176,7 @@ const translations = {
     "fr": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "Un compagnon d'écriture IA local pour macOS, Windows et Linux. <br> Découvrez la puissance de l'intelligence locale avec Ollama et WebLLM, enveloppée dans un design natif minimaliste.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -198,6 +205,7 @@ const translations = {
     "de": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "Ein lokaler KI-Schreibbegleiter für macOS, Windows und Linux. <br> Erleben Sie die Kraft lokaler Intelligenz mit Ollama und WebLLM in einem minimalistischen, nativen Design.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -226,6 +234,7 @@ const translations = {
     "it": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "Un compagno di scrittura AI first-local per macOS, Windows e Linux. <br> Sperimenta la potenza dell'intelligenza locale con Ollama e WebLLM, avvolto in un design nativo minimalista.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -254,6 +263,7 @@ const translations = {
     "pt": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "Um companheiro de escrita de IA local para macOS, Windows e Linux. <br> Experimente o poder da inteligência local com Ollama e WebLLM, envolto em um design nativo minimalista.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -282,6 +292,7 @@ const translations = {
     "ru": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "Локальный ИИ-помощник для письма на macOS, Windows и Linux. <br> Испытайте мощь локального интеллекта с Ollama и WebLLM в минималистичном нативном дизайне.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
@@ -310,6 +321,7 @@ const translations = {
     "ar": {
         "title": "WitNote",
         "tagline": "Smart Core, Simple Form",
+        "slogan-sub": "Everything is a file",
         "description": "رفيق كتابة مدعوم بالذكاء الاصطناعي محليًا لأنظمة macOS و Windows و Linux. <br> جرب قوة الذكاء المحلي مع Ollama و WebLLM، في تصميم أصلي بسيط.",
         "btn-mac": "Mac App Store",
         "btn-win": "Windows",
