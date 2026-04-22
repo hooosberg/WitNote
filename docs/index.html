@@ -283,40 +283,53 @@
             margin-bottom: 24px;
         }
 
+        .friend-sub {
+            font-size: 14px;
+            color: var(--secondary-text);
+            margin: -12px 0 28px;
+        }
+
         .links-container {
             display: flex;
             justify-content: center;
-            gap: 10px 16px;
+            gap: 28px;
             flex-wrap: wrap;
-            max-width: 840px;
+            max-width: 880px;
             margin: 0 auto;
         }
 
         .friend-item {
-            display: inline-flex;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            gap: 10px;
+            width: 96px;
             text-decoration: none;
-            color: var(--secondary-text);
-            padding: 8px 14px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 99px;
-            transition: all 0.2s;
+            color: var(--text-color);
+            transition: transform 0.2s;
         }
 
         .friend-item:hover {
-            border-color: rgba(0, 0, 0, 0.2);
-            color: var(--text-color);
+            transform: translateY(-3px);
+        }
+
+        .friend-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            object-fit: contain;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .friend-item[href*="uixskills"] .friend-icon,
+        .friend-item[href*="agentlimb"] .friend-icon {
+            padding: 4px;
         }
 
         .friend-name {
             font-size: 13px;
-            font-weight: 400;
-        }
-
-        .friend-name b {
-            color: var(--text-color);
-            font-weight: 600;
-            margin-right: 4px;
+            font-weight: 500;
         }
 
         .footer-bottom {
@@ -476,28 +489,36 @@
     <footer>
         <div class="container">
             <div class="friend-links">
-                <h3 data-i18n="section-projects">Built by hooosberg</h3>
+                <h3>More Works</h3>
+                <p class="friend-sub">Creative tools from the same developer</p>
                 <div class="links-container">
                     <a href="https://agentlimb.com" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>AgentLimb</b> · teach AI to control your browser</span>
+                        <img src="https://agentlimb.com/icons/icon.svg" alt="AgentLimb" class="friend-icon" loading="lazy">
+                        <span class="friend-name">AgentLimb</span>
                     </a>
                     <a href="https://hooosberg.github.io/BeRaw/" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>BeRaw</b> · Behance raw-image grabber</span>
+                        <img src="https://hooosberg.github.io/BeRaw/assets/icon-128.png" alt="BeRaw" class="friend-icon" loading="lazy">
+                        <span class="friend-name">BeRaw</span>
                     </a>
                     <a href="https://hooosberg.github.io/Packpour/" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>Packpour</b> · App Store Connect locale filler</span>
+                        <img src="https://hooosberg.github.io/Packpour/assets/icon-128.png" alt="Packpour" class="friend-icon" loading="lazy">
+                        <span class="friend-name">Packpour</span>
                     </a>
                     <a href="https://hooosberg.github.io/GlotShot/" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>GlotShot</b> · perfect App Store preview images</span>
+                        <img src="https://hooosberg.github.io/GlotShot/public/icon/icon-128.png" alt="GlotShot" class="friend-icon" loading="lazy">
+                        <span class="friend-name">GlotShot</span>
                     </a>
                     <a href="https://hooosberg.github.io/TrekReel/" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>TrekReel</b> · outdoor trails, cinematic reels</span>
+                        <img src="https://hooosberg.github.io/TrekReel/Apple/icon-128.png" alt="TrekReel" class="friend-icon" loading="lazy">
+                        <span class="friend-name">TrekReel</span>
                     </a>
                     <a href="https://hooosberg.github.io/DOMPrompter/" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>DOMPrompter</b> · visualize DOM for AI code</span>
+                        <img src="https://hooosberg.github.io/DOMPrompter/pages/img/icon-128.png" alt="DOMPrompter" class="friend-icon" loading="lazy">
+                        <span class="friend-name">DOMPrompter</span>
                     </a>
                     <a href="https://uixskills.com" class="friend-item" target="_blank" rel="noopener">
-                        <span class="friend-name"><b>UIXskills</b> · AI → JSON → Whiteboard → UI</span>
+                        <img src="https://uixskills.com/icons/icon.png" alt="UIXskills" class="friend-icon" loading="lazy">
+                        <span class="friend-name">UIXskills</span>
                     </a>
                 </div>
             </div>
