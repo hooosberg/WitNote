@@ -303,6 +303,20 @@ MIT License
 
 ---
 
+## Sibling projects
+
+Built by [hooosberg](https://github.com/hooosberg):
+
+- [AgentLimb](https://agentlimb.com) — teach AI to control your browser
+- [BeRaw](https://hooosberg.github.io/BeRaw/) — Behance raw-image grabber
+- [Packpour](https://hooosberg.github.io/Packpour/) — App Store Connect locale filler
+- [GlotShot](https://hooosberg.github.io/GlotShot/) — perfect App Store preview images
+- [TrekReel](https://hooosberg.github.io/TrekReel/) — outdoor trails, cinematic reels
+- [DOMPrompter](https://hooosberg.github.io/DOMPrompter/) — visualize DOM for AI code
+- [UIXskills](https://uixskills.com) — AI → JSON → Whiteboard → UI
+
+---
+
 ## 👨‍💻 Developer
 
 **hooosberg**

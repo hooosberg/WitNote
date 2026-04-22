@@ -286,35 +286,37 @@
         .links-container {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 10px 16px;
             flex-wrap: wrap;
+            max-width: 840px;
+            margin: 0 auto;
         }
 
         .friend-item {
-            display: flex;
-            flex-direction: column;
+            display: inline-flex;
             align-items: center;
             text-decoration: none;
-            color: var(--text-color);
-            transition: opacity 0.2s;
+            color: var(--secondary-text);
+            padding: 8px 14px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 99px;
+            transition: all 0.2s;
         }
 
         .friend-item:hover {
-            opacity: 0.7;
-        }
-
-        .friend-icon {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 8px;
-            /* Removed background, border-radius, box-shadow for container */
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-            object-fit: contain;
+            border-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
         }
 
         .friend-name {
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 400;
+        }
+
+        .friend-name b {
+            color: var(--text-color);
+            font-weight: 600;
+            margin-right: 4px;
         }
 
         .footer-bottom {
@@ -474,15 +476,28 @@
     <footer>
         <div class="container">
             <div class="friend-links">
-                <h3 data-i18n="section-projects">Our Projects</h3>
+                <h3 data-i18n="section-projects">Built by hooosberg</h3>
                 <div class="links-container">
-                    <a href="#" class="friend-item">
-                        <img src="assets/icon.png" alt="WitNote" class="friend-icon">
-                        <span class="friend-name">WitNote</span>
+                    <a href="https://agentlimb.com" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>AgentLimb</b> · teach AI to control your browser</span>
                     </a>
-                    <a href="https://hooosberg.github.io/GlotShot/" class="friend-item" target="_blank">
-                        <img src="assets/glotshot.png" alt="GlotShot" class="friend-icon">
-                        <span class="friend-name">GlotShot</span>
+                    <a href="https://hooosberg.github.io/BeRaw/" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>BeRaw</b> · Behance raw-image grabber</span>
+                    </a>
+                    <a href="https://hooosberg.github.io/Packpour/" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>Packpour</b> · App Store Connect locale filler</span>
+                    </a>
+                    <a href="https://hooosberg.github.io/GlotShot/" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>GlotShot</b> · perfect App Store preview images</span>
+                    </a>
+                    <a href="https://hooosberg.github.io/TrekReel/" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>TrekReel</b> · outdoor trails, cinematic reels</span>
+                    </a>
+                    <a href="https://hooosberg.github.io/DOMPrompter/" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>DOMPrompter</b> · visualize DOM for AI code</span>
+                    </a>
+                    <a href="https://uixskills.com" class="friend-item" target="_blank" rel="noopener">
+                        <span class="friend-name"><b>UIXskills</b> · AI → JSON → Whiteboard → UI</span>
                     </a>
                 </div>
             </div>
