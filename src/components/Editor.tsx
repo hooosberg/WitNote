@@ -585,6 +585,7 @@ export const Editor: React.FC<EditorProps> = ({
                                         content={content}
                                         onChange={onChange}
                                         editorScrollRef={scrollRef}
+                                        engineStore={engineStore}
                                     />
                                 )}
 
@@ -773,6 +774,7 @@ export const Editor: React.FC<EditorProps> = ({
                                     content={content}
                                     onChange={onChange}
                                     editorScrollRef={scrollRef}
+                                    engineStore={engineStore}
                                 />
                             )}
 
