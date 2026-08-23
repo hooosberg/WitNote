@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, ArrowRight, Copy, Check, RefreshCw } from 'lucide-react'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 interface AIDialogProps {
     isOpen: boolean
@@ -105,12 +106,13 @@ export default function AIDialog({
         }
     }
 
+    // 安全：sanitize 后再渲染，防止 Prompt Injection 导致的 XSS/IPC 攻击
     const renderMarkdown = (text: string) => {
         try {
             const html = marked.parse(text, { async: false }) as string
-            return html
+            return DOMPurify.sanitize(html, { ADD_ATTR: ['class'] })
         } catch {
-            return text
+            return DOMPurify.sanitize(text)
         }
     }
 

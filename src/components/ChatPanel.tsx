@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown, AlertCircle, Copy } from 'lucide-react'
+import { Send, Square, Sparkles, Check, Bot, Server, Cloud, X, Download, ChevronDown, AlertCircle, Copy, RotateCcw } from 'lucide-react'
 import { ChatMessage, RECOMMENDED_MODELS } from '../services/types'
 import { ALL_WEBLLM_MODELS_INFO } from '../engines/webllmModels'
 import { UseLLMReturn } from '../hooks/useLLM'
@@ -55,6 +55,8 @@ interface ChatPanelProps {
     llm: UseLLMReturn
     engineStore?: UseEngineStoreReturn
     openSettings?: () => void
+    isMobile?: boolean
+    onBack?: () => void
 }
 
 const isThinkingModel = (modelName: string) => {
@@ -84,7 +86,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
         messages,
         isGenerating,
         sendMessage,
-        abortGeneration
+        abortGeneration,
+        clearMessages
     } = llm
 
     const [showModelMenu, setShowModelMenu] = useState(false)
@@ -1011,6 +1014,41 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ llm, engineStore, openSett
                             );
                         })() : null}
                     </div>
+                    {/* 一键清空会话按钮 */}
+                    {messages.length > 0 && (
+                        <button
+                            className="chat-clear-btn"
+                            onClick={clearMessages}
+                            title={t('chat.clearHistory') || '清空当前对话'}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 8px',
+                                background: 'transparent',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                color: 'var(--text-secondary)',
+                                transition: 'all 0.2s',
+                                marginLeft: 'auto'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.color = '#ef4444'
+                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.06)'
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.color = 'var(--text-secondary)'
+                                e.currentTarget.style.borderColor = 'var(--border-color)'
+                                e.currentTarget.style.background = 'transparent'
+                            }}
+                        >
+                            <RotateCcw size={11} />
+                            <span>{t('chat.clearHistory') || '清空'}</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* 输入框 */}

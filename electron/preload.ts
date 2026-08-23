@@ -263,5 +263,11 @@ contextBridge.exposeInMainWorld('externalFile', {
         ipcRenderer.invoke('fs:getExternalFilePath')
 })
 
+// 暴露系统外链打开 API
+contextBridge.exposeInMainWorld('electronAPI', {
+    openExternal: (url: string): Promise<boolean> =>
+        ipcRenderer.invoke('shell:openExternal', url)
+})
+
 console.log('🔗 Preload 脚本已加载')
 

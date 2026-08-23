@@ -20,15 +20,8 @@ export const isWindows = (): boolean => {
 
 /**
  * 检测是否启用 WebLLM
- * macOS 和 Linux 启用，Windows 禁用
- * 
- * 注意：Windows 版本因 WebGPU 兼容性问题无法正常运行 WebLLM
+ * 开源版本全面聚焦 Ollama (本地引擎) 与 Cloud API (云端接口)，精简实验性内置模型
  */
 export const isWebLLMEnabled = (): boolean => {
-    // 构建时禁用标志（Windows 构建会设置此值）
-    if (import.meta.env.DISABLE_WEBLLM === 'true' || import.meta.env.DISABLE_WEBLLM === true) {
-        return false
-    }
-    // 运行时平台检测
-    return !isWindows()
+    return false
 }

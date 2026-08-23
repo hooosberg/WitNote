@@ -8,6 +8,7 @@ import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { FloatingToolbar } from './FloatingToolbar'
@@ -43,63 +44,72 @@ marked.setOptions({
 })
 
 /**
- * 渲染 LaTeX 公式
- * 注意：需要保护 <code> 和 <pre> 标签内的内容不被渲染
- */
-const renderLatex = (html: string): string => {
-    // 临时占位符保护 code 和 pre 标签内容
-    const codeBlocks: string[] = []
-    const placeholder = '___CODE_BLOCK_PLACEHOLDER___'
-
-    // 1. 提取并保护所有 code 和 pre 标签内容
-    html = html.replace(/<(code|pre)[^>]*>[\s\S]*?<\/\1>/gi, (match) => {
-        codeBlocks.push(match)
-        return placeholder + (codeBlocks.length - 1) + '___'
-    })
-
-    // 2. 渲染块级公式 $$...$$ (支持多行)
-    html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_, formula) => {
-        try {
-            return katex.renderToString(formula.trim(), {
-                displayMode: true,
-                throwOnError: false
-            })
-        } catch {
-            return `<span class="latex-error">$$${formula}$$</span>`
-        }
-    })
-
-    // 3. 渲染行内公式 $...$ (单行，避免匹配 $$)
-    html = html.replace(/(?<!\$)\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, formula) => {
-        try {
-            return katex.renderToString(formula.trim(), {
-                displayMode: false,
-                throwOnError: false
-            })
-        } catch {
-            return `<span class="latex-error">$${formula}$</span>`
-        }
-    })
-
-    // 4. 恢复 code 和 pre 标签内容
-    html = html.replace(new RegExp(placeholder + '(\\d+)___', 'g'), (_, index) => {
-        return codeBlocks[parseInt(index)]
-    })
-
-    return html
-}
-
-/**
  * 使用 marked + KaTeX 渲染 Markdown
- * 支持完整的 GitHub 风格语法 + LaTeX 数学公式
+ * 管道：公式预提取保护 ➔ marked 解析 ➔ KaTeX 渲染 ➔ DOMPurify 净化
+ * 安全：彻底解决多行 LaTeX (aligned、矩阵、&、\\) 被 marked 转义破坏的问题，同时杜绝 XSS 注入
  */
 const renderMarkdown = (md: string): string => {
+    if (!md) return ''
     try {
-        let html = marked(md) as string
-        html = renderLatex(html)
-        return html
+        const latexBlocks: { id: string; formula: string; display: boolean }[] = []
+        let placeholderCounter = 0
+
+        // 1. 保护代码块（避免代码里的 $ 符号被误提取）
+        const codePlaceholders: string[] = []
+        let protectedMd = md.replace(/(```[\s\S]*?```|`[^`\n]+?`)/g, (match) => {
+            codePlaceholders.push(match)
+            return `%%%CODEBLOCK${codePlaceholders.length - 1}%%%`
+        })
+
+        // 2. 提取块级公式 $$...$$ (多行支持，使用非 markdown 关键字占位符)
+        protectedMd = protectedMd.replace(/\$\$([\s\S]+?)\$\$/g, (_, formula) => {
+            const id = `@@@LATEXBLOCK${placeholderCounter++}@@@`
+            latexBlocks.push({ id, formula: formula.trim(), display: true })
+            return `\n\n${id}\n\n`
+        })
+
+        // 3. 提取行内公式 $...$ (排除转义 \$)
+        protectedMd = protectedMd.replace(/(?<!\\)\$(?!\$)([^$\n]+?)(?<!\\)\$/g, (_, formula) => {
+            const id = `@@@LATEXINLINE${placeholderCounter++}@@@`
+            latexBlocks.push({ id, formula: formula.trim(), display: false })
+            return id
+        })
+
+        // 4. 恢复代码块
+        protectedMd = protectedMd.replace(/%%%CODEBLOCK(\d+)%%%/g, (_, idx) => {
+            return codePlaceholders[parseInt(idx)] || ''
+        })
+
+        // 5. 调用 marked 解析 Markdown
+        let html = marked(protectedMd) as string
+
+        // 6. 用 KaTeX 渲染公式并替换回 HTML
+        for (const item of latexBlocks) {
+            let renderedLatex = ''
+            try {
+                renderedLatex = katex.renderToString(item.formula, {
+                    displayMode: item.display,
+                    throwOnError: false,
+                    trust: true
+                })
+            } catch {
+                const delim = item.display ? '$$' : '$'
+                renderedLatex = `<span class="latex-error">${delim}${item.formula}${delim}</span>`
+            }
+            if (item.display) {
+                html = html.replace(`<p>${item.id}</p>`, renderedLatex)
+            }
+            html = html.replace(item.id, renderedLatex)
+        }
+
+        // 7. DOMPurify 安全净化，保留 KaTeX 和代码高亮所需的标签与属性
+        return DOMPurify.sanitize(html, {
+            ADD_TAGS: ['annotation', 'semantics', 'math', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'mfrac', 'span', 'div'],
+            ADD_ATTR: ['class', 'style', 'aria-hidden'],
+            ALLOW_DATA_ATTR: false
+        })
     } catch {
-        return md
+        return DOMPurify.sanitize(md)
     }
 }
 
@@ -268,6 +278,24 @@ export const Editor: React.FC<EditorProps> = ({
     }, [])
 
 
+
+    // 预览区外链安全点击拦截：调用系统默认浏览器打开，防止应用内白屏跳转
+    const handlePreviewClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement
+        const anchor = target.closest('a')
+        if (anchor) {
+            const href = anchor.getAttribute('href') || anchor.href
+            if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+                e.preventDefault()
+                e.stopPropagation()
+                if (window.electronAPI?.openExternal) {
+                    window.electronAPI.openExternal(href)
+                } else {
+                    window.open(href, '_blank')
+                }
+            }
+        }
+    }, [])
 
     // 判断是否为新建的未命名文件
     const isUntitled = fileName.startsWith('Untitled_')
@@ -725,6 +753,7 @@ export const Editor: React.FC<EditorProps> = ({
                                 </div>
                                 <div
                                     className="editor-preview"
+                                    onClick={handlePreviewClick}
                                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                                     style={{ display: 'block' }}
                                 />
@@ -854,6 +883,7 @@ export const Editor: React.FC<EditorProps> = ({
 
                             <div
                                 className="editor-preview"
+                                onClick={handlePreviewClick}
                                 dangerouslySetInnerHTML={{ __html: previewHtml }}
                                 style={{ display: showPreview ? 'block' : 'none' }}
                             />

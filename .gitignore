@@ -5,6 +5,8 @@ node_modules/
 dist/
 dist-electron/
 release/
+releases/
+dist-releases/
 
 # 日志
 *.log

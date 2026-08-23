@@ -110,7 +110,8 @@ export function useEngineStore(options: UseEngineStoreOptions = {}): UseEngineSt
     // 引擎类型
     const [currentEngine, setCurrentEngine] = useState<EngineType>(() => {
         const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_ENGINE);
-        return (saved as EngineType) || 'ollama';
+        if (saved === 'webllm' || !saved) return 'ollama';
+        return (saved as EngineType);
     });
 
     // WebLLM 状态

@@ -1709,7 +1709,7 @@ export function Settings({ isOpen, onClose, llm, defaultTab, onTabChange, engine
                                 📧 <a href="mailto:zikedece@proton.me">zikedece@proton.me</a>
                             </p>
                             <p className="guide-contact">
-                                🌐 <a href="https://hooosberg.github.io/WitNote/" target="_blank" rel="noopener noreferrer">{t('guide.officialWebsite')}</a>
+                                🌐 <a href="https://hooosberg.com/apps/witnote/" target="_blank" rel="noopener noreferrer">{t('guide.officialWebsite')}</a>
                             </p>
                             <p className="guide-contact">
                                 🔗 <a href="https://github.com/hooosberg/WitNote" target="_blank" rel="noopener noreferrer">GitHub</a>

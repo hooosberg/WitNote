@@ -113,6 +113,11 @@ interface ExternalFileAPI {
     getExternalFilePath(): Promise<string | null>
 }
 
+// 系统外链打开 API
+interface ElectronAPI {
+    openExternal(url: string): Promise<boolean>
+}
+
 // 全局 Window 接口扩展
 declare global {
     interface Window {
@@ -126,6 +131,7 @@ declare global {
         shortcuts: ShortcutsAPI
         vault: VaultAPI
         externalFile: ExternalFileAPI
+        electronAPI?: ElectronAPI
     }
 }
 

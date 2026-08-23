@@ -661,6 +661,23 @@ function ensureZenNoteDir(vaultPath: string): void {
 // ============ IPC 处理器 ============
 
 function setupIpcHandlers() {
+    // 安全打开外部链接（系统默认浏览器）
+    ipcMain.handle('shell:openExternal', async (_event, targetUrl: string) => {
+        try {
+            if (!targetUrl || typeof targetUrl !== 'string') return false
+            const parsed = new URL(targetUrl)
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                await shell.openExternal(targetUrl)
+                return true
+            }
+            console.warn('⚠️ 拒绝打开非安全协议链接:', targetUrl)
+            return false
+        } catch (err) {
+            console.error('打开外部链接失败:', err)
+            return false
+        }
+    })
+
     // 获取 Vault 路径（自动检测文件夹是否存在）
     ipcMain.handle('fs:getVaultPath', () => {
         const vaultPath = store.get('vaultPath')
@@ -1995,7 +2012,7 @@ function createApplicationMenu() {
                 {
                     label: tm('menu.visitWebsite'),
                     click: async () => {
-                        await shell.openExternal('https://hooosberg.github.io/WitNote/')
+                        await shell.openExternal('https://hooosberg.com/apps/witnote/')
                     }
                 },
                 {
@@ -2102,6 +2119,23 @@ function createWindow() {
     }
 
     mainWindow = new BrowserWindow(windowOptions)
+
+    // 拦截外链：一律调用系统默认浏览器打开，防止应用窗口内部跳转导致白屏
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http:') || url.startsWith('https:')) {
+            shell.openExternal(url)
+        }
+        return { action: 'deny' }
+    })
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        // 如果是外部 http/https 导航且非开发服务器主页，拦截并外部打开
+        if (url.startsWith('http:') || url.startsWith('https:')) {
+            if (!VITE_DEV_SERVER_URL || !url.startsWith(VITE_DEV_SERVER_URL)) {
+                event.preventDefault()
+                shell.openExternal(url)
+            }
+        }
+    })
 
     // 开发模式连接 Vite 开发服务器
     if (VITE_DEV_SERVER_URL) {
