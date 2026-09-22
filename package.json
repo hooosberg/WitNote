@@ -58,9 +58,9 @@
   "build": {
     "appId": "com.zikedece.witnote",
     "productName": "WitNote",
-    "buildVersion": "1.3.3",
+    "buildVersion": "2.0.1",
     "directories": {
-      "output": "release",
+      "output": "releases",
       "buildResources": "build"
     },
     "files": [
