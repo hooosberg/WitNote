@@ -27,6 +27,25 @@
 
 ---
 
+<!-- Sponsor Section Start -->
+<p align="center">
+  <a href="https://www.infistar.cc/register?aff=MCLBTDB2&ref_source=link" target="_blank">
+    <img src="../docs/assets/infistar-banner.png" alt="Infistar.cc - 一站式全球大模型API服务平台" width="100%">
+  </a>
+</p>
+
+> [!TIP]
+> **💖 赞助商支持 / Sponsored by [Infistar.cc 无限星河](https://www.infistar.cc/register?aff=MCLBTDB2&ref_source=link)**
+> 
+> **中文**：感谢 [Infistar.cc 无限星河](https://www.infistar.cc/register?aff=MCLBTDB2&ref_source=link) 赞助本项目！平台聚合 Claude、GPT、Gemini、DeepSeek 等主流模型，单 Key 自由切换，多节点冗余抗 429。价格低至官方 0.1 折起，倍率透明，轻松支撑海量笔记 RAG 检索、长文精读与知识库整理，长时使用无 Token 焦虑。  
+> WitNote 用户通过 [专属推广链接](https://www.infistar.cc/register?aff=MCLBTDB2&ref_source=link) 注册，即领 **$5 测试额度** 与首充专享特惠，即刻开箱体验！
+> 
+> **English**: Special thanks to [Infistar.cc](https://www.infistar.cc/register?aff=MCLBTDB2&ref_source=link) for sponsoring WitNote! Access Claude, GPT, Gemini, and DeepSeek via a single API key with multi-node redundancy against 429 limits. Rates start at up to 99% off (0.01x) official pricing, effortlessly powering heavy RAG search, long-document summarization, and PKM workflows without token anxiety.  
+> WitNote users can sign up through the [Referral Link](https://www.infistar.cc/register?aff=MCLBTDB2&ref_source=link) to claim a **$5 test credit** and exclusive first-recharge discounts—get started instantly!
+<!-- Sponsor Section End -->
+
+---
+
 ## 🍃 回归纯粹：我们的产品初心
 
 在如今写作软件与各类 AI 工具功能越来越臃肿、层层配置越来越繁杂的当下，**智简笔记本 (WitNote) 选择坚守最初的设计初心**：
