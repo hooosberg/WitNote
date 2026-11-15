@@ -62,12 +62,18 @@ We focus on doing the core essentials to perfection:
 
 ## 🍎 Apple Ecosystem (Native Swift Architecture)
 
-For macOS, iOS, and iPadOS, WitNote has transitioned to a **100% pure native architecture written in Swift & SwiftUI**.
+For macOS, iOS, and iPadOS, WitNote has transitioned to a **100% pure native architecture written in Swift & SwiftUI** (v2.0+). All three Apple platforms are now **live on the Apple App Store**.
 
-- **Why Native?** Native Apple architecture deeply integrates with Apple Silicon hardware and macOS system energy-efficiency frameworks, offering instantaneous startup, buttery-smooth scrolling, and zero runtime container overhead.
-- **Mac App Store**: Directly search **"WitNote"** on the App Store or [Click Here to Download](https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12) to enjoy official sandbox protection and silent updates.
-- **iOS & iPadOS**: Native mobile versions are currently under active development.
-- *(Note: Mac users who prefer the open-source Electron build can still compile and run it from source code.)*
+- **Why Native?** Native Apple architecture deeply integrates with Apple Silicon hardware and Apple system energy-efficiency frameworks, offering instantaneous startup, buttery-smooth scrolling, and zero runtime container overhead.
+- **Mac App Store**: Search **"WitNote"** on the App Store or [Click Here to Download](https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12) to enjoy official sandbox protection and silent updates.
+- **iOS & iPadOS App Store**: Available natively on iPhone and iPad alongside macOS (active stability improvements for AI panel responsiveness are in progress).
+
+### Edition Comparison
+
+| Edition | Stack & Distribution | Best For | Key Advantage |
+| :--- | :--- | :--- | :--- |
+| **Apple App Store Native Edition** | Swift & SwiftUI (macOS / iOS / iPadOS) | Apple ecosystem users | One-click install, sandboxed security, Apple Silicon native performance & iCloud/system integration |
+| **Open-Source Cross-Platform Edition** | Electron / Vite (Windows / Linux / macOS source) | Windows / Linux users & developers | MIT licensed, full source visibility, x86_64 & ARM64 installers or local build |
 
 ---
 

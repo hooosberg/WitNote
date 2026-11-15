@@ -62,12 +62,18 @@
 
 ## 🍎 苹果生态路线说明（Swift 纯原生架构）
 
-为了追求极致丝滑的能效与视觉交互，WitNote 在苹果生态（macOS / iOS / iPadOS）全面采用了 **Swift & SwiftUI 纯原生重写架构**。
+为了追求极致丝滑的能效与视觉交互，WitNote 在苹果生态（macOS / iOS / iPadOS）全面采用了 **Swift & SwiftUI 纯原生重写架构**（v2.0+），目前三端均已**正式上架 Apple App Store**。
 
-- **为什么选原生？** 纯原生架构深度调用了 Apple Silicon 芯片硬件加速与 macOS 能效框架，相比任何第三方跨平台容器，拥有更快的冷启动速度、原生的文本渲染质感和近乎为零的内存开销。
-- **Mac App Store 下载**：直接在 Mac App Store 搜索 **"WitNote"** 或 [点击此处前往商店下载](https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12)，享受官方沙盒安全保障与静默更新。
-- **iOS & iPadOS**：原生手机与平板端正在积极研发中，敬请期待！
-- *(注：偏好开源跨平台版本的 Mac 用户，依然可以直接克隆本项目源码进行本地编译运行。)*
+- **为什么选原生？** 纯原生架构深度调用了 Apple Silicon 芯片硬件加速与系统级能效框架，相比跨平台容器拥有极速冷启动、原生文本渲染质感与极低内存开销。
+- **Mac App Store 下载**：在 Mac App Store 搜索 **"WitNote"** 或 [点击此处前往商店下载](https://apps.apple.com/us/app/witnote-local-ai-writer/id6756833873?mt=12)，享受官方沙盒安全保障与静默更新。
+- **iOS & iPadOS App Store**：iPhone 与 iPad 原生版本已同步上架（正在持续优化移动端 AI 栏交互响应体验）。
+
+### 版本选择对照表
+
+| 版本 | 技术栈与分发渠道 | 适用人群 | 核心优势 |
+| :--- | :--- | :--- | :--- |
+| **Apple App Store 纯原生版** | Swift & SwiftUI（macOS / iOS / iPadOS） | 苹果生态日常用户 | App Store 一键安装免配置、官方沙盒安全、Apple Silicon 原生省电高帧率体验 |
+| **GitHub 开源跨平台版** | Electron / Vite（Windows / Linux / macOS 源码） | Windows / Linux 用户与开发者 | MIT 开源透明、官方 x86_64 & ARM64 安装包、支持自行克隆二次编译 |
 
 ---
 
